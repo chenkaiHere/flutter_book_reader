@@ -1,0 +1,32 @@
+name: flutter_book_reader
+description: >-
+  A customizable Flutter reader widget for novels and ebooks: lazy chapter
+  loading, paginated and continuous-scroll modes, themes, and pluggable
+  data sources & progress storage.
+version: 1.0.0
+repository: https://github.com/chenkaiHere/flutter_book_reader
+homepage: https://github.com/chenkaiHere/flutter_book_reader
+issue_tracker: https://github.com/chenkaiHere/flutter_book_reader/issues
+
+topics:
+  - reader
+  - ebook
+  - pagination
+  - novel
+  - reading
+
+environment:
+  # Color.withValues 需要 Flutter 3.27 / Dart 3.6 及以上
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
