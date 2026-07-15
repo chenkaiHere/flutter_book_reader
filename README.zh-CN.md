@@ -5,6 +5,8 @@
 
 [English](README.md) | 中文
 
+🔗 **[在线体验](https://ck-readbook-demo.ckdgdgdg.workers.dev/)** —— 打开浏览器即可试用。
+
 一个可商用、可定制的 Flutter **小说 / 电子书阅读器组件**。
 
 放入 `BookReader`、接上你自己的数据源，即可获得分页阅读与上下连续滚动、章节导航、
@@ -118,6 +120,7 @@ BookReader(
 
 ## 示例
 
+可以直接[**在线体验**](https://ck-readbook-demo.ckdgdgdg.workers.dev/)，或在本地运行。
 `example/` 是一个完整示例 app（书架 + 阅读器，数据来自 `assets/books.json`），
 通过 `path: ../` 依赖本包：
 

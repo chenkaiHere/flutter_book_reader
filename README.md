@@ -5,6 +5,8 @@
 
 English | [中文](README.zh-CN.md)
 
+🔗 **[Live demo](https://ck-readbook-demo.ckdgdgdg.workers.dev/)** — try it in your browser.
+
 A customizable, production-ready **novel / ebook reader widget** for Flutter.
 
 Drop in `BookReader`, point it at your own data source, and you get paginated
@@ -131,8 +133,10 @@ BookReader(
 
 ## Example
 
-A full example app (bookshelf + reader, data from `assets/books.json`) lives in
-[`example/`](example) and depends on this package via `path: ../`:
+Try the **[live demo](https://ck-readbook-demo.ckdgdgdg.workers.dev/)** in your browser,
+or run it locally. A full example app (bookshelf + reader, data from
+`assets/books.json`) lives in [`example/`](example) and depends on this package
+via `path: ../`:
 
 ```bash
 cd example
