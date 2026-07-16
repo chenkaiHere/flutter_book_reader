@@ -90,4 +90,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(menuOpacity(), 0);
   });
+
+  testWidgets('切换主题立即生效（纸张背景色随之更新，无需重进）',
+      (WidgetTester tester) async {
+    final ReaderConfig config = ReaderConfig();
+    await tester.pumpWidget(
+      MaterialApp(home: BookReader(source: FakeBookSource(), config: config)),
+    );
+    await tester.pumpAndSettle();
+
+    Color bg() => tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor!;
+    expect(bg(), ReaderTheme.yellow.paperColor, reason: '默认黄色主题');
+
+    // 在同一个组件实例上切主题
+    config.setTheme(ReaderTheme.night);
+    await tester.pump();
+    expect(bg(), ReaderTheme.night.paperColor, reason: '切换后应立即更新背景');
+  });
 }

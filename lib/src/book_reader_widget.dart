@@ -196,54 +196,65 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final ReaderTheme t = _config.theme;
     return ReaderLabelsScope(
       labels: widget.labels,
-      child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: t.isDark
-            ? SystemUiOverlayStyle.light
-            : SystemUiOverlayStyle.dark,
-        child: Scaffold(backgroundColor: t.paperColor, body: _buildBody(t)),
-      ),
+      child: _buildScaffold(),
     );
   }
 
-  Widget _buildBody(ReaderTheme t) {
-    if (_error != null) {
-      return ReaderStatusPage(
-        theme: t,
-        error: true,
-        onRetry: () {
-          setState(() => _error = null);
-          _init();
-        },
+  Widget _buildScaffold() {
+    final ReadingController? c = _controller;
+
+    // 未就绪 / 出错：静态主题 Scaffold（此阶段菜单不可用，主题不会变化）。
+    if (c == null) {
+      final ReaderTheme t = _config.theme;
+      return Scaffold(
+        backgroundColor: t.paperColor,
+        body: _error != null
+            ? ReaderStatusPage(
+                theme: t,
+                error: true,
+                onRetry: () {
+                  setState(() => _error = null);
+                  _init();
+                },
+              )
+            : ReaderStatusPage(theme: t),
       );
     }
-    final ReadingController? c = _controller;
-    if (c == null) return ReaderStatusPage(theme: t);
 
-    // 内容随控制器变化重建（重新分页）；菜单显隐用 ValueNotifier 局部刷新，互不牵连。
+    // 就绪：整个 Scaffold（含纸张背景色 / 状态栏样式）随控制器重建。
+    // config 变化会经 ReadingController 通知，因此切主题 / 改字号会立即生效。
+    // 菜单显隐用 ValueNotifier 局部刷新，与内容互不牵连。
     return AnimatedBuilder(
       animation: c,
       builder: (BuildContext context, _) {
-        final ReaderTheme theme = _config.theme;
-        return Stack(
-          children: <Widget>[
-            Positioned.fill(child: _buildContent(theme, c)),
-            if (_config.dimLevel > 0)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    color: Colors.black.withValues(alpha: _config.dimLevel),
+        final ReaderTheme t = _config.theme;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: t.isDark
+              ? SystemUiOverlayStyle.light
+              : SystemUiOverlayStyle.dark,
+          child: Scaffold(
+            backgroundColor: t.paperColor,
+            body: Stack(
+              children: <Widget>[
+                Positioned.fill(child: _buildContent(t, c)),
+                if (_config.dimLevel > 0)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: _config.dimLevel),
+                      ),
+                    ),
                   ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: _menuVisible,
+                  builder: (BuildContext context, bool visible, _) =>
+                      _buildMenu(c, visible),
                 ),
-              ),
-            ValueListenableBuilder<bool>(
-              valueListenable: _menuVisible,
-              builder: (BuildContext context, bool visible, _) =>
-                  _buildMenu(c, visible),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
