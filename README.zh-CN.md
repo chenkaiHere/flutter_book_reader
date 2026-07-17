@@ -10,6 +10,12 @@
 
 🔗 **[打开在线体验 →](https://ck-readbook-demo.ckdgdgdg.workers.dev/)**（浏览器即可试用）
 
+<p align="center">
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif" width="270" alt="flutter_book_reader 演示 —— 阅读与仿真翻页">
+  &nbsp;&nbsp;
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="270" alt="flutter_book_reader 演示 —— 主题与设置">
+</p>
+
 把 `BookReader` 接上你自己的数据，立刻就能得到真实分页、跟随手指的仿真翻页、章节导航、
 主题与阅读进度持久化。一切都由小而可替换的抽象驱动 —— 正文可以来自接口、数据库、本地文件，
 或任何地方，无需改动组件内部。

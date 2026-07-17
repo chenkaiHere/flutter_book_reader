@@ -11,6 +11,12 @@
 
 🔗 **[Try the live demo →](https://ck-readbook-demo.ckdgdgdg.workers.dev/)** (runs in your browser)
 
+<p align="center">
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif" width="270" alt="flutter_book_reader demo — reading & page-curl">
+  &nbsp;&nbsp;
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="270" alt="flutter_book_reader demo — themes & settings">
+</p>
+
 Point `BookReader` at your own data and you instantly get real pagination,
 finger-following page-curl animations, chapter navigation, themes, and
 reading-progress persistence. Everything is driven by small, replaceable
