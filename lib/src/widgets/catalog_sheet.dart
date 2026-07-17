@@ -95,9 +95,8 @@ class _CatalogSheetState extends State<CatalogSheet> {
                               color: active
                                   ? accent
                                   : text.withValues(alpha: 0.85),
-                              fontWeight: active
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
+                              fontWeight:
+                                  active ? FontWeight.w600 : FontWeight.w400,
                             ),
                           ),
                         ),

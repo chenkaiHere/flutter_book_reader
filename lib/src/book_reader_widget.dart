@@ -11,6 +11,7 @@ import 'reader_labels.dart';
 import 'reader_theme.dart';
 import 'source/book_source.dart';
 import 'views/horizontal_reader.dart';
+import 'views/simulation_reader.dart';
 import 'views/vertical_reader.dart';
 import 'widgets/catalog_sheet.dart';
 import 'widgets/loading_page.dart';
@@ -87,9 +88,8 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
         manifest.id,
       );
       final int start = widget.startChapter ?? saved?.chapterIndex ?? 0;
-      final int offset = widget.startChapter != null
-          ? 0
-          : (saved?.charOffset ?? 0);
+      final int offset =
+          widget.startChapter != null ? 0 : (saved?.charOffset ?? 0);
 
       if (!mounted) return;
       final ReadingController controller = ReadingController(
@@ -194,6 +194,18 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     }
   }
 
+  /// 状态栏 + 底部系统导航栏都用纸张色（沉浸），图标明暗随主题。
+  SystemUiOverlayStyle _overlayStyle(ReaderTheme t) {
+    final Brightness icons = t.isDark ? Brightness.light : Brightness.dark;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: icons,
+      statusBarBrightness: t.isDark ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor: t.paperColor,
+      systemNavigationBarIconBrightness: icons,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ReaderLabelsScope(
@@ -208,18 +220,21 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     // 未就绪 / 出错：静态主题 Scaffold（此阶段菜单不可用，主题不会变化）。
     if (c == null) {
       final ReaderTheme t = _config.theme;
-      return Scaffold(
-        backgroundColor: t.paperColor,
-        body: _error != null
-            ? ReaderStatusPage(
-                theme: t,
-                error: true,
-                onRetry: () {
-                  setState(() => _error = null);
-                  _init();
-                },
-              )
-            : ReaderStatusPage(theme: t),
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: _overlayStyle(t),
+        child: Scaffold(
+          backgroundColor: t.paperColor,
+          body: _error != null
+              ? ReaderStatusPage(
+                  theme: t,
+                  error: true,
+                  onRetry: () {
+                    setState(() => _error = null);
+                    _init();
+                  },
+                )
+              : ReaderStatusPage(theme: t),
+        ),
       );
     }
 
@@ -231,14 +246,26 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       builder: (BuildContext context, _) {
         final ReaderTheme t = _config.theme;
         return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: t.isDark
-              ? SystemUiOverlayStyle.light
-              : SystemUiOverlayStyle.dark,
+          value: _overlayStyle(t),
           child: Scaffold(
             backgroundColor: t.paperColor,
             body: Stack(
               children: <Widget>[
-                Positioned.fill(child: _buildContent(t, c)),
+                // 正文始终可交互；菜单唤起时一旦开始滑动（用户拖动），立即隐藏菜单，
+                // 让翻页/滚动照常进行。菜单自身的章节滑杆不属于此监听，不受影响。
+                Positioned.fill(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (ScrollNotification n) {
+                      if (_menuVisible.value &&
+                          n is ScrollStartNotification &&
+                          n.dragDetails != null) {
+                        _menuVisible.value = false;
+                      }
+                      return false;
+                    },
+                    child: _buildContent(t, c),
+                  ),
+                ),
                 if (_config.dimLevel > 0)
                   Positioned.fill(
                     child: IgnorePointer(
@@ -279,6 +306,7 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
 
           c.updateViewport(contentSize, MediaQuery.of(context).textScaler);
 
+          // 页眉（章节/书名）与页脚（页码/进度）都在各页内，随翻页/滚动一起移动。
           return Semantics(
             container: true,
             label: c.currentChapterTitle,
@@ -286,14 +314,26 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTapUp: (TapUpDetails d) => _handleTap(d, constraints.maxWidth),
-              child: _config.flipType == FlipType.slideHorizontal
-                  ? HorizontalReader(controller: c)
-                  : _buildStaticPage(t, c),
+              child: _buildReader(t, c),
             ),
           );
         },
       ),
     );
+  }
+
+  /// 依翻页方式选视图：平滑/覆盖→横向 PageView；仿真→卷曲视图；无动画→静态页。
+  Widget _buildReader(ReaderTheme t, ReadingController c) {
+    switch (_config.flipType) {
+      case FlipType.slideHorizontal:
+      case FlipType.cover:
+        return HorizontalReader(controller: c, style: _config.flipType);
+      case FlipType.simulation:
+        return SimulationReader(controller: c);
+      case FlipType.none:
+      case FlipType.scrollVertical:
+        return _buildStaticPage(t, c);
+    }
   }
 
   Widget _buildStaticPage(ReaderTheme t, ReadingController c) {
@@ -306,11 +346,13 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       );
     }
     final int i = c.pageIndex;
-    return ReaderPageFrame(
+    return ReaderPageContent(
       theme: t,
       config: _config,
+      bookTitle: c.manifest.title,
       chapterTitle: c.currentChapterTitle,
       page: (i >= 0 && i < c.pages.length) ? c.pages[i] : const <ReaderBlock>[],
+      isChapterHead: i == 0,
       chapterIndex: c.chapterIndex,
       chapterCount: c.chapterCount,
       pageIndex: i,

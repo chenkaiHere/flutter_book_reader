@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../paginator.dart';
+import '../reader_config.dart';
 import '../widgets/loading_page.dart';
 import '../widgets/page_frame.dart';
 import 'reader_mode_view.dart';
 
-/// 横向滑动翻页视图。
+/// 横向分页翻页视图（平滑 / 覆盖 / 仿真共用同一个 PageView，仅视觉变换不同）。
 ///
 /// 页序：[上一章末页?] + 本章各页 + [下一章首页?]。边界页直接渲染相邻章的
 /// 真实页面，滑过去内容即目标章，切章在后台完成、前后画面一致，因此无跳动。
 class HorizontalReader extends ReaderModeView {
-  const HorizontalReader({super.key, required super.controller});
+  const HorizontalReader({
+    super.key,
+    required super.controller,
+    this.style = FlipType.slideHorizontal,
+  });
+
+  /// 翻页视觉样式：slideHorizontal（平滑）、cover（覆盖）、simulation（仿真）。
+  final FlipType style;
 
   @override
   State<HorizontalReader> createState() => _HorizontalReaderState();
@@ -94,14 +102,75 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
       },
       itemBuilder: (BuildContext context, int v) {
         final int real = v - controller.leading;
+        final Widget page;
         if (real < 0) {
-          return _boundaryFrame(controller.chapterIndex - 1, atEnd: true);
+          page = _boundaryFrame(controller.chapterIndex - 1, atEnd: true);
+        } else if (real >= controller.pages.length) {
+          page = _boundaryFrame(controller.chapterIndex + 1, atEnd: false);
+        } else {
+          page = _frame(controller.chapterIndex, controller.pages, real);
         }
-        if (real >= controller.pages.length) {
-          return _boundaryFrame(controller.chapterIndex + 1, atEnd: false);
-        }
-        return _frame(controller.chapterIndex, controller.pages, real);
+        // 每页带不透明纸张底色：覆盖翻页时新页才能真正盖住下层，而非透视穿透。
+        return _styled(v, ColoredBox(color: theme.paperColor, child: page));
       },
+    );
+  }
+
+  /// 覆盖样式给每页叠加变换：当前及更早的页固定在原位（被盖住），
+  /// 后一页从右侧自然滑入并投下左缘阴影。平滑样式则原样返回。
+  Widget _styled(int viewIndex, Widget page) {
+    if (widget.style != FlipType.cover) return page;
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double w = constraints.maxWidth;
+        return AnimatedBuilder(
+          animation: _pageController,
+          child: page,
+          builder: (BuildContext context, Widget? child) {
+            final double current =
+                _pageController.hasClients && _pageController.page != null
+                    ? _pageController.page!
+                    : (controller.leading + controller.pageIndex).toDouble();
+            final double delta = viewIndex - current;
+            if (delta <= 0) {
+              return Transform.translate(
+                offset: Offset(-delta * w, 0),
+                child: child,
+              );
+            }
+            return _withLeftEdgeShadow(child!, (1 - delta).clamp(0.0, 1.0));
+          },
+        );
+      },
+    );
+  }
+
+  Widget _withLeftEdgeShadow(Widget child, double intensity) {
+    if (intensity <= 0.01) return child;
+    return Stack(
+      children: <Widget>[
+        child,
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 18,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: <Color>[
+                    Colors.black.withValues(alpha: 0.22 * intensity),
+                    Colors.black.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -123,17 +192,18 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
     final ReaderPage pageContent = (pageIdx >= 0 && pageIdx < pages.length)
         ? pages[pageIdx]
         : const <ReaderBlock>[];
-    return ReaderPageFrame(
+    return ReaderPageContent(
       theme: theme,
       config: config,
+      bookTitle: controller.manifest.title,
       chapterTitle: controller.chapterTitleAt(chapterIdx),
       page: pageContent,
+      isChapterHead: pageIdx == 0,
       chapterIndex: chapterIdx,
       chapterCount: controller.chapterCount,
       pageIndex: pageIdx,
       pageCount: pages.length,
       progress: controller.progressFor(chapterIdx, pages, pageIdx),
-      padding: pagePadding,
     );
   }
 }

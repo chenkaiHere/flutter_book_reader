@@ -72,10 +72,11 @@ mixin ChapterContentMixin on ReaderControllerBase {
       ...flowChapters,
     };
     final List<int> candidates =
-        _bodies.keys.where((int k) => !protectedIdx.contains(k)).toList()..sort(
-          (int a, int b) =>
-              (b - chapterIndex).abs().compareTo((a - chapterIndex).abs()),
-        );
+        _bodies.keys.where((int k) => !protectedIdx.contains(k)).toList()
+          ..sort(
+            (int a, int b) =>
+                (b - chapterIndex).abs().compareTo((a - chapterIndex).abs()),
+          );
     for (final int k in candidates) {
       if (_bodies.length <= maxCachedChapters) break;
       _bodies.remove(k);

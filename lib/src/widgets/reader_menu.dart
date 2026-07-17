@@ -68,10 +68,10 @@ class _ReaderMenuState extends State<ReaderMenu> {
   Widget build(BuildContext context) {
     _labels = ReaderLabels.of(context);
     final ReaderTheme t = widget.config.theme;
-    final Color barColor = t.isDark ? const Color(0xFF262629) : Colors.white;
-    final Color iconColor = t.isDark
-        ? const Color(0xFFCACACA)
-        : const Color(0xFF33373D);
+    // 沉浸式：菜单栏用当前主题纸张色（不再是纯白），无边界线，完全融入背景
+    final Color barColor = t.paperColor;
+    final Color iconColor =
+        t.isDark ? const Color(0xFFCACACA) : const Color(0xFF33373D);
 
     return IgnorePointer(
       ignoring: !widget.visible,
@@ -107,16 +107,21 @@ class _ReaderMenuState extends State<ReaderMenu> {
       top: widget.visible ? 0 : -140,
       left: 0,
       right: 0,
-      child: Container(
+      child: ColoredBox(
         color: barColor,
         child: SafeArea(
           bottom: false,
           child: SizedBox(
-            height: 52,
+            height: kReaderMenuBarHeight,
             child: Row(
               children: <Widget>[
                 IconButton(
                   tooltip: _labels.back,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: kReaderMenuBarHeight,
+                    minHeight: kReaderMenuBarHeight,
+                  ),
                   icon: Icon(
                     Icons.arrow_back_ios_new,
                     size: 20,
@@ -138,6 +143,11 @@ class _ReaderMenuState extends State<ReaderMenu> {
                 ),
                 IconButton(
                   tooltip: _labels.more,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: kReaderMenuBarHeight,
+                    minHeight: kReaderMenuBarHeight,
+                  ),
                   icon: Icon(Icons.more_horiz, color: iconColor),
                   onPressed: () {},
                 ),
@@ -157,21 +167,54 @@ class _ReaderMenuState extends State<ReaderMenu> {
       bottom: widget.visible ? 0 : -320,
       left: 0,
       right: 0,
-      child: Container(
+      child: ColoredBox(
         color: barColor,
         child: SafeArea(
           top: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              if (_panel == _Panel.settings) _buildSettingsPanel(iconColor),
-              if (_panel == _Panel.theme) _buildThemePanel(iconColor),
+              _buildPanelArea(iconColor),
               _buildChapterSeek(iconColor),
               Divider(height: 1, color: iconColor.withValues(alpha: 0.08)),
               _buildActionRow(iconColor),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// 设置 / 主题子面板：展开、收起、切换都带平滑动画（高度渐变 + 交叉淡入）。
+  Widget _buildPanelArea(Color iconColor) {
+    Widget child;
+    switch (_panel) {
+      case _Panel.settings:
+        child = KeyedSubtree(
+          key: const ValueKey<String>('settings'),
+          child: _buildSettingsPanel(iconColor),
+        );
+        break;
+      case _Panel.theme:
+        child = KeyedSubtree(
+          key: const ValueKey<String>('theme'),
+          child: _buildThemePanel(iconColor),
+        );
+        break;
+      case _Panel.none:
+        child = const SizedBox(
+          key: ValueKey<String>('none'),
+          width: double.infinity,
+        );
+        break;
+    }
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.bottomCenter,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 180),
+        child: child,
       ),
     );
   }
@@ -237,17 +280,15 @@ class _ReaderMenuState extends State<ReaderMenu> {
             iconColor,
             () {
               setState(
-                () => _panel = _panel == _Panel.theme
-                    ? _Panel.none
-                    : _Panel.theme,
+                () => _panel =
+                    _panel == _Panel.theme ? _Panel.none : _Panel.theme,
               );
             },
           ),
           _menuBtn(Icons.text_fields, _labels.settingsMenu, iconColor, () {
             setState(
-              () => _panel = _panel == _Panel.settings
-                  ? _Panel.none
-                  : _Panel.settings,
+              () => _panel =
+                  _panel == _Panel.settings ? _Panel.none : _Panel.settings,
             );
           }),
         ],
@@ -324,33 +365,25 @@ class _ReaderMenuState extends State<ReaderMenu> {
           ),
           const SizedBox(height: 4),
           _rowLabel(_labels.flipMode, iconColor),
-          const SizedBox(height: 6),
-          Row(
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: FlipType.values.map((FlipType f) {
               final bool active = c.flipType == f;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: OutlinedButton.icon(
-                    onPressed: () => c.setFlipType(f),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: active ? _accent : iconColor,
-                      side: BorderSide(
-                        color: active
-                            ? _accent
-                            : iconColor.withValues(alpha: 0.3),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    icon: Icon(f.icon, size: 16),
-                    label: Text(
-                      f.label,
-                      style: const TextStyle(fontSize: 11),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+              return OutlinedButton.icon(
+                onPressed: () => c.setFlipType(f),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: active ? _accent : iconColor,
+                  side: BorderSide(
+                    color: active ? _accent : iconColor.withValues(alpha: 0.3),
                   ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  visualDensity: VisualDensity.compact,
                 ),
+                icon: Icon(f.icon, size: 16),
+                label: Text(f.label, style: const TextStyle(fontSize: 12)),
               );
             }).toList(),
           ),
@@ -412,9 +445,9 @@ class _ReaderMenuState extends State<ReaderMenu> {
   }
 
   Widget _rowLabel(String text, Color color) => Text(
-    text,
-    style: TextStyle(fontSize: 12, color: color.withValues(alpha: 0.6)),
-  );
+        text,
+        style: TextStyle(fontSize: 12, color: color.withValues(alpha: 0.6)),
+      );
 
   Widget _stepBtn(String text, Color color, VoidCallback onTap) =>
       OutlinedButton(

@@ -13,10 +13,25 @@ const double kReaderFooterHeight = 22;
 /// 确保排版好的一页永远不会撑破可视区域（视觉上仅是底部多一点留白）。
 const double kReaderContentSafety = 16;
 
+/// 章首大标题（每章第一页展示）的上/下间距。
+const double kReaderHeadingGapTop = 8;
+const double kReaderHeadingGapBottom = 16;
+
+/// 顶部菜单工具栏行的高度。约等于顶部小标题栏所占高度
+/// (kReaderPagePadding.top + kReaderHeaderHeight = 12 + 24)，
+/// 使菜单唤起时其顶栏正好盖住那条小标题栏，而不侵入正文。
+const double kReaderMenuBarHeight = 44;
+
 /// 翻页方式
 enum FlipType {
-  /// 左右平滑翻页（横向 PageView）
+  /// 左右平滑翻页（横向 PageView，两页并排滑动）
   slideHorizontal('平滑翻页', Icons.view_carousel_outlined),
+
+  /// 覆盖翻页（当前页不动，新页从右侧滑入盖住）
+  cover('覆盖翻页', Icons.flip_to_front),
+
+  /// 仿真翻页（滑动时叠加透视立体与书页阴影）
+  simulation('仿真翻页', Icons.auto_stories_outlined),
 
   /// 上下滚动（纵向连续滚动）
   scrollVertical('上下滚动', Icons.swap_vert),
@@ -28,6 +43,10 @@ enum FlipType {
 
   final String label;
   final IconData icon;
+
+  /// 是否使用横向分页视图（平滑 / 覆盖 / 仿真都基于同一个 PageView）
+  bool get isHorizontalPaged =>
+      this == slideHorizontal || this == cover || this == simulation;
 }
 
 /// 阅读器全局设置。用 [ChangeNotifier] 承载，页面通过监听刷新。
@@ -65,6 +84,10 @@ class ReaderConfig extends ChangeNotifier {
   bool get justify => _justify;
   TextAlign get textAlign => _justify ? TextAlign.justify : TextAlign.start;
 
+  // —— 字体（family 名由业务方在自己的 pubspec 中声明并传入；null = 系统默认）——
+  String? _fontFamily;
+  String? get fontFamily => _fontFamily;
+
   // —— 主题 ——
   ReaderTheme _theme = ReaderTheme.yellow;
   ReaderTheme get theme => _theme;
@@ -78,10 +101,20 @@ class ReaderConfig extends ChangeNotifier {
   double get dimLevel => _dimLevel;
 
   TextStyle get textStyle => TextStyle(
-    fontSize: _fontSize,
-    height: _lineHeight,
-    color: _theme.textColor,
-  );
+        fontFamily: _fontFamily,
+        fontSize: _fontSize,
+        height: _lineHeight,
+        color: _theme.textColor,
+      );
+
+  /// 章首大标题样式（比正文大一号、加粗）。
+  TextStyle get headingStyle => TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: _fontSize + 6,
+        height: 1.3,
+        fontWeight: FontWeight.w700,
+        color: _theme.textColor,
+      );
 
   void increaseFont() {
     if (_fontSize >= maxFontSize) return;
@@ -115,6 +148,13 @@ class ReaderConfig extends ChangeNotifier {
   void setJustify(bool value) {
     if (value == _justify) return;
     _justify = value;
+    notifyListeners();
+  }
+
+  /// 设置正文字体族（需业务方在自己的 pubspec 中声明该 family）。传 null 恢复系统默认。
+  void setFontFamily(String? family) {
+    if (family == _fontFamily) return;
+    _fontFamily = family;
     notifyListeners();
   }
 

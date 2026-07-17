@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../paginator.dart';
+import '../reader_config.dart';
 import 'chapter_content_mixin.dart';
 import 'reader_controller_base.dart';
 
@@ -10,8 +11,8 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
 
   String _sizeSig(Size s) =>
       '${s.width.toInt()}x${s.height.toInt()}|${config.fontSize}|${config.lineHeight}'
-      // 纳入系统字体缩放与排版参数，任一变化才会失效重排
-      '|${textScaler.scale(100).round()}'
+      // 纳入系统字体缩放、字体与排版参数，任一变化才会失效重排
+      '|${textScaler.scale(100).round()}|${config.fontFamily}'
       '|${config.firstLineIndent}|${config.paragraphSpacing}|${config.justify}';
 
   /// 把整章正文拆成「干净」的段落：按换行切分、去掉数据自带的行首缩进、丢弃空行。
@@ -24,9 +25,9 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
 
   /// 整章按段落转成文本块（不分页，供纵向连续滚动模式渲染），排版与分页一致。
   ReaderPage chapterBlocks(String body) => <ReaderBlock>[
-    for (final String p in _paragraphsOf(body))
-      ReaderBlock(text: config.indent + p, isParagraphStart: true),
-  ];
+        for (final String p in _paragraphsOf(body))
+          ReaderBlock(text: config.indent + p, isParagraphStart: true),
+      ];
 
   /// 取某章分页结果；正文未加载时返回 null 并触发加载。
   List<ReaderPage>? pagesFor(int index) {
@@ -46,8 +47,22 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
         indent: config.indent,
         paragraphSpacing: config.paragraphSpacing,
         textAlign: config.textAlign,
+        // 首页为章首大标题预留高度（与 ReaderPageFrame 的渲染保持一致）
+        firstPageReserve: headingReserveFor(index),
       ),
     );
+  }
+
+  /// 章首大标题在首页占用的高度（含上下间距），供分页预留与视图渲染共用基准。
+  double headingReserveFor(int index) {
+    if (contentSize.width <= 0) return 0;
+    final double h = Paginator.measureHeight(
+      chapterTitleAt(index),
+      config.headingStyle,
+      contentSize.width,
+      textScaler: textScaler,
+    );
+    return kReaderHeadingGapTop + h + kReaderHeadingGapBottom;
   }
 
   /// 布局阶段调用：更新可用区域并按需重排当前章（在 build 期间调用，不通知）。

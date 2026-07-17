@@ -9,9 +9,9 @@ class ReadingPosition {
   final int charOffset;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'chapterIndex': chapterIndex,
-    'charOffset': charOffset,
-  };
+        'chapterIndex': chapterIndex,
+        'charOffset': charOffset,
+      };
 
   factory ReadingPosition.fromJson(Map<String, dynamic> json) =>
       ReadingPosition(

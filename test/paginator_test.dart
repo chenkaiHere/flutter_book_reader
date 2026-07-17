@@ -22,10 +22,8 @@ void main() {
 
     expect(pages.length, greaterThan(1), reason: '应切成多页');
 
-    final String joined = pages
-        .expand((ReaderPage p) => p)
-        .map((ReaderBlock b) => b.text)
-        .join();
+    final String joined =
+        pages.expand((ReaderPage p) => p).map((ReaderBlock b) => b.text).join();
     final String expected = paras.map((String p) => '$indent$p').join();
     expect(joined, expected, reason: '分页只是切分，不应丢字或改写');
   });
@@ -38,20 +36,19 @@ void main() {
       indent: indent,
     );
     expect(pages.length, 1);
-    final int starts = pages.first
-        .where((ReaderBlock b) => b.isParagraphStart)
-        .length;
+    final int starts =
+        pages.first.where((ReaderBlock b) => b.isParagraphStart).length;
     expect(starts, 6, reason: '6 段应有 6 个段落起始块');
   });
 
   test('段间距变化会改变每页容纳的段数', () {
     List<ReaderPage> run(double spacing) => Paginator.paginate(
-      paragraphs: makeParagraphs(40),
-      style: style,
-      size: const Size(320, 480),
-      indent: indent,
-      paragraphSpacing: spacing,
-    );
+          paragraphs: makeParagraphs(40),
+          style: style,
+          size: const Size(320, 480),
+          indent: indent,
+          paragraphSpacing: spacing,
+        );
     // 段间距越大，首页能放下的块越少（页数不减）
     expect(run(24).length, greaterThanOrEqualTo(run(0).length));
   });

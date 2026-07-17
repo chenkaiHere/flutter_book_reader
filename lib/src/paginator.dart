@@ -31,6 +31,7 @@ class Paginator {
     String indent = '　　',
     double paragraphSpacing = 0,
     TextAlign textAlign = TextAlign.start,
+    double firstPageReserve = 0,
   }) {
     final double pageHeight = size.height;
     if (size.width <= 0 || pageHeight <= 0 || paragraphs.isEmpty) {
@@ -44,7 +45,8 @@ class Paginator {
 
     final List<ReaderPage> pages = <ReaderPage>[];
     ReaderPage current = <ReaderBlock>[];
-    double used = 0;
+    // 首页预留章首大标题的高度（仅第一页；flushPage 后归零，故只影响首页）。
+    double used = firstPageReserve.clamp(0, pageHeight * 0.6);
 
     void flushPage() {
       if (current.isNotEmpty) {
@@ -78,9 +80,8 @@ class Paginator {
       int line = 0;
       bool paragraphStart = true;
       while (line < lines.length) {
-        final double gap = (paragraphStart && current.isNotEmpty)
-            ? paragraphSpacing
-            : 0;
+        final double gap =
+            (paragraphStart && current.isNotEmpty) ? paragraphSpacing : 0;
         final int startOffset = _offsetAtLineTop(
           painter,
           lines[line].baseline - lines[line].ascent,
@@ -160,13 +161,14 @@ class Paginator {
     TextStyle style,
     TextScaler ts,
     TextAlign align,
-  ) => TextPainter(
-    text: TextSpan(text: text, style: style),
-    textDirection: TextDirection.ltr,
-    textAlign: align,
-    textScaler: ts,
-    maxLines: null,
-  );
+  ) =>
+      TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.ltr,
+        textAlign: align,
+        textScaler: ts,
+        maxLines: null,
+      );
 
   /// 子串在给定宽度下的实际渲染高度（与 Text 组件排布一致）。
   static double _measureHeight(
@@ -182,6 +184,16 @@ class Paginator {
     p.dispose();
     return h;
   }
+
+  /// 文本在给定宽度下的渲染高度（对外，用于度量章首标题等预留高度）。
+  static double measureHeight(
+    String text,
+    TextStyle style,
+    double width, {
+    TextScaler textScaler = TextScaler.noScaling,
+    TextAlign textAlign = TextAlign.start,
+  }) =>
+      _measureHeight(text, style, width, textScaler, textAlign);
 
   static int _offsetAtLineTop(TextPainter painter, double lineTop) =>
       painter.getPositionForOffset(Offset(0, lineTop + 1)).offset;

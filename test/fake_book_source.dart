@@ -13,13 +13,14 @@ class FakeBookSource extends BookSource {
 
   @override
   Future<BookManifest> loadManifest() async => BookManifest(
-    id: 'fake-book',
-    title: '测试书',
-    author: '作者',
-    intro: '简介',
-    coverColor: const Color(0xFF808080),
-    chapterTitles: List<String>.generate(chapters, (int i) => '第 ${i + 1} 章'),
-  );
+        id: 'fake-book',
+        title: '测试书',
+        author: '作者',
+        intro: '简介',
+        coverColor: const Color(0xFF808080),
+        chapterTitles:
+            List<String>.generate(chapters, (int i) => '第 ${i + 1} 章'),
+      );
 
   @override
   Future<String> loadChapterBody(int index) async {
@@ -28,7 +29,7 @@ class FakeBookSource extends BookSource {
   }
 
   String _body(int index) => List<String>.filled(
-    paragraphsPerChapter,
-    '　　这是第 ${index + 1} 章的正文段落，用于填充足够的文字以便分页测试。',
-  ).join('\n');
+        paragraphsPerChapter,
+        '　　这是第 ${index + 1} 章的正文段落，用于填充足够的文字以便分页测试。',
+      ).join('\n');
 }

@@ -81,22 +81,59 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader> {
   Widget build(BuildContext context) {
     final ReaderLabels labels = ReaderLabels.of(context);
     final int count = controller.flowChapters.length;
+    // 连续滚动模式：顶部当前章节信息、底部章节进度为固定信息栏（中间列表滚动）。
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.onTapToggleMenu,
-      child: NotificationListener<ScrollNotification>(
-        onNotification: _onScroll,
-        // builder 惰性构建，滚出视口的章节会被回收，避免 RenderObject 无限驻留
-        child: ListView.builder(
-          key: _listKey,
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: pagePadding,
-          itemCount: count + 1,
-          itemBuilder: (BuildContext context, int i) => i < count
-              ? _section(controller.flowChapters[i], labels)
-              : _footer(labels),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.only(
+              left: pagePadding.left,
+              right: pagePadding.right,
+              top: pagePadding.top,
+            ),
+            child: ReaderHeaderBar(
+              title: controller.currentChapterTitle,
+              theme: theme,
+            ),
+          ),
+          Expanded(
+            child: NotificationListener<ScrollNotification>(
+              onNotification: _onScroll,
+              // builder 惰性构建，滚出视口的章节会被回收，避免 RenderObject 无限驻留
+              child: ListView.builder(
+                key: _listKey,
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.only(
+                  left: pagePadding.left,
+                  right: pagePadding.right,
+                ),
+                itemCount: count + 1,
+                itemBuilder: (BuildContext context, int i) => i < count
+                    ? _section(controller.flowChapters[i], labels)
+                    : _footer(labels),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+              left: pagePadding.left,
+              right: pagePadding.right,
+              bottom: pagePadding.bottom,
+            ),
+            child: ReaderFooterBar(
+              theme: theme,
+              chapterIndex: controller.chapterIndex,
+              chapterCount: controller.chapterCount,
+              pageIndex: 0,
+              pageCount: 0, // 连续滚动无页码，仅显示章号与进度
+              progress: controller.globalProgress,
+            ),
+          ),
+        ],
       ),
     );
   }

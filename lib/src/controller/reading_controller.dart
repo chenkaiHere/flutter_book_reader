@@ -21,9 +21,9 @@ class ReadingController extends ReaderControllerBase
     ReaderConfig? config,
     int startChapter = 0,
     int startCharOffset = 0,
-  }) : _source = source,
-       _manifest = manifest,
-       _config = config ?? ReaderConfig.instance {
+  })  : _source = source,
+        _manifest = manifest,
+        _config = config ?? ReaderConfig.instance {
     chapterIndex = startChapter.clamp(0, manifest.chapterCount - 1);
     charOffset = startCharOffset;
     flowChapters = <int>[chapterIndex];
