@@ -9,11 +9,17 @@ import 'reader_controller_base.dart';
 mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
   static final RegExp _leadingIndent = RegExp(r'^[　\s]+');
 
+  /// 分页与渲染共用的正文样式（优先用实际渲染解析出的样式，回退到 config）。
+  TextStyle get _bodyStyle => paintTextStyle ?? config.textStyle;
+  TextStyle get _headingStyle => paintHeadingStyle ?? config.headingStyle;
+
   String _sizeSig(Size s) =>
       '${s.width.toInt()}x${s.height.toInt()}|${config.fontSize}|${config.lineHeight}'
       // 纳入系统字体缩放、字体与排版参数，任一变化才会失效重排
       '|${textScaler.scale(100).round()}|${config.fontFamily}'
-      '|${config.firstLineIndent}|${config.paragraphSpacing}|${config.justify}';
+      '|${config.firstLineIndent}|${config.paragraphSpacing}|${config.justify}'
+      // 纳入实际渲染字体与地区：主题字体 / CJK 回退不同会改变换行行数
+      '|${_bodyStyle.fontFamily}|${_bodyStyle.fontFamilyFallback}|$locale';
 
   /// 把整章正文拆成「干净」的段落：按换行切分、去掉数据自带的行首缩进、丢弃空行。
   /// 缩进与段距一律由阅读器统一施加，避免排版耦合到数据。
@@ -41,9 +47,10 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
       key,
       () => Paginator.paginate(
         paragraphs: _paragraphsOf(body),
-        style: config.textStyle,
+        style: _bodyStyle,
         size: contentSize,
         textScaler: textScaler,
+        locale: locale,
         indent: config.indent,
         paragraphSpacing: config.paragraphSpacing,
         textAlign: config.textAlign,
@@ -59,17 +66,30 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
     if (contentSize.width <= 0) return 0;
     final double h = Paginator.measureHeight(
       chapterTitleAt(index),
-      config.headingStyle,
+      _headingStyle,
       contentSize.width,
       textScaler: textScaler,
+      locale: locale,
     );
     return kReaderHeadingGapTop + h + kReaderHeadingGapBottom;
   }
 
   /// 布局阶段调用：更新可用区域并按需重排当前章（在 build 期间调用，不通知）。
-  void updateViewport(Size size, TextScaler ts) {
+  ///
+  /// [bodyStyle]/[headingStyle]/[textLocale] 为实际渲染解析出的样式与地区，
+  /// 传入后分页度量与屏幕渲染口径完全一致，杜绝换行行数不符导致的末行裁切。
+  void updateViewport(
+    Size size,
+    TextScaler ts, {
+    TextStyle? bodyStyle,
+    TextStyle? headingStyle,
+    Locale? textLocale,
+  }) {
     contentSize = size;
     textScaler = ts;
+    paintTextStyle = bodyStyle;
+    paintHeadingStyle = headingStyle;
+    locale = textLocale;
     prefetchAround(chapterIndex);
 
     final List<ReaderPage>? current = pagesFor(chapterIndex);

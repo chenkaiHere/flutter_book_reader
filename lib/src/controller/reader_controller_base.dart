@@ -36,6 +36,13 @@ abstract class ReaderControllerBase extends ChangeNotifier {
   Size contentSize = Size.zero;
   TextScaler textScaler = TextScaler.noScaling;
 
+  /// 实际渲染时解析出的正文 / 标题样式（含主题字体、字体回退）与地区。
+  /// 分页度量必须与之完全一致，否则换行行数不同会导致末行被裁切。
+  /// 为空时回退到 [config] 的样式（例如纯逻辑测试直接调用分页器时）。
+  TextStyle? paintTextStyle;
+  TextStyle? paintHeadingStyle;
+  Locale? locale;
+
   /// 上次分页的签名（区域+字号+行距+章节），变化时才重排
   String signature = '';
 

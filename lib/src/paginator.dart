@@ -33,6 +33,7 @@ class Paginator {
     TextAlign textAlign = TextAlign.start,
     double firstPageReserve = 0,
     StrutStyle? strutStyle,
+    Locale? locale,
   }) {
     final double pageHeight = size.height;
     if (size.width <= 0 || pageHeight <= 0 || paragraphs.isEmpty) {
@@ -60,7 +61,7 @@ class Paginator {
     for (final String para in paragraphs) {
       final String text = indent + para;
       final TextPainter painter =
-          _painter(text, style, textScaler, textAlign, strutStyle)
+          _painter(text, style, textScaler, textAlign, strutStyle, locale)
             ..layout(maxWidth: size.width);
       final List<LineMetrics> lines = painter.computeLineMetrics();
       if (lines.isEmpty) {
@@ -108,6 +109,7 @@ class Paginator {
             textScaler,
             textAlign,
             strutStyle,
+            locale,
           );
           if (used + gap + h <= pageHeight) {
             lastFit = j;
@@ -138,6 +140,7 @@ class Paginator {
             textScaler,
             textAlign,
             strutStyle,
+            locale,
           );
         }
 
@@ -168,13 +171,15 @@ class Paginator {
     TextScaler ts,
     TextAlign align,
     StrutStyle? strutStyle,
+    Locale? locale,
   ) =>
       TextPainter(
-        text: TextSpan(text: text, style: style),
+        text: TextSpan(text: text, style: style, locale: locale),
         textDirection: TextDirection.ltr,
         textAlign: align,
         textScaler: ts,
         strutStyle: strutStyle,
+        locale: locale,
         maxLines: null,
       );
 
@@ -186,8 +191,9 @@ class Paginator {
     TextScaler ts,
     TextAlign align,
     StrutStyle? strutStyle,
+    Locale? locale,
   ) {
-    final TextPainter p = _painter(text, style, ts, align, strutStyle)
+    final TextPainter p = _painter(text, style, ts, align, strutStyle, locale)
       ..layout(maxWidth: width);
     // 向上取整：分页保守，避免亚像素舍入导致末行溢出被裁切。
     final double h = p.height.ceilToDouble();
@@ -203,8 +209,10 @@ class Paginator {
     TextScaler textScaler = TextScaler.noScaling,
     TextAlign textAlign = TextAlign.start,
     StrutStyle? strutStyle,
+    Locale? locale,
   }) =>
-      _measureHeight(text, style, width, textScaler, textAlign, strutStyle);
+      _measureHeight(
+          text, style, width, textScaler, textAlign, strutStyle, locale);
 
   static int _offsetAtLineTop(TextPainter painter, double lineTop) =>
       painter.getPositionForOffset(Offset(0, lineTop + 1)).offset;

@@ -341,7 +341,16 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
             return VerticalReader(controller: c, onTapToggleMenu: _toggleMenu);
           }
 
-          c.updateViewport(contentSize, MediaQuery.of(context).textScaler);
+          // 传入“实际渲染解析出的样式与地区”：分页度量必须与屏幕渲染完全同源
+          // （含主题字体、CJK 地区回退），否则换行行数不同会导致末行被裁切。
+          final TextStyle base = DefaultTextStyle.of(context).style;
+          c.updateViewport(
+            contentSize,
+            MediaQuery.of(context).textScaler,
+            bodyStyle: base.merge(_config.textStyle),
+            headingStyle: base.merge(_config.headingStyle),
+            textLocale: Localizations.maybeLocaleOf(context),
+          );
 
           // 页眉（章节/书名）与页脚（页码/进度）都在各页内，随翻页/滚动一起移动。
           return Semantics(
