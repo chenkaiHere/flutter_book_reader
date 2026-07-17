@@ -13,6 +13,10 @@ class ReaderLabels {
     this.prevChapter = '上一章',
     this.nextChapter = '下一章',
     this.catalog = '目录',
+    this.detail = '详情',
+    this.noIntro = '暂无简介',
+    this.orderAsc = '正序',
+    this.orderDesc = '倒序',
     this.themeMenu = '主题',
     this.dayMode = '日间',
     this.nightMode = '夜间',
@@ -33,6 +37,10 @@ class ReaderLabels {
   final String prevChapter;
   final String nextChapter;
   final String catalog;
+  final String detail;
+  final String noIntro;
+  final String orderAsc;
+  final String orderDesc;
   final String themeMenu;
   final String dayMode;
   final String nightMode;

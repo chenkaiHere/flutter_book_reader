@@ -47,6 +47,7 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
         indent: config.indent,
         paragraphSpacing: config.paragraphSpacing,
         textAlign: config.textAlign,
+        strutStyle: config.strut,
         // 首页为章首大标题预留高度（与 ReaderPageFrame 的渲染保持一致）
         firstPageReserve: headingReserveFor(index),
       ),

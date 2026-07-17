@@ -25,13 +25,13 @@ class Chapter {
   String get body => paragraphs.map((String p) => '　　$p').join('\n');
 
   factory Chapter.fromJson(Map<String, dynamic> json) => Chapter(
-        id: json['id'] as int,
-        index: json['index'] as int,
-        title: json['title'] as String,
-        paragraphs: (json['paragraphs'] as List<dynamic>)
-            .map((dynamic e) => e as String)
-            .toList(),
-      );
+    id: json['id'] as int,
+    index: json['index'] as int,
+    title: json['title'] as String,
+    paragraphs: (json['paragraphs'] as List<dynamic>)
+        .map((dynamic e) => e as String)
+        .toList(),
+  );
 }
 
 /// 一本书
@@ -57,15 +57,15 @@ class Book {
   int get chapterCount => chapters.length;
 
   factory Book.fromJson(Map<String, dynamic> json) => Book(
-        id: json['id'] as int,
-        title: json['title'] as String,
-        author: json['author'] as String,
-        intro: json['intro'] as String,
-        coverColor: _parseColor(json['coverColor'] as String?),
-        chapters: (json['chapters'] as List<dynamic>)
-            .map((dynamic e) => Chapter.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+    id: json['id'] as int,
+    title: json['title'] as String,
+    author: json['author'] as String,
+    intro: json['intro'] as String,
+    coverColor: _parseColor(json['coverColor'] as String?),
+    chapters: (json['chapters'] as List<dynamic>)
+        .map((dynamic e) => Chapter.fromJson(e as Map<String, dynamic>))
+        .toList(),
+  );
 
   /// 解析 "5B7B9A" 这样的 RGB 十六进制字符串为不透明 Color
   static Color _parseColor(String? hex) {
@@ -84,16 +84,26 @@ class BookRepository {
 
   static const String assetPath = 'assets/books.json';
 
+  /// 单独存放的《三国演义》（真实全本，数据量大故独立成文件），置顶为第一本。
+  static const String featuredPath = 'assets/sanguo.json';
+
   static List<Book>? _cache;
 
   /// 已加载的书籍（未加载时为空列表）。加载请用 [load]。
   static List<Book> get books => _cache ?? const <Book>[];
 
   /// 从 JSON 资源加载书籍（带缓存，重复调用直接返回缓存）。
+  /// 先载入置顶的《三国演义》，再拼接 books.json 中的其余书籍。
   static Future<List<Book>> load() async {
     if (_cache != null) return _cache!;
-    final String raw = await rootBundle.loadString(assetPath);
-    _cache = parse(raw);
+    final Book featured = Book.fromJson(
+      json.decode(await rootBundle.loadString(featuredPath))
+          as Map<String, dynamic>,
+    );
+    final List<Book> others = parse(
+      await rootBundle.loadString(assetPath),
+    ).where((Book b) => b.id != featured.id).toList();
+    _cache = <Book>[featured, ...others];
     return _cache!;
   }
 

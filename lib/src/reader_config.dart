@@ -107,6 +107,15 @@ class ReaderConfig extends ChangeNotifier {
         color: _theme.textColor,
       );
 
+  /// 正文行高严格锁定：分页度量与实际渲染共用同一 strut，强制每行等高，
+  /// 与字体固有行高 / 前导分布无关，保证“计算的高度 == 渲染的高度”，不裁切。
+  StrutStyle get strut => StrutStyle(
+        fontFamily: _fontFamily,
+        fontSize: _fontSize,
+        height: _lineHeight,
+        forceStrutHeight: true,
+      );
+
   /// 章首大标题样式（比正文大一号、加粗）。
   TextStyle get headingStyle => TextStyle(
         fontFamily: _fontFamily,

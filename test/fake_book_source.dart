@@ -16,7 +16,7 @@ class FakeBookSource extends BookSource {
         id: 'fake-book',
         title: '测试书',
         author: '作者',
-        intro: '简介',
+        intro: '这是一本用于测试的书籍简介。',
         coverColor: const Color(0xFF808080),
         chapterTitles:
             List<String>.generate(chapters, (int i) => '第 ${i + 1} 章'),

@@ -194,20 +194,35 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     final int? picked = await showModalBottomSheet<int>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _config.theme.paperColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      // 由 DraggableScrollableSheet 自绘圆角纸张背景，因此外层透明。
+      backgroundColor: Colors.transparent,
       builder: (_) => ReaderLabelsScope(
         labels: widget.labels,
-        child: FractionallySizedBox(
-          heightFactor: 0.85,
-          child: CatalogSheet(
-            bookTitle: c.manifest.title,
-            chapterTitles: c.manifest.chapterTitles,
-            currentIndex: c.chapterIndex,
-            theme: _config.theme,
-          ),
+        // 可拖拽面板：列表滚到顶部后继续下拉会带动整个面板下移，拖到底部即关闭。
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.92,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
+              child: ColoredBox(
+                color: _config.theme.paperColor,
+                child: CatalogSheet(
+                  bookTitle: c.manifest.title,
+                  author: c.manifest.author,
+                  intro: c.manifest.intro,
+                  coverColor: c.manifest.coverColor,
+                  chapterTitles: c.manifest.chapterTitles,
+                  currentIndex: c.chapterIndex,
+                  theme: _config.theme,
+                  scrollController: scrollController,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

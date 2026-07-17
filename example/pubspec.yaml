@@ -64,6 +64,7 @@ flutter:
   # 书籍数据以 JSON 形式外置，运行时从此 asset 读取
   assets:
     - assets/books.json
+    - assets/sanguo.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:
