@@ -1,44 +1,63 @@
-# flutter_book_reader
+# 📖 flutter_book_reader
 
 [![pub package](https://img.shields.io/pub/v/flutter_book_reader.svg)](https://pub.dev/packages/flutter_book_reader)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-English | [中文](README.zh-CN.md)
+**English | [中文](README.zh-CN.md)**
 
-🔗 **[Live demo](https://ck-readbook-demo.ckdgdgdg.workers.dev/)** — try it in your browser.
+> A polished, production-ready **novel & ebook reader** for Flutter — the kind of
+> reading experience your users expect from a top-tier reading app, in a single
+> widget.
 
-A customizable, production-ready **novel / ebook reader widget** for Flutter.
+🔗 **[Try the live demo →](https://ck-readbook-demo.ckdgdgdg.workers.dev/)** (runs in your browser)
 
-Drop in `BookReader`, point it at your own data source, and you get paginated
-and continuous-scroll reading, chapter navigation, themes, and reading-progress
-persistence — all driven by replaceable abstractions, so your content can come
-from the network, a database, local files, or anywhere else.
+Point `BookReader` at your own data and you instantly get real pagination,
+finger-following page-curl animations, chapter navigation, themes, and
+reading-progress persistence. Everything is driven by small, replaceable
+abstractions, so your content can come from an API, a database, local files, or
+anywhere else — without touching the reader's internals.
 
-> 一个可商用、可定制的 Flutter 小说 / 电子书阅读器组件。数据源与进度存储均为可替换的抽象，
-> 业务方无需改动组件内部即可接入网络 / 数据库 / 本地文件。
+## Why flutter_book_reader?
+
+- 🪄 **It feels like a real book.** A realistic simulation page-curl that follows
+  your finger, plus cover, slide, vertical-scroll, and no-animation modes.
+- 📐 **Real pagination, not a scroll hack.** Paragraph-aware layout measured with
+  `TextPainter`, with proper first-line indent and justification.
+- 🔌 **Bring your own everything.** Data and progress storage are plain
+  abstractions — network, DB, cloud sync, offline files all just work.
+- 🎨 **Beautiful out of the box.** Six paper themes, one-tap day/night, adjustable
+  font size / line height / spacing, and full-screen immersive reading.
+- 🧪 **Built to last.** A widget-free logic core that's fully unit-tested, with a
+  clean, documented architecture.
 
 ## Features
 
-- **Three page modes** — smooth horizontal paging (seamless chapter crossing, no
-  flicker), continuous vertical scroll (auto-loads the next/previous chapter),
-  and no-animation.
+- **Five page modes** — a realistic **simulation** page-curl that follows your
+  finger (corner dog-ear, or a vertical curl when you swipe from the middle),
+  **cover** (incoming page slides over the current one), smooth **horizontal**
+  paging (seamless, flicker-free chapter crossing), continuous **vertical**
+  scroll (auto-loads the next / previous chapter), and **no-animation**.
+- **Full-screen immersive reading** — hides the status & system navigation bars
+  while reading (no content shift when the menu opens), restored on exit; plus a
+  one-tap **day / night** toggle.
 - **Real pagination** via `TextPainter`, paragraph-aware: reader-owned first-line
-  indent, paragraph spacing, and justification. Reading position is preserved
-  across font-size / line-height / system-text-scale changes.
-- **Lazy chapter loading** with neighbor prefetch, bounded LRU cache, loading &
-  **error/retry** states.
+  indent (works together with justification), paragraph spacing, and
+  justification. Reading position is preserved across font-size / line-height /
+  system-text-scale changes.
+- **Lazy chapter loading** with neighbor prefetch, a bounded LRU cache, and
+  loading & **error / retry** states.
 - **Pluggable data source** (`BookSource`) and **progress storage**
-  (`ReaderProgressStore`) — bring your own network/DB/cloud implementation.
-- **Debounced progress saving** with flush on app background.
-- **Theming & typography**: six built-in paper themes, per-theme accent color,
-  font size / line height / brightness overlay.
+  (`ReaderProgressStore`) — bring your own network / DB / cloud implementation.
+- **Debounced progress saving** with a flush when the app goes to background.
+- **Theming & typography** — six built-in paper themes, per-theme accent color,
+  and runtime controls for font size / line height / brightness.
 - **Localizable** UI strings (`ReaderLabels`) and basic accessibility semantics.
 
 ## Install
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.0.0
+  flutter_book_reader: ^1.1.0
 ```
 
 ```dart
@@ -95,17 +114,21 @@ class PrefsProgressStore extends ReaderProgressStore {
 
 Built-ins: `NoopReaderProgressStore` (default) and `InMemoryReaderProgressStore`.
 
-### 3. Theming & typography
+### 3. Theming, typography & page mode
 
 ```dart
 final config = ReaderConfig()
   ..setTheme(ReaderTheme.yellow.copyWith(accentColor: const Color(0xFF3366FF)))
+  ..setFlipType(FlipType.simulation) // simulation / cover / slideHorizontal / scrollVertical / none
   ..setFirstLineIndent(2)
   ..setParagraphSpacing(8)
   ..setJustify(true);
 
 BookReader(source: MyBookSource(), config: config);
 ```
+
+Users can also switch theme, page mode, font size, spacing, and day / night from
+the in-reader settings menu at runtime.
 
 ### 4. Localize the UI
 
@@ -127,14 +150,14 @@ BookReader(
 - `ReadingController` — pure, widget-free logic core, composed from four
   **mixins** (content loading / pagination / navigation / vertical flow); fully
   unit-testable.
-- `ReaderModeView` — view base class; `HorizontalReader` and `VerticalReader`
-  **extend** it.
+- `ReaderModeView` — view base class; `HorizontalReader`, `VerticalReader`, and
+  `SimulationReader` **extend** it.
 - `BookReader` — the single entry-point widget.
 
 ## Example
 
-Try the **[live demo](https://ck-readbook-demo.ckdgdgdg.workers.dev/)** in your browser,
-or run it locally. A full example app (bookshelf + reader, data from
+Try the **[live demo](https://ck-readbook-demo.ckdgdgdg.workers.dev/)** in your
+browser, or run it locally. A full example app (bookshelf + reader, data from
 `assets/books.json`) lives in [`example/`](example) and depends on this package
 via `path: ../`:
 

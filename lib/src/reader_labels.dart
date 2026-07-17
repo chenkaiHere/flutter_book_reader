@@ -14,10 +14,12 @@ class ReaderLabels {
     this.nextChapter = '下一章',
     this.catalog = '目录',
     this.themeMenu = '主题',
+    this.dayMode = '日间',
+    this.nightMode = '夜间',
     this.settingsMenu = '设置',
     this.fontSize = '字号',
     this.lineSpacing = '行距',
-    this.flipMode = '翻页方式',
+    this.flipMode = '翻页',
     this.background = '背景 / 主题',
     this.bookEnd = '—— 全书完 ——',
     this.loadingNext = '正在载入下一章…',
@@ -32,6 +34,8 @@ class ReaderLabels {
   final String nextChapter;
   final String catalog;
   final String themeMenu;
+  final String dayMode;
+  final String nightMode;
   final String settingsMenu;
   final String fontSize;
   final String lineSpacing;

@@ -3,6 +3,7 @@ import 'package:flutter_book_reader/src/paginator.dart';
 import 'package:flutter_book_reader/src/widgets/page_frame.dart';
 import 'package:flutter_book_reader/src/widgets/reader_menu.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_book_source.dart';
@@ -133,6 +134,73 @@ void main() {
     await tester.fling(find.byType(PageView), const Offset(-400, 0), 1200);
     await tester.pumpAndSettle();
     expect(menuOpacity(), 0, reason: '滑动应隐藏菜单');
+  });
+
+  testWidgets('菜单唤起后单击只隐藏菜单、不翻页；滑动才翻页', (WidgetTester tester) async {
+    await tester.pumpWidget(host(FakeBookSource()));
+    await tester.pumpAndSettle();
+
+    double menuOpacity() => tester
+        .widget<AnimatedOpacity>(
+          find.descendant(
+            of: find.byType(ReaderMenu),
+            matching: find.byType(AnimatedOpacity),
+          ),
+        )
+        .opacity;
+
+    final Size size = tester.getSize(find.byType(BookReader));
+    // 唤起菜单
+    await tester.tapAt(Offset(size.width * 0.5, size.height * 0.5));
+    await tester.pumpAndSettle();
+    expect(menuOpacity(), 1);
+    expect(find.textContaining('1/'), findsWidgets, reason: '仍在第 1 页');
+
+    // 菜单可见时点右侧 —— 只隐藏菜单，不翻页
+    await tester.tapAt(Offset(size.width * 0.85, size.height * 0.5));
+    await tester.pumpAndSettle();
+    expect(menuOpacity(), 0, reason: '单击应隐藏菜单');
+    expect(find.textContaining('1/'), findsWidgets, reason: '单击不应翻页');
+
+    // 再次唤起，滑动 —— 隐藏菜单并翻页
+    await tester.tapAt(Offset(size.width * 0.5, size.height * 0.5));
+    await tester.pumpAndSettle();
+    expect(menuOpacity(), 1);
+    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1200);
+    await tester.pumpAndSettle();
+    expect(menuOpacity(), 0, reason: '滑动应隐藏菜单');
+    expect(find.textContaining('2/'), findsWidgets, reason: '滑动应翻到下一页');
+  });
+
+  testWidgets('退出阅读页后把底部导航栏恢复为白底黑字', (WidgetTester tester) async {
+    final List<MethodCall> calls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (MethodCall call) async {
+        calls.add(call);
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+
+    await tester.pumpWidget(host(FakeBookSource()));
+    await tester.pumpAndSettle();
+    // 卸载阅读页（等价于退出返回）
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+
+    final Iterable<MethodCall> styleCalls = calls.where(
+      (MethodCall c) => c.method == 'SystemChrome.setSystemUIOverlayStyle',
+    );
+    expect(styleCalls, isNotEmpty);
+    final Map<Object?, Object?> args =
+        styleCalls.last.arguments as Map<Object?, Object?>;
+    expect(args['systemNavigationBarColor'], 0xFFFFFFFF, reason: '底部导航栏应为白色');
+    expect(args['systemNavigationBarIconBrightness'], 'Brightness.dark',
+        reason: '底部导航栏图标应为黑色');
   });
 
   for (final FlipType style in <FlipType>[

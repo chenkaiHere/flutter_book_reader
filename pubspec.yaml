@@ -3,7 +3,7 @@ description: >-
   A customizable Flutter reader widget for novels and ebooks: lazy chapter
   loading, paginated and continuous-scroll modes, themes, and pluggable
   data sources & progress storage.
-version: 1.0.0
+version: 1.1.0
 repository: https://github.com/chenkaiHere/flutter_book_reader
 homepage: https://github.com/chenkaiHere/flutter_book_reader
 issue_tracker: https://github.com/chenkaiHere/flutter_book_reader/issues

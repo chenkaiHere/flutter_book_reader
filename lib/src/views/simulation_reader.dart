@@ -17,7 +17,14 @@ import 'reader_mode_view.dart';
 ///
 /// 该几何/绘制模型参考开源库 bookfx（lixp），此处为独立实现与适配。
 class SimulationReader extends ReaderModeView {
-  const SimulationReader({super.key, required super.controller});
+  const SimulationReader({
+    super.key,
+    required super.controller,
+    this.onFlipStart,
+  });
+
+  /// 手指开始拖动翻页时回调（用于唤起菜单时隐藏菜单）。
+  final VoidCallback? onFlipStart;
 
   @override
   State<SimulationReader> createState() => _SimulationReaderState();
@@ -92,6 +99,8 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
       _forward = dx < 0;
       if ((_forward && !_canForward) || (!_forward && !_canBackward)) return;
       _midBand = _down.dy > h / 3 && _down.dy < h * 2 / 3;
+      // 开始翻页：通知外层隐藏菜单（若已唤起）
+      widget.onFlipStart?.call();
       setState(() {
         _started = true;
         _folding = true;

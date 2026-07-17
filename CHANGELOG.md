@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+- New page-turn modes: `simulation` and `cover`, for five in total.
+- Full-screen immersive reading (hides status & navigation bars); nav bar
+  restored on exit.
+- First-line indent now works with justified text.
+- Reworked settings menu with a one-tap day/night toggle.
+
 ## 1.0.0
 
 Initial release.

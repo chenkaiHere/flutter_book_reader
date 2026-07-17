@@ -78,7 +78,14 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // 全屏沉浸：进入阅读页即隐藏系统状态栏与导航栏，并在唤起菜单时保持隐藏——
+    // 避免状态栏出现时把正文往下顶，正文始终铺满整屏。
+    _enterImmersive();
     _init();
+  }
+
+  void _enterImmersive() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
   Future<void> _init() async {
@@ -133,6 +140,9 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     if (state != AppLifecycleState.resumed) {
       _saveTimer?.cancel();
       _flushSave();
+    } else {
+      // 从后台返回时系统可能已重置 UI 模式，重新应用沉浸式
+      _enterImmersive();
     }
   }
 
@@ -141,6 +151,18 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _saveTimer?.cancel();
     _flushSave();
+    // 离开阅读页：恢复系统栏显示，并把状态栏 / 底部导航栏重置为“白底黑字”默认样式，
+    // 否则阅读页设置的纸张色会残留到退出后的页面。
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
     _controller?.removeListener(_onControllerChanged);
     _controller?.dispose();
     _menuVisible.dispose();
@@ -329,7 +351,11 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       case FlipType.cover:
         return HorizontalReader(controller: c, style: _config.flipType);
       case FlipType.simulation:
-        return SimulationReader(controller: c);
+        // 仿真翻页用原始手势（无滚动通知），拖动开始时主动隐藏菜单
+        return SimulationReader(
+          controller: c,
+          onFlipStart: () => _menuVisible.value = false,
+        );
       case FlipType.none:
       case FlipType.scrollVertical:
         return _buildStaticPage(t, c);

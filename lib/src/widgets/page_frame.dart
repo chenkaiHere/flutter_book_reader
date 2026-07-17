@@ -152,17 +152,21 @@ class ReaderProse extends StatelessWidget {
   final ReaderConfig config;
   final bool bounded;
 
+  static final RegExp _leadingIndent = RegExp(r'^[　\s]+');
+
   @override
   Widget build(BuildContext context) {
+    // 首行缩进用固定宽度占位（WidgetSpan）而非空格：两端对齐（justify）会吞掉行首空格，
+    // 占位块不会被压缩，因此“两端对齐 + 首行缩进”可以并存。
+    final double indentWidth = config.firstLineIndent *
+        MediaQuery.textScalerOf(context).scale(config.fontSize);
     final List<Widget> children = <Widget>[];
     for (int i = 0; i < page.length; i++) {
       final ReaderBlock block = page[i];
       if (i > 0 && block.isParagraphStart) {
         children.add(SizedBox(height: config.paragraphSpacing));
       }
-      children.add(
-        Text(block.text, style: config.textStyle, textAlign: config.textAlign),
-      );
+      children.add(_paragraph(block, indentWidth));
     }
     final Column column = Column(
       mainAxisSize: MainAxisSize.min,
@@ -179,6 +183,31 @@ class ReaderProse extends StatelessWidget {
         maxHeight: double.infinity,
         child: column,
       ),
+    );
+  }
+
+  /// 段落起始块：行首缩进用等宽占位块，其余块（跨页续接）直接渲染。
+  Widget _paragraph(ReaderBlock block, double indentWidth) {
+    if (!block.isParagraphStart) {
+      return Text(
+        block.text,
+        style: config.textStyle,
+        textAlign: config.textAlign,
+      );
+    }
+    final String body = block.text.replaceFirst(_leadingIndent, '');
+    return Text.rich(
+      TextSpan(
+        children: <InlineSpan>[
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: SizedBox(width: indentWidth),
+          ),
+          TextSpan(text: body),
+        ],
+      ),
+      style: config.textStyle,
+      textAlign: config.textAlign,
     );
   }
 }

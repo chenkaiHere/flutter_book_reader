@@ -20,21 +20,21 @@ const double kReaderHeadingGapBottom = 16;
 /// 顶部菜单工具栏行的高度。约等于顶部小标题栏所占高度
 /// (kReaderPagePadding.top + kReaderHeaderHeight = 12 + 24)，
 /// 使菜单唤起时其顶栏正好盖住那条小标题栏，而不侵入正文。
-const double kReaderMenuBarHeight = 44;
+const double kReaderMenuBarHeight = 52;
 
 /// 翻页方式
 enum FlipType {
-  /// 左右平滑翻页（横向 PageView，两页并排滑动）
-  slideHorizontal('平滑翻页', Icons.view_carousel_outlined),
+  /// 仿真翻页（书页折角卷曲，跟随手指）
+  simulation('仿真', Icons.auto_stories_outlined),
 
   /// 覆盖翻页（当前页不动，新页从右侧滑入盖住）
-  cover('覆盖翻页', Icons.flip_to_front),
+  cover('覆盖', Icons.flip_to_front),
 
-  /// 仿真翻页（滑动时叠加透视立体与书页阴影）
-  simulation('仿真翻页', Icons.auto_stories_outlined),
+  /// 左右平移翻页（横向 PageView，两页并排滑动）
+  slideHorizontal('平移', Icons.view_carousel_outlined),
 
   /// 上下滚动（纵向连续滚动）
-  scrollVertical('上下滚动', Icons.swap_vert),
+  scrollVertical('上下', Icons.swap_vert),
 
   /// 无动画直接切换
   none('无动画', Icons.crop_square);
