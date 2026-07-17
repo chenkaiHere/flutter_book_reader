@@ -10,12 +10,6 @@ import '../widgets/page_frame.dart';
 import 'reader_mode_view.dart';
 
 /// 仿真翻页：真实书页折角，跟随手指。
-///
-/// 折角几何为经典书籍翻页算法：书角固定在右下角 [f]，手指点 [a] 与 [f] 连线的
-/// 中垂线即折痕，用两段二次贝塞尔勾出折边。当前页按“整页去掉折角”裁剪，露出
-/// 底下相邻页；折起的纸背填纯色 + 多层渐变阴影，营造纸张卷折的立体感。
-///
-/// 该几何/绘制模型参考开源库 bookfx（lixp），此处为独立实现与适配。
 class SimulationReader extends ReaderModeView {
   const SimulationReader({
     super.key,
