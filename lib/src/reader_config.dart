@@ -9,9 +9,10 @@ const EdgeInsets kReaderPagePadding = EdgeInsets.fromLTRB(20, 12, 20, 16);
 const double kReaderHeaderHeight = 24;
 const double kReaderFooterHeight = 22;
 
-/// 分页时在可用高度上再预留的安全余量：吸收多段落逐块渲染时的亚像素累计，
-/// 确保排版好的一页永远不会撑破可视区域（视觉上仅是底部多一点留白）。
-const double kReaderContentSafety = 16;
+/// 分页可用高度的安全余量。分页现已按“实际渲染字体/地区 + 锁定 strut 行高 +
+/// 高度向上取整”严格度量，与屏幕渲染逐行一致，不再需要额外留白，故为 0——
+/// 这样每页尽量填满，底部不会白白空出可容一行的空间。
+const double kReaderContentSafety = 0;
 
 /// 章首大标题（每章第一页展示）的上/下间距。
 const double kReaderHeadingGapTop = 8;
@@ -105,6 +106,15 @@ class ReaderConfig extends ChangeNotifier {
         fontSize: _fontSize,
         height: _lineHeight,
         color: _theme.textColor,
+      );
+
+  /// 正文行高严格锁定：分页度量与实际渲染共用同一 strut，强制每行等高，
+  /// 与字体固有行高 / 前导分布无关，保证“计算的高度 == 渲染的高度”，不裁切。
+  StrutStyle get strut => StrutStyle(
+        fontFamily: _fontFamily,
+        fontSize: _fontSize,
+        height: _lineHeight,
+        forceStrutHeight: true,
       );
 
   /// 章首大标题样式（比正文大一号、加粗）。

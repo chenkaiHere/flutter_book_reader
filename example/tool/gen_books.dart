@@ -11,24 +11,60 @@ import 'dart:io';
 void main() {
   final Map<String, dynamic> data = <String, dynamic>{
     'books': <Map<String, dynamic>>[
-      _book(1, '山海行记', '云中鹤',
-          '一部关于少年离乡、跨越山海寻找归途的长篇故事。翻开它，便随主角踏上未知的旅程。',
-          '5B7B9A', 24, _seedA),
-      _book(2, '长夜将明', '沈砚秋',
-          '战火与星光交织的年代，一群普通人如何在长夜里守住微弱却不灭的光。',
-          '8A5B6B', 18, _seedB),
-      _book(3, '城南旧巷', '林知微',
-          '青石板路、旧书铺与巷口的老槐树，记录着一座城里几代人温柔的悲欢。',
-          '5B8A6B', 30, _seedA),
-      _book(4, '心', '夏目漱石',
-          '「先生」与「我」在镰仓海边相遇，一段忘年之交牵出深埋心底的往事、孤独与愧疚。日本国民作家探问人心的代表作。',
-          '3F5B78', 16, _seedKokoro),
-      _book(5, '人间失格', '太宰治',
-          '一个畏惧人世、以滑稽伪装示人的男子留下的三则手记，是无赖派文学关于自我与羞耻的绝唱。',
-          '4A4A55', 12, _seedNingen),
-      _book(6, '雪国', '川端康成',
-          '穿过县界长长的隧道，便是雪国。旅人岛村与温泉乡艺伎之间徒劳而唯美的情感，诺贝尔文学奖名作。',
-          '6B7E8A', 14, _seedYukiguni),
+      _book(
+        1,
+        '山海行记',
+        '云中鹤',
+        '一部关于少年离乡、跨越山海寻找归途的长篇故事。翻开它，便随主角踏上未知的旅程。',
+        '5B7B9A',
+        24,
+        _seedA,
+      ),
+      _book(
+        2,
+        '长夜将明',
+        '沈砚秋',
+        '战火与星光交织的年代，一群普通人如何在长夜里守住微弱却不灭的光。',
+        '8A5B6B',
+        18,
+        _seedB,
+      ),
+      _book(
+        3,
+        '城南旧巷',
+        '林知微',
+        '青石板路、旧书铺与巷口的老槐树，记录着一座城里几代人温柔的悲欢。',
+        '5B8A6B',
+        30,
+        _seedA,
+      ),
+      _book(
+        4,
+        '心',
+        '夏目漱石',
+        '「先生」与「我」在镰仓海边相遇，一段忘年之交牵出深埋心底的往事、孤独与愧疚。日本国民作家探问人心的代表作。',
+        '3F5B78',
+        16,
+        _seedKokoro,
+      ),
+      _book(
+        5,
+        '人间失格',
+        '太宰治',
+        '一个畏惧人世、以滑稽伪装示人的男子留下的三则手记，是无赖派文学关于自我与羞耻的绝唱。',
+        '4A4A55',
+        12,
+        _seedNingen,
+      ),
+      _book(
+        6,
+        '雪国',
+        '川端康成',
+        '穿过县界长长的隧道，便是雪国。旅人岛村与温泉乡艺伎之间徒劳而唯美的情感，诺贝尔文学奖名作。',
+        '6B7E8A',
+        14,
+        _seedYukiguni,
+      ),
     ],
   };
 
@@ -39,8 +75,15 @@ void main() {
   stdout.writeln('已生成 ${out.path}（${(data['books'] as List).length} 本书）');
 }
 
-Map<String, dynamic> _book(int id, String title, String author, String intro,
-    String coverColor, int chapterCount, List<String> seed) {
+Map<String, dynamic> _book(
+  int id,
+  String title,
+  String author,
+  String intro,
+  String coverColor,
+  int chapterCount,
+  List<String> seed,
+) {
   final List<Map<String, dynamic>> chapters = <Map<String, dynamic>>[];
   for (int i = 0; i < chapterCount; i++) {
     chapters.add(<String, dynamic>{
@@ -75,15 +118,50 @@ List<String> _paragraphs(List<String> seed, int chapter) {
 }
 
 const List<String> _titleWords = <String>[
-  '启程', '故人', '风起', '夜行', '归途', '抉择', '暗涌', '重逢',
-  '迷雾', '灯火', '远方', '旧约', '裂痕', '黎明', '潮声', '落雪',
-  '孤舟', '春信', '登高', '别离', '拂晓', '余晖', '同行', '尘埃',
-  '惊蛰', '守望', '回声', '破晓', '长风', '终章',
+  '启程',
+  '故人',
+  '风起',
+  '夜行',
+  '归途',
+  '抉择',
+  '暗涌',
+  '重逢',
+  '迷雾',
+  '灯火',
+  '远方',
+  '旧约',
+  '裂痕',
+  '黎明',
+  '潮声',
+  '落雪',
+  '孤舟',
+  '春信',
+  '登高',
+  '别离',
+  '拂晓',
+  '余晖',
+  '同行',
+  '尘埃',
+  '惊蛰',
+  '守望',
+  '回声',
+  '破晓',
+  '长风',
+  '终章',
 ];
 
 String _cn(int n) {
   const List<String> digits = <String>[
-    '零', '一', '二', '三', '四', '五', '六', '七', '八', '九'
+    '零',
+    '一',
+    '二',
+    '三',
+    '四',
+    '五',
+    '六',
+    '七',
+    '八',
+    '九',
   ];
   if (n < 10) return digits[n];
   if (n < 20) return '十${n % 10 == 0 ? '' : digits[n % 10]}';

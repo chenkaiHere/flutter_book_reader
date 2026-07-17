@@ -194,20 +194,35 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     final int? picked = await showModalBottomSheet<int>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _config.theme.paperColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      // 由 DraggableScrollableSheet 自绘圆角纸张背景，因此外层透明。
+      backgroundColor: Colors.transparent,
       builder: (_) => ReaderLabelsScope(
         labels: widget.labels,
-        child: FractionallySizedBox(
-          heightFactor: 0.85,
-          child: CatalogSheet(
-            bookTitle: c.manifest.title,
-            chapterTitles: c.manifest.chapterTitles,
-            currentIndex: c.chapterIndex,
-            theme: _config.theme,
-          ),
+        // 可拖拽面板：列表滚到顶部后继续下拉会带动整个面板下移，拖到底部即关闭。
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.92,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
+              child: ColoredBox(
+                color: _config.theme.paperColor,
+                child: CatalogSheet(
+                  bookTitle: c.manifest.title,
+                  author: c.manifest.author,
+                  intro: c.manifest.intro,
+                  coverColor: c.manifest.coverColor,
+                  chapterTitles: c.manifest.chapterTitles,
+                  currentIndex: c.chapterIndex,
+                  theme: _config.theme,
+                  scrollController: scrollController,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -326,7 +341,16 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
             return VerticalReader(controller: c, onTapToggleMenu: _toggleMenu);
           }
 
-          c.updateViewport(contentSize, MediaQuery.of(context).textScaler);
+          // 传入“实际渲染解析出的样式与地区”：分页度量必须与屏幕渲染完全同源
+          // （含主题字体、CJK 地区回退），否则换行行数不同会导致末行被裁切。
+          final TextStyle base = DefaultTextStyle.of(context).style;
+          c.updateViewport(
+            contentSize,
+            MediaQuery.of(context).textScaler,
+            bodyStyle: base.merge(_config.textStyle),
+            headingStyle: base.merge(_config.headingStyle),
+            textLocale: Localizations.maybeLocaleOf(context),
+          );
 
           // 页眉（章节/书名）与页脚（页码/进度）都在各页内，随翻页/滚动一起移动。
           return Semantics(

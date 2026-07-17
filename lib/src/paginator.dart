@@ -32,6 +32,8 @@ class Paginator {
     double paragraphSpacing = 0,
     TextAlign textAlign = TextAlign.start,
     double firstPageReserve = 0,
+    StrutStyle? strutStyle,
+    Locale? locale,
   }) {
     final double pageHeight = size.height;
     if (size.width <= 0 || pageHeight <= 0 || paragraphs.isEmpty) {
@@ -58,19 +60,22 @@ class Paginator {
 
     for (final String para in paragraphs) {
       final String text = indent + para;
-      final TextPainter painter = _painter(text, style, textScaler, textAlign)
-        ..layout(maxWidth: size.width);
+      final TextPainter painter =
+          _painter(text, style, textScaler, textAlign, strutStyle, locale)
+            ..layout(maxWidth: size.width);
       final List<LineMetrics> lines = painter.computeLineMetrics();
       if (lines.isEmpty) {
         painter.dispose();
         continue;
       }
 
-      // 快路径：整段能放进本页剩余空间就整段放入（高度即实际渲染高度，精确）。
+      // 快路径：整段能放进本页剩余空间就整段放入。高度向上取整，保证分页“宁可少放
+      // 一点”，即便设备端亚像素舍入使渲染略高于度量，也不会溢出被裁切。
       final double wholeGap = current.isNotEmpty ? paragraphSpacing : 0;
-      if (used + wholeGap + painter.height <= pageHeight) {
+      final double wholeHeight = painter.height.ceilToDouble();
+      if (used + wholeGap + wholeHeight <= pageHeight) {
         current.add(ReaderBlock(text: text, isParagraphStart: true));
-        used += wholeGap + painter.height;
+        used += wholeGap + wholeHeight;
         painter.dispose();
         continue;
       }
@@ -103,6 +108,8 @@ class Paginator {
             size.width,
             textScaler,
             textAlign,
+            strutStyle,
+            locale,
           );
           if (used + gap + h <= pageHeight) {
             lastFit = j;
@@ -132,6 +139,8 @@ class Paginator {
             size.width,
             textScaler,
             textAlign,
+            strutStyle,
+            locale,
           );
         }
 
@@ -161,12 +170,16 @@ class Paginator {
     TextStyle style,
     TextScaler ts,
     TextAlign align,
+    StrutStyle? strutStyle,
+    Locale? locale,
   ) =>
       TextPainter(
-        text: TextSpan(text: text, style: style),
+        text: TextSpan(text: text, style: style, locale: locale),
         textDirection: TextDirection.ltr,
         textAlign: align,
         textScaler: ts,
+        strutStyle: strutStyle,
+        locale: locale,
         maxLines: null,
       );
 
@@ -177,10 +190,13 @@ class Paginator {
     double width,
     TextScaler ts,
     TextAlign align,
+    StrutStyle? strutStyle,
+    Locale? locale,
   ) {
-    final TextPainter p = _painter(text, style, ts, align)
+    final TextPainter p = _painter(text, style, ts, align, strutStyle, locale)
       ..layout(maxWidth: width);
-    final double h = p.height;
+    // 向上取整：分页保守，避免亚像素舍入导致末行溢出被裁切。
+    final double h = p.height.ceilToDouble();
     p.dispose();
     return h;
   }
@@ -192,8 +208,11 @@ class Paginator {
     double width, {
     TextScaler textScaler = TextScaler.noScaling,
     TextAlign textAlign = TextAlign.start,
+    StrutStyle? strutStyle,
+    Locale? locale,
   }) =>
-      _measureHeight(text, style, width, textScaler, textAlign);
+      _measureHeight(
+          text, style, width, textScaler, textAlign, strutStyle, locale);
 
   static int _offsetAtLineTop(TextPainter painter, double lineTop) =>
       painter.getPositionForOffset(Offset(0, lineTop + 1)).offset;

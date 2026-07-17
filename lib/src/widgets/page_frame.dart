@@ -154,12 +154,36 @@ class ReaderProse extends StatelessWidget {
 
   static final RegExp _leadingIndent = RegExp(r'^[　\s]+');
 
+  /// 实测缩进串在给定样式/缩放下的宽度（与分页器度量口径一致）。
+  static double _measureIndent(
+    String indent,
+    TextStyle style,
+    TextScaler scaler,
+  ) {
+    if (indent.isEmpty) return 0;
+    final TextPainter tp = TextPainter(
+      text: TextSpan(text: indent, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+    )..layout();
+    final double w = tp.width;
+    tp.dispose();
+    return w;
+  }
+
   @override
   Widget build(BuildContext context) {
     // 首行缩进用固定宽度占位（WidgetSpan）而非空格：两端对齐（justify）会吞掉行首空格，
     // 占位块不会被压缩，因此“两端对齐 + 首行缩进”可以并存。
-    final double indentWidth = config.firstLineIndent *
-        MediaQuery.textScalerOf(context).scale(config.fontSize);
+    //
+    // 宽度取 config.indent（两个全角空格）在当前字体/缩放下的实测宽度——与分页器
+    // 度量段落时所用的缩进完全一致，避免占位宽度与实际字宽不符导致渲染多出一行、
+    // 末行被裁切。
+    final double indentWidth = _measureIndent(
+      config.indent,
+      config.textStyle,
+      MediaQuery.textScalerOf(context),
+    );
     final List<Widget> children = <Widget>[];
     for (int i = 0; i < page.length; i++) {
       final ReaderBlock block = page[i];
@@ -193,6 +217,7 @@ class ReaderProse extends StatelessWidget {
         block.text,
         style: config.textStyle,
         textAlign: config.textAlign,
+        strutStyle: config.strut,
       );
     }
     final String body = block.text.replaceFirst(_leadingIndent, '');
@@ -208,6 +233,7 @@ class ReaderProse extends StatelessWidget {
       ),
       style: config.textStyle,
       textAlign: config.textAlign,
+      strutStyle: config.strut,
     );
   }
 }

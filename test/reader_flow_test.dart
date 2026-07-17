@@ -1,6 +1,7 @@
 import 'package:flutter_book_reader/flutter_book_reader.dart';
 import 'package:flutter_book_reader/src/paginator.dart';
 import 'package:flutter_book_reader/src/widgets/page_frame.dart';
+import 'package:flutter_book_reader/src/widgets/catalog_sheet.dart';
 import 'package:flutter_book_reader/src/widgets/reader_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -170,6 +171,84 @@ void main() {
     await tester.pumpAndSettle();
     expect(menuOpacity(), 0, reason: '滑动应隐藏菜单');
     expect(find.textContaining('2/'), findsWidgets, reason: '滑动应翻到下一页');
+  });
+
+  testWidgets('目录弹窗滚到顶部后下拉可关闭', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
+        home: BookReader(source: FakeBookSource()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final Size size = tester.getSize(find.byType(BookReader));
+
+    // 唤起菜单 → 打开目录
+    await tester.tapAt(Offset(size.width * 0.5, size.height * 0.5));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('目录'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CatalogSheet), findsOneWidget);
+
+    // 列表已在顶部（当前第 1 章），继续向下拖拽应带动面板下移并关闭弹窗
+    await tester.fling(
+      find.descendant(
+        of: find.byType(CatalogSheet),
+        matching: find.byType(ListView),
+      ),
+      const Offset(0, 700),
+      1200,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(CatalogSheet), findsNothing, reason: '顶部下拉应关闭目录弹窗');
+  });
+
+  testWidgets('书籍抽屉可在详情 / 目录标签间切换', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
+        home: BookReader(source: FakeBookSource()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final Size size = tester.getSize(find.byType(BookReader));
+    await tester.tapAt(Offset(size.width * 0.5, size.height * 0.5));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('目录'));
+    await tester.pumpAndSettle();
+
+    // 默认落在「目录」标签：能看到章节
+    expect(find.byType(CatalogSheet), findsOneWidget);
+    expect(find.text('第 2 章'), findsOneWidget);
+    expect(find.text('这是一本用于测试的书籍简介。'), findsNothing);
+
+    // 切到「详情」标签：显示简介
+    await tester.tap(find.text('详情'));
+    await tester.pumpAndSettle();
+    expect(find.text('这是一本用于测试的书籍简介。'), findsOneWidget, reason: '详情标签应显示书籍简介');
+  });
+
+  testWidgets('目录可在正序 / 倒序间切换', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
+        home: BookReader(source: FakeBookSource()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final Size size = tester.getSize(find.byType(BookReader));
+    await tester.tapAt(Offset(size.width * 0.5, size.height * 0.5));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('目录'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('正序'), findsOneWidget);
+    expect(find.text('倒序'), findsNothing);
+
+    await tester.tap(find.text('正序'));
+    await tester.pumpAndSettle();
+    expect(find.text('倒序'), findsOneWidget, reason: '点击后应切换为倒序');
+    expect(find.text('正序'), findsNothing);
   });
 
   testWidgets('退出阅读页后把底部导航栏恢复为白底黑字', (WidgetTester tester) async {
