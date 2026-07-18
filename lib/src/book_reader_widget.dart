@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'bookmark/reader_bookmark_store.dart';
 import 'controller/reading_controller.dart';
 import 'paginator.dart';
 import 'progress/reader_progress_store.dart';
@@ -29,6 +30,7 @@ class BookReader extends StatefulWidget {
     required this.source,
     this.config,
     this.progressStore = const NoopReaderProgressStore(),
+    this.bookmarkStore = const NoopReaderBookmarkStore(),
     this.labels = const ReaderLabels(),
     this.startChapter,
     this.onChapterChanged,
@@ -44,6 +46,9 @@ class BookReader extends StatefulWidget {
 
   /// 阅读进度存储；默认不持久化
   final ReaderProgressStore progressStore;
+
+  /// 书签存储；默认不持久化（仅当前会话内有效）
+  final ReaderBookmarkStore bookmarkStore;
 
   /// 界面文案（支持本地化 / 白标）
   final ReaderLabels labels;
@@ -72,6 +77,9 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
 
   final ValueNotifier<bool> _menuVisible = ValueNotifier<bool>(false);
 
+  /// 当前书籍的书签（会话内的权威副本，变更后写回 [BookReader.bookmarkStore]）。
+  List<Bookmark> _bookmarks = <Bookmark>[];
+
   ReaderConfig get _config => widget.config ?? ReaderConfig.instance;
 
   @override
@@ -94,6 +102,8 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       final ReadingPosition? saved = await widget.progressStore.load(
         manifest.id,
       );
+      final List<Bookmark> bookmarks =
+          await widget.bookmarkStore.load(manifest.id);
       final int start = widget.startChapter ?? saved?.chapterIndex ?? 0;
       final int offset =
           widget.startChapter != null ? 0 : (saved?.charOffset ?? 0);
@@ -110,6 +120,7 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       controller.addListener(_onControllerChanged);
       setState(() {
         _controller = controller;
+        _bookmarks = bookmarks;
         _error = null;
       });
     } catch (e) {
@@ -188,10 +199,51 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     }
   }
 
+  // —— 书签 ——
+
+  /// 当前页（起始偏移落在本页区间内）已有的书签；没有则为 null。
+  Bookmark? _bookmarkOnCurrentPage() {
+    final ReadingController? c = _controller;
+    if (c == null || c.pages.isEmpty) return null;
+    final int start = c.startOffsetOfPage(c.pageIndex);
+    final int end = c.pageIndex + 1 < c.pages.length
+        ? c.startOffsetOfPage(c.pageIndex + 1)
+        : 1 << 30;
+    for (final Bookmark b in _bookmarks) {
+      if (b.chapterIndex == c.chapterIndex &&
+          b.charOffset >= start &&
+          b.charOffset < end) {
+        return b;
+      }
+    }
+    return null;
+  }
+
+  bool get _isBookmarked => _bookmarkOnCurrentPage() != null;
+
+  /// 加入 / 移除当前页书签（已存在则移除，否则新增），并写回存储。
+  void _toggleBookmark() {
+    final ReadingController c = _controller!;
+    final Bookmark? existing = _bookmarkOnCurrentPage();
+    final List<Bookmark> next = List<Bookmark>.of(_bookmarks);
+    if (existing != null) {
+      next.removeWhere((Bookmark b) => b.key == existing.key);
+    } else {
+      next.add(Bookmark(
+        chapterIndex: c.chapterIndex,
+        charOffset: c.startOffsetOfPage(c.pageIndex),
+        chapterTitle: c.currentChapterTitle,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      ));
+    }
+    setState(() => _bookmarks = next);
+    widget.bookmarkStore.save(c.manifest.id, next);
+  }
+
   Future<void> _openCatalog() async {
     final ReadingController c = _controller!;
     _menuVisible.value = false;
-    final int? picked = await showModalBottomSheet<int>(
+    final ReadingPosition? picked = await showModalBottomSheet<ReadingPosition>(
       context: context,
       isScrollControlled: true,
       // 由 DraggableScrollableSheet 自绘圆角纸张背景，因此外层透明。
@@ -217,6 +269,7 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
                   coverColor: c.manifest.coverColor,
                   chapterTitles: c.manifest.chapterTitles,
                   currentIndex: c.chapterIndex,
+                  bookmarks: _bookmarks,
                   theme: _config.theme,
                   scrollController: scrollController,
                 ),
@@ -226,8 +279,11 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
         ),
       ),
     );
-    if (picked != null && picked != c.chapterIndex) {
-      c.loadChapter(picked);
+    if (picked != null) {
+      // 章节：跳到章首（charOffset 0）；书签：跳到章内指定偏移
+      if (picked.charOffset > 0 || picked.chapterIndex != c.chapterIndex) {
+        c.loadChapter(picked.chapterIndex, charOffset: picked.charOffset);
+      }
     }
   }
 
@@ -420,6 +476,8 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       chapterCount: c.chapterCount,
       progress: c.globalProgress,
       config: _config,
+      bookmarked: _isBookmarked,
+      onToggleBookmark: _toggleBookmark,
       onBack: _close,
       onOpenCatalog: _openCatalog,
       onPrevChapter: () => c.loadChapter(c.chapterIndex - 1),

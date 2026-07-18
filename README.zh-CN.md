@@ -16,6 +16,12 @@
   <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="270" alt="flutter_book_reader 演示 —— 主题与设置">
 </p>
 
+<p align="center">
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_1.jpeg" width="270" alt="flutter_book_reader 演示 —— 书架">
+  &nbsp;&nbsp;
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_2.jpeg" width="270" alt="flutter_book_reader 演示 —— 阅读器">
+</p>
+
 把 `BookReader` 接上你自己的数据，立刻就能得到真实分页、跟随手指的仿真翻页、章节导航、
 主题与阅读进度持久化。一切都由小而可替换的抽象驱动 —— 正文可以来自接口、数据库、本地文件，
 或任何地方，无需改动组件内部。
@@ -42,13 +48,15 @@
   自行实现网络 / 数据库 / 云端版本即可接入。
 - **进度防抖保存**，应用进入后台时立即落盘。
 - **主题与排版**：六套内置纸张主题、每套可定制强调色，字号 / 行距 / 亮度可运行时调节。
-- **文案可本地化**（`ReaderLabels`），并具备基础无障碍语义。
+- **内置多语言** —— `ReaderLabels` 内置 **12 种语言**（en、zh、es、fr、ar、bn、pt、
+  ru、hi、ur、ja、ko），通过 `ReaderLabels.forLanguageCode(code)` 选择（非内置语言
+  回退英文）；每条文案仍可自定义覆盖。具备基础无障碍语义。
 
 ## 安装
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.1.0
+  flutter_book_reader: ^1.2.0
 ```
 
 ```dart
@@ -121,15 +129,23 @@ BookReader(source: MyBookSource(), config: config);
 
 ### 4. 本地化界面文案
 
+内置 12 种语言，直接传入当前语言码即可（非内置语言自动回退英文）：
+
 ```dart
 BookReader(
   source: MyBookSource(),
-  labels: const ReaderLabels(
-    prevChapter: '上一章',
-    nextChapter: '下一章',
-    catalog: '目录',
-    // …
+  labels: ReaderLabels.forLanguageCode(
+    Localizations.localeOf(context).languageCode, // 'zh'、'en'、'ja' …
   ),
+)
+```
+
+也可传入自定义文案，做完全掌控 / 白标：
+
+```dart
+BookReader(
+  source: MyBookSource(),
+  labels: const ReaderLabels(prevChapter: '上一章', catalog: '目录'),
 )
 ```
 

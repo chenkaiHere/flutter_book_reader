@@ -1,0 +1,89 @@
+{
+  "@@locale": "en",
+
+  "bookshelfTitle": "Bookshelf",
+  "shelfSummary": "{total} books · {reading} reading",
+  "@shelfSummary": {
+    "placeholders": {
+      "total": { "type": "int" },
+      "reading": { "type": "int" }
+    }
+  },
+  "searchHint": "Search title / author",
+  "allBooks": "All books",
+  "localTag": "Local",
+
+  "continueReading": "Continue reading",
+  "readToChapter": "Read to Chapter {n}",
+  "@readToChapter": { "placeholders": { "n": { "type": "int" } } },
+  "notStarted": "Not started",
+  "readPercent": "{pct}% read",
+  "@readPercent": { "placeholders": { "pct": { "type": "int" } } },
+  "unread": "Unread",
+
+  "importTooltip": "Import TXT",
+  "importTitle": "Import a local novel",
+  "importDesc": "Add TXT novels from your phone to the bookshelf and read offline anytime.",
+  "importPoint1Title": "One tap",
+  "importPoint1Body": "Just pick a local TXT file — no network needed",
+  "importPoint2Title": "Smart layout",
+  "importPoint2Body": "Auto-detects title, author and chapters",
+  "importPoint3Title": "Encoding-safe",
+  "importPoint3Body": "Auto-detects UTF-8 / GBK / Big5 — no garbled text",
+  "importPoint4Title": "Save & delete",
+  "importPoint4Body": "Stored on device; swipe left to delete",
+  "importLater": "Not now",
+  "importPick": "Choose TXT file",
+  "importedToast": "Imported \"{title}\" · {count} chapters",
+  "@importedToast": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "importFailed": "Import failed: {error}",
+  "@importFailed": { "placeholders": { "error": { "type": "String" } } },
+
+  "deleteTitle": "Delete book",
+  "deleteMessage": "Delete \"{title}\"? This removes the imported book data.",
+  "@deleteMessage": { "placeholders": { "title": { "type": "String" } } },
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "cannotDeleteBuiltin": "Built-in books can't be deleted",
+  "deletedToast": "Deleted \"{title}\"",
+  "@deletedToast": { "placeholders": { "title": { "type": "String" } } },
+
+  "tabDetail": "Detail",
+  "tabToc": "Contents",
+  "tabBookmarks": "Bookmarks",
+  "statChapters": "Chapters",
+  "statSource": "Source",
+  "statProgress": "Progress",
+  "sourceLocal": "Local",
+  "sourceBuiltin": "Built-in",
+  "statusLocalImported": "Local import",
+  "statusBuiltin": "Built-in book",
+  "introHeading": "Synopsis",
+  "noIntro": "No synopsis.",
+  "chapterCountLabel": "{n} chapters",
+  "@chapterCountLabel": { "placeholders": { "n": { "type": "int" } } },
+  "orderAsc": "Ascending",
+  "orderDesc": "Descending",
+  "startReading": "Start reading",
+  "noBookmarks": "No bookmarks yet",
+  "noBookmarksHint": "Tap the top-right while reading to add a bookmark,\nso you can jump back anytime.",
+  "bookmarkEntry": "Chapter {n} · {title}",
+  "@bookmarkEntry": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "title": { "type": "String" }
+    }
+  },
+
+  "emptyShelf": "No books yet — tap the top-right to import a TXT",
+  "noMatches": "No matching books",
+  "loadFailed": "Failed to load books: {error}",
+  "@loadFailed": { "placeholders": { "error": { "type": "String" } } },
+
+  "languageSheetTitle": "Language"
+}

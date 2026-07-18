@@ -13,6 +13,7 @@
 library;
 
 export 'src/book_reader_widget.dart';
+export 'src/bookmark/reader_bookmark_store.dart';
 export 'src/paginator.dart' show Paginator;
 export 'src/progress/reader_progress_store.dart';
 export 'src/reader_config.dart' show ReaderConfig, FlipType;

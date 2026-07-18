@@ -38,6 +38,19 @@ dependencies:
   # 阅读器组件（依赖仓库根部的本包）
   flutter_book_reader:
     path: ../
+  shared_preferences: ^2.5.5
+  path_provider: ^2.1.5
+  file_picker: ^11.0.2
+  charset: ^2.0.1
+  enough_convert: ^1.6.0
+  flutter_slidable: ^4.0.3
+  google_fonts: ^8.2.0
+  drift: ^2.34.2
+  drift_flutter: ^0.3.1
+  sqlite3_flutter_libs: ^0.6.0+eol
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -49,6 +62,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  drift_dev: ^2.34.4
+  build_runner: ^2.15.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -60,6 +75,7 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  generate: true
 
   # 书籍数据以 JSON 形式外置，运行时从此 asset 读取
   assets:

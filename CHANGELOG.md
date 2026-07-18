@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0
+
+- Built-in 12-language labels via `ReaderLabels.forLanguageCode(code)` (English
+  fallback, still overridable).
+- Redesigned menu and a draggable catalog with swipeable detail / contents /
+  bookmarks tabs.
+- Refined the six paper themes.
+
 ## 1.1.0
 
 - New page-turn modes: `simulation` and `cover`, for five in total.
