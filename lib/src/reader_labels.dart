@@ -14,6 +14,10 @@ class ReaderLabels {
     this.nextChapter = '下一章',
     this.catalog = '目录',
     this.detail = '详情',
+    this.bookmarkTab = '书签',
+    this.addBookmark = '加入书签',
+    this.removeBookmark = '移除书签',
+    this.noBookmarks = '暂无书签',
     this.noIntro = '暂无简介',
     this.orderAsc = '正序',
     this.orderDesc = '倒序',
@@ -38,6 +42,10 @@ class ReaderLabels {
   final String nextChapter;
   final String catalog;
   final String detail;
+  final String bookmarkTab;
+  final String addBookmark;
+  final String removeBookmark;
+  final String noBookmarks;
   final String noIntro;
   final String orderAsc;
   final String orderDesc;

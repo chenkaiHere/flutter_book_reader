@@ -20,8 +20,9 @@ class AssetJsonBookSource extends BookSource {
       author: book.author,
       intro: book.intro,
       coverColor: book.coverColor,
-      chapterTitles:
-          book.chapters.map((Chapter c) => c.title).toList(growable: false),
+      chapterTitles: book.chapters
+          .map((Chapter c) => c.title)
+          .toList(growable: false),
     );
   }
 

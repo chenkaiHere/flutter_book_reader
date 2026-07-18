@@ -10,6 +10,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'fake_book_source.dart';
 
 void main() {
+  Future<void> openMenu(WidgetTester tester) async {
+    final Size size = tester.getSize(find.byType(BookReader));
+    await tester.tapAt(Offset(size.width * 0.5, size.height * 0.5));
+    await tester.pumpAndSettle();
+  }
+
+  Widget bookmarkHost() => MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
+        home: BookReader(
+          source: FakeBookSource(),
+          bookmarkStore: InMemoryReaderBookmarkStore(),
+        ),
+      );
+
   Widget host(FakeBookSource source) =>
       MaterialApp(home: BookReader(source: source));
 
@@ -201,6 +215,56 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(CatalogSheet), findsNothing, reason: '顶部下拉应关闭目录弹窗');
+  });
+
+  testWidgets('书签：顶栏按钮加入后出现在书签页', (WidgetTester tester) async {
+    await tester.pumpWidget(bookmarkHost());
+    await tester.pumpAndSettle();
+
+    await openMenu(tester);
+    // 初始未加书签：空心图标
+    expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
+    expect(find.byIcon(Icons.bookmark), findsNothing);
+
+    // 点击加入书签 → 变实心
+    await tester.tap(find.byIcon(Icons.bookmark_border));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.bookmark), findsWidgets);
+
+    // 打开目录 → 切到「书签」标签 → 列表出现一条书签
+    await tester.tap(find.text('目录'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('书签'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CatalogSheet), findsOneWidget);
+    expect(find.text('暂无书签'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(CatalogSheet),
+        matching: find.byIcon(Icons.bookmark),
+      ),
+      findsOneWidget,
+      reason: '书签页应有一条书签',
+    );
+  });
+
+  testWidgets('书签：再次点击移除', (WidgetTester tester) async {
+    await tester.pumpWidget(bookmarkHost());
+    await tester.pumpAndSettle();
+
+    await openMenu(tester);
+    await tester.tap(find.byIcon(Icons.bookmark_border)); // 加入
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.bookmark)); // 移除
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
+    expect(find.byIcon(Icons.bookmark), findsNothing);
+
+    await tester.tap(find.text('目录'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('书签'));
+    await tester.pumpAndSettle();
+    expect(find.text('暂无书签'), findsOneWidget, reason: '移除后书签页应为空');
   });
 
   testWidgets('书籍抽屉可在详情 / 目录标签间切换', (WidgetTester tester) async {

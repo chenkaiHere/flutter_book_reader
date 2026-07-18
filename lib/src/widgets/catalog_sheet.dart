@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../bookmark/reader_bookmark_store.dart';
+import '../progress/reader_progress_store.dart';
 import '../reader_labels.dart';
 import '../reader_theme.dart';
 
-/// 书籍信息抽屉：顶部为书籍信息区（封面 + 书名 + 作者），下方分「详情 / 目录」两个
-/// 可点击切换、也可左右滑动的标签页。详情页展示简介，目录页点击某章返回其序号。
+/// 书籍信息抽屉：顶部为书籍信息区（封面 + 书名 + 作者），下方分「详情 / 目录 / 书签」
+/// 三个可点击切换、也可左右滑动的标签页。详情页展示简介，目录页点击某章跳转，
+/// 书签页点击某条书签跳转到其记录位置。
 ///
-/// 仅依赖标题列表与简介文本，不耦合具体数据模型。
+/// 点击章节或书签均通过 [Navigator.pop] 返回一个 [ReadingPosition]（章 + 偏移）。
 class CatalogSheet extends StatefulWidget {
   const CatalogSheet({
     super.key,
@@ -17,6 +20,7 @@ class CatalogSheet extends StatefulWidget {
     required this.chapterTitles,
     required this.currentIndex,
     required this.theme,
+    this.bookmarks = const <Bookmark>[],
     this.scrollController,
   });
 
@@ -27,6 +31,9 @@ class CatalogSheet extends StatefulWidget {
   final List<String> chapterTitles;
   final int currentIndex;
   final ReaderTheme theme;
+
+  /// 书签列表（展示于「书签」标签页）
+  final List<Bookmark> bookmarks;
 
   /// 外部滚动控制器（如 [DraggableScrollableSheet] 提供的）；为空时内部自建。
   /// 会绑定到「目录」列表，使列表滚到顶部后继续下拉可关闭整个面板。
@@ -41,7 +48,7 @@ class _CatalogSheetState extends State<CatalogSheet>
   static const double _itemExtent = 52;
 
   late final TabController _tab = TabController(
-    length: 2,
+    length: 3,
     initialIndex: 1, // 默认落在「目录」（入口即目录按钮）
     vsync: this,
   );
@@ -115,6 +122,7 @@ class _CatalogSheetState extends State<CatalogSheet>
               children: <Widget>[
                 _buildDetail(labels, text, sub),
                 _buildCatalog(labels, text, sub, accent),
+                _buildBookmarks(labels, text, sub, accent),
               ],
             ),
           ),
@@ -212,6 +220,7 @@ class _CatalogSheetState extends State<CatalogSheet>
       tabs: <Widget>[
         Tab(text: labels.detail),
         Tab(text: labels.catalog),
+        Tab(text: labels.bookmarkTab),
       ],
     );
   }
@@ -295,7 +304,8 @@ class _CatalogSheetState extends State<CatalogSheet>
         final int index = _chapterAt(pos);
         final bool active = index == widget.currentIndex;
         return InkWell(
-          onTap: () => Navigator.of(context).pop(index),
+          onTap: () =>
+              Navigator.of(context).pop(ReadingPosition(chapterIndex: index)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
@@ -320,5 +330,80 @@ class _CatalogSheetState extends State<CatalogSheet>
         );
       },
     );
+  }
+
+  // 书签：记录的章 + 章节名 + 记录时间；点击跳转到记录位置。按记录时间倒序（最近在前）。
+  Widget _buildBookmarks(
+    ReaderLabels labels,
+    Color text,
+    Color sub,
+    Color accent,
+  ) {
+    if (widget.bookmarks.isEmpty) {
+      return Center(
+        child: Text(
+          labels.noBookmarks,
+          style: TextStyle(fontSize: 14, color: sub),
+        ),
+      );
+    }
+    final List<Bookmark> items = List<Bookmark>.of(widget.bookmarks)
+      ..sort((Bookmark a, Bookmark b) => b.createdAt.compareTo(a.createdAt));
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      itemCount: items.length,
+      separatorBuilder: (_, __) =>
+          Divider(height: 1, color: text.withValues(alpha: 0.06)),
+      itemBuilder: (BuildContext context, int i) {
+        final Bookmark b = items[i];
+        return InkWell(
+          onTap: () => Navigator.of(context).pop(
+            ReadingPosition(
+              chapterIndex: b.chapterIndex,
+              charOffset: b.charOffset,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              children: <Widget>[
+                Icon(Icons.bookmark, size: 18, color: accent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        '第 ${b.chapterIndex + 1} 章 · ${b.chapterTitle}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: text.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatTime(b.createdAt),
+                        style: TextStyle(fontSize: 12, color: sub),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 时间戳（毫秒）格式化为 “yyyy-MM-dd HH:mm”。
+  static String _formatTime(int ms) {
+    if (ms <= 0) return '';
+    final DateTime t = DateTime.fromMillisecondsSinceEpoch(ms);
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${t.year}-${two(t.month)}-${two(t.day)} '
+        '${two(t.hour)}:${two(t.minute)}';
   }
 }

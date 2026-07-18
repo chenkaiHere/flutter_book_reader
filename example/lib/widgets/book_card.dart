@@ -3,15 +3,28 @@ import 'package:flutter/material.dart';
 
 import '../data/asset_json_book_source.dart';
 import '../data/book.dart';
+import '../import/memory_book_source.dart';
 
 /// 书架中的单本书卡片：模拟封面 + 书名/作者/简介，点击进入阅读器。
 class BookCard extends StatelessWidget {
-  const BookCard({super.key, required this.book, required this.progressStore});
+  const BookCard({
+    super.key,
+    required this.book,
+    required this.progressStore,
+    required this.bookmarkStore,
+    this.imported = false,
+  });
 
   final Book book;
 
   /// 全书架共享的进度存储，用于跨书记忆阅读位置
   final ReaderProgressStore progressStore;
+
+  /// 全书架共享的书签存储
+  final ReaderBookmarkStore bookmarkStore;
+
+  /// 是否为导入的书（导入书直接用内存中的 [Book] 作为数据源）
+  final bool imported;
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +33,11 @@ class BookCard extends StatelessWidget {
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => BookReader(
-            source: AssetJsonBookSource(bookId: book.id),
+            source: imported
+                ? MemoryBookSource(book)
+                : AssetJsonBookSource(bookId: book.id),
             progressStore: progressStore,
+            bookmarkStore: bookmarkStore,
           ),
         ),
       ),
@@ -54,11 +70,15 @@ class BookCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(book.title,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+        Text(
+          book.title,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 4),
-        Text('${book.author} · 共 ${book.chapterCount} 章',
-            style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+        Text(
+          '${book.author} · 共 ${book.chapterCount} 章',
+          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+        ),
         const SizedBox(height: 8),
         Text(
           book.intro,
@@ -85,7 +105,10 @@ class _Cover extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[book.coverColor, book.coverColor.withValues(alpha: 0.7)],
+          colors: <Color>[
+            book.coverColor,
+            book.coverColor.withValues(alpha: 0.7),
+          ],
         ),
         borderRadius: BorderRadius.circular(6),
       ),

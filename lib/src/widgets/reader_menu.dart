@@ -17,6 +17,8 @@ class ReaderMenu extends StatefulWidget {
     required this.chapterCount,
     required this.progress,
     required this.config,
+    required this.bookmarked,
+    required this.onToggleBookmark,
     required this.onBack,
     required this.onOpenCatalog,
     required this.onPrevChapter,
@@ -34,6 +36,12 @@ class ReaderMenu extends StatefulWidget {
   /// 全书阅读进度 0~1
   final double progress;
   final ReaderConfig config;
+
+  /// 当前页是否已加书签（决定顶栏书签按钮的实心/空心）
+  final bool bookmarked;
+
+  /// 点击顶栏书签按钮：已加书签则移除，否则加入
+  final VoidCallback onToggleBookmark;
 
   final VoidCallback onBack;
   final VoidCallback onOpenCatalog;
@@ -162,15 +170,21 @@ class _ReaderMenuState extends State<ReaderMenu> {
                     ),
                   ),
                 ),
+                // 顶栏右侧：加入 / 移除书签。已加书签为实心强调色，否则空心。
                 IconButton(
-                  tooltip: _labels.more,
+                  tooltip: widget.bookmarked
+                      ? _labels.removeBookmark
+                      : _labels.addBookmark,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
                     minWidth: kReaderMenuBarHeight,
                     minHeight: kReaderMenuBarHeight,
                   ),
-                  icon: Icon(Icons.more_horiz, color: iconColor),
-                  onPressed: () {},
+                  icon: Icon(
+                    widget.bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                    color: widget.bookmarked ? _accent : iconColor,
+                  ),
+                  onPressed: widget.onToggleBookmark,
                 ),
                 const SizedBox(width: 4),
               ],

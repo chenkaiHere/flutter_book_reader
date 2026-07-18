@@ -38,6 +38,12 @@ dependencies:
   # 阅读器组件（依赖仓库根部的本包）
   flutter_book_reader:
     path: ../
+  shared_preferences: ^2.5.5
+  path_provider: ^2.1.5
+  file_picker: ^11.0.2
+  charset: ^2.0.1
+  enough_convert: ^1.6.0
+  flutter_slidable: ^4.0.3
 
 dev_dependencies:
   flutter_test:
