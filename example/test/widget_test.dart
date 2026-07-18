@@ -8,6 +8,7 @@ import 'package:flutter_book_reader_example/data/book.dart';
 import 'package:flutter_book_reader_example/data/db/app_database.dart';
 import 'package:flutter_book_reader_example/data/db/book_db.dart';
 import 'package:flutter_book_reader_example/data/db/db_book_source.dart';
+import 'package:flutter_book_reader_example/l10n/app_localizations.dart';
 
 void main() {
   late final List<Book> books;
@@ -20,11 +21,19 @@ void main() {
 
   AppDatabase memDb() => AppDatabase(NativeDatabase.memory());
 
+  // 固定中文语言，使断言的中文文案生效。
+  Widget app(Widget home) => MaterialApp(
+    locale: const Locale('zh'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: home,
+  );
+
   testWidgets('书架从 drift 加载并展示书籍（首次自动播种内置书）', (WidgetTester tester) async {
     final AppDatabase db = memDb();
     addTearDown(db.close);
 
-    await tester.pumpWidget(MaterialApp(home: BookshelfPage(database: db)));
+    await tester.pumpWidget(app(BookshelfPage(database: db)));
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     await tester.pumpAndSettle();
@@ -41,7 +50,7 @@ void main() {
     final BookRow target = rows.first; // 三国演义
 
     await tester.pumpWidget(
-      MaterialApp(home: BookReader(source: DbBookSource(db, target.id))),
+      app(BookReader(source: DbBookSource(db, target.id))),
     );
     await tester.pumpAndSettle();
 

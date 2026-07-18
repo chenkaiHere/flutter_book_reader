@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_book_reader/flutter_book_reader.dart';
 
 import '../data/db/app_database.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/warm_theme.dart';
 import 'book_cover.dart';
 
@@ -141,6 +142,8 @@ class _BookDetailSheetState extends State<BookDetailSheet>
     });
   }
 
+  AppLocalizations get _l => AppLocalizations.of(context);
+
   int? get _curChapter => widget.position?.chapterIndex;
 
   void _jumpToCurrent() {
@@ -196,7 +199,9 @@ class _BookDetailSheetState extends State<BookDetailSheet>
 
   Widget _headerRow() {
     final BookRow b = widget.book;
-    final String status = b.imported ? '本地导入' : '内置书籍';
+    final String status = b.imported
+        ? _l.statusLocalImported
+        : _l.statusBuiltin;
     return Padding(
       padding: const EdgeInsets.fromLTRB(22, 8, 22, 14),
       child: Row(
@@ -267,10 +272,10 @@ class _BookDetailSheetState extends State<BookDetailSheet>
         unselectedLabelStyle: label,
         dividerColor: Colors.transparent,
         labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-        tabs: const <Widget>[
-          Tab(text: '详情'),
-          Tab(text: '目录'),
-          Tab(text: '书签'),
+        tabs: <Widget>[
+          Tab(text: _l.tabDetail),
+          Tab(text: _l.tabToc),
+          Tab(text: _l.tabBookmarks),
         ],
       ),
     );
@@ -310,18 +315,21 @@ class _BookDetailSheetState extends State<BookDetailSheet>
       children: <Widget>[
         Row(
           children: <Widget>[
-            stat('${b.chapterCount}', '章节'),
+            stat('${b.chapterCount}', _l.statChapters),
             const SizedBox(width: 10),
-            stat(b.imported ? '本地' : '内置', '来源'),
+            stat(b.imported ? _l.sourceLocal : _l.sourceBuiltin, _l.statSource),
             const SizedBox(width: 10),
-            stat('${(widget.progress * 100).round()}%', '进度'),
+            stat('${(widget.progress * 100).round()}%', _l.statProgress),
           ],
         ),
         const SizedBox(height: 18),
-        Text('内容简介', style: Warm.serif(size: 15, weight: FontWeight.w700)),
+        Text(
+          _l.introHeading,
+          style: Warm.serif(size: 15, weight: FontWeight.w700),
+        ),
         const SizedBox(height: 9),
         Text(
-          b.intro.isEmpty ? '暂无简介。' : b.intro,
+          b.intro.isEmpty ? _l.noIntro : b.intro,
           style: Warm.sans(
             size: 15,
             height: 1.95,
@@ -349,7 +357,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Text(
-                '共 ${all.length} 章',
+                _l.chapterCountLabel(all.length),
                 style: Warm.sans(size: 13, color: Warm.muted),
               ),
               GestureDetector(
@@ -364,7 +372,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
                     const Icon(Icons.swap_vert, size: 15, color: Warm.accent),
                     const SizedBox(width: 5),
                     Text(
-                      _asc ? '正序' : '倒序',
+                      _asc ? _l.orderAsc : _l.orderDesc,
                       style: Warm.sans(
                         size: 13,
                         weight: FontWeight.w600,
@@ -444,7 +452,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '还没有书签',
+                  _l.noBookmarks,
                   style: Warm.sans(
                     size: 15,
                     weight: FontWeight.w600,
@@ -453,7 +461,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '阅读时点击右上角即可添加书签，\n方便随时回到精彩之处。',
+                  _l.noBookmarksHint,
                   textAlign: TextAlign.center,
                   style: Warm.sans(
                     size: 12.5,
@@ -488,7 +496,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        '第 ${m.chapterIndex + 1} 章 · ${m.chapterTitle}',
+                        _l.bookmarkEntry(m.chapterIndex + 1, m.chapterTitle),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Warm.sans(size: 14.5, weight: FontWeight.w600),
@@ -540,7 +548,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
               ),
               const SizedBox(width: 8),
               Text(
-                started ? '继续阅读' : '开始阅读',
+                started ? _l.continueReading : _l.startReading,
                 style: Warm.sans(
                   size: 16,
                   weight: FontWeight.w700,

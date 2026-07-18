@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_book_reader/flutter_book_reader.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,11 +12,24 @@ import 'data/db/db_book_source.dart';
 import 'data/shared_prefs_bookmark_store.dart';
 import 'data/shared_prefs_progress_store.dart';
 import 'import/txt_parser.dart';
+import 'l10n/app_localizations.dart';
 import 'theme/warm_theme.dart';
 import 'widgets/book_card.dart';
 import 'widgets/book_cover.dart';
 import 'widgets/book_detail_sheet.dart';
+import 'widgets/language_sheet.dart';
 import 'widgets/warm_widgets.dart';
+
+/// 书架及 App 主界面的系统栏样式：状态栏透明 + 深色图标，底部导航栏白底黑字。
+/// 与阅读页退出时恢复的样式一致，避免进入 App 时出现灰色遮罩 / 黑色导航栏。
+const SystemUiOverlayStyle kAppSystemUi = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.dark,
+  statusBarBrightness: Brightness.light,
+  systemNavigationBarColor: Colors.white,
+  systemNavigationBarIconBrightness: Brightness.dark,
+  systemNavigationBarContrastEnforced: false,
+);
 
 /// 书架 / 书城入口页。数据全部来自 drift 数据库（内置书首次播种、导入书落库），
 /// 列表只读书籍信息不含正文；阅读时正文按章懒读。视觉遵循「暖纸」设计（见 [Warm]）。
@@ -49,6 +63,8 @@ class _BookshelfPageState extends State<BookshelfPage> {
   bool _importing = false;
   String _query = '';
   _Layout _layout = _Layout.list;
+
+  AppLocalizations get _l => AppLocalizations.of(context);
 
   @override
   void initState() {
@@ -161,8 +177,9 @@ class _BookshelfPageState extends State<BookshelfPage> {
 
   Future<void> _onDelete(BookRow book) async {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final AppLocalizations l = _l;
     if (!book.imported) {
-      messenger.showSnackBar(const SnackBar(content: Text('内置书籍无法删除')));
+      messenger.showSnackBar(SnackBar(content: Text(l.cannotDeleteBuiltin)));
       return;
     }
     final bool confirmed =
@@ -170,19 +187,22 @@ class _BookshelfPageState extends State<BookshelfPage> {
           context: context,
           builder: (BuildContext ctx) => AlertDialog(
             backgroundColor: Warm.sheet,
-            title: Text('删除书籍', style: Warm.serif(size: 19)),
+            title: Text(l.deleteTitle, style: Warm.serif(size: 19)),
             content: Text(
-              '确定删除《${book.title}》吗？此操作将移除已导入的书籍数据。',
+              l.deleteMessage(book.title),
               style: Warm.sans(size: 14, height: 1.5, color: Warm.ink2),
             ),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text('取消', style: Warm.sans(color: Warm.muted2)),
+                child: Text(l.cancel, style: Warm.sans(color: Warm.muted2)),
               ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
+                child: Text(
+                  l.delete,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ),
@@ -197,7 +217,9 @@ class _BookshelfPageState extends State<BookshelfPage> {
         _books = _books.where((BookRow e) => e.id != book.id).toList();
         _progress.remove(book.id);
       });
-      messenger.showSnackBar(SnackBar(content: Text('已删除《${book.title}》')));
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.deletedToast(book.title))),
+      );
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text('删除失败：$e')));
@@ -220,6 +242,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
   }
 
   Future<bool> _showImportIntro() async {
+    final AppLocalizations l = _l;
     Widget point(String bold, String rest) => Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -272,26 +295,26 @@ class _BookshelfPageState extends State<BookshelfPage> {
                     size: 30,
                   ),
                   const SizedBox(width: 12),
-                  Text('导入本地小说', style: Warm.serif(size: 22)),
+                  Text(l.importTitle, style: Warm.serif(size: 22)),
                 ],
               ),
               const SizedBox(height: 16),
               Text(
-                '把手机里的 TXT 小说加入书架，随时离线畅读。',
+                l.importDesc,
                 style: Warm.sans(size: 14.5, height: 1.7, color: Warm.ink2),
               ),
               const SizedBox(height: 16),
-              point('一键导入', '选择本地 TXT 文件即可，无需联网'),
-              point('智能排版', '自动识别书名、作者与章节'),
-              point('编码无忧', '自动检测 UTF-8 / GBK / Big5，中文不乱码'),
-              point('随存随删', '保存在本机，左滑即可删除'),
+              point(l.importPoint1Title, l.importPoint1Body),
+              point(l.importPoint2Title, l.importPoint2Body),
+              point(l.importPoint3Title, l.importPoint3Body),
+              point(l.importPoint4Title, l.importPoint4Body),
               const SizedBox(height: 8),
               Row(
                 children: <Widget>[
                   TextButton(
                     onPressed: () => Navigator.of(ctx).pop(false),
                     child: Text(
-                      '暂不导入',
+                      l.importLater,
                       style: Warm.sans(
                         size: 15,
                         weight: FontWeight.w600,
@@ -303,7 +326,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
                   Expanded(
                     child: _GradientButton(
                       icon: Icons.file_upload_outlined,
-                      label: '选择 TXT 文件',
+                      label: l.importPick,
                       onTap: () => Navigator.of(ctx).pop(true),
                     ),
                   ),
@@ -350,19 +373,17 @@ class _BookshelfPageState extends State<BookshelfPage> {
           .where((BookRow e) => e.id == id)
           .firstOrNull;
       setState(() => _importing = false);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            added == null
-                ? '已导入'
-                : '已导入《${added.title}》，共 ${added.chapterCount} 章',
+      if (added != null) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(_l.importedToast(added.title, added.chapterCount)),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _importing = false);
-      messenger.showSnackBar(SnackBar(content: Text('导入失败：$e')));
+      messenger.showSnackBar(SnackBar(content: Text(_l.importFailed('$e'))));
     }
   }
 
@@ -370,12 +391,15 @@ class _BookshelfPageState extends State<BookshelfPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Warm.bg,
-      body: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: SafeArea(child: _buildBody()),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: kAppSystemUi,
+      child: Scaffold(
+        backgroundColor: Warm.bg,
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SafeArea(child: _buildBody()),
+        ),
       ),
     );
   }
@@ -383,7 +407,10 @@ class _BookshelfPageState extends State<BookshelfPage> {
   Widget _buildBody() {
     if (_error != null) {
       return Center(
-        child: Text('书籍加载失败：$_error', style: Warm.sans(color: Warm.ink2)),
+        child: Text(
+          _l.loadFailed('$_error'),
+          style: Warm.sans(color: Warm.ink2),
+        ),
       );
     }
     if (_loading) {
@@ -436,7 +463,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                '书架',
+                _l.bookshelfTitle,
                 style: Warm.serif(
                   size: 31,
                   weight: FontWeight.w800,
@@ -446,14 +473,48 @@ class _BookshelfPageState extends State<BookshelfPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                '共 ${_books.length} 本 · 在读 $_readingCount 本',
+                _l.shelfSummary(_books.length, _readingCount),
                 style: Warm.sans(size: 12.5, color: Warm.muted),
               ),
             ],
           ),
         ),
+        _iconBox(
+          icon: Icons.language,
+          onTap: () => LanguageSheet.show(context),
+        ),
+        const SizedBox(width: 10),
         _importButton(),
       ],
+    );
+  }
+
+  /// 圆角描边图标按钮（语言 / 与导入按钮同款外观）。
+  Widget _iconBox({required IconData icon, required VoidCallback onTap}) {
+    return Material(
+      color: Warm.card,
+      borderRadius: BorderRadius.circular(13),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(13),
+        onTap: onTap,
+        child: Ink(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: Warm.card,
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: Warm.hairline),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: const Color(0xFF5A3C1E).withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Center(child: Icon(icon, size: 21, color: Warm.accent)),
+        ),
+      ),
     );
   }
 
@@ -521,7 +582,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
-                hintText: '搜索书名 / 作者',
+                hintText: _l.searchHint,
                 hintStyle: Warm.sans(size: 14.5, color: Warm.muted),
               ),
             ),
@@ -534,7 +595,9 @@ class _BookshelfPageState extends State<BookshelfPage> {
   Widget _continueCard(BookRow b) {
     final double pct = _progressOf(b);
     final ReadingPosition? pos = _progress[b.id];
-    final String curLabel = pos == null ? '未开始' : '第 ${pos.chapterIndex + 1} 章';
+    final String curLabel = pos == null
+        ? _l.notStarted
+        : _l.readToChapter(pos.chapterIndex + 1);
     return Container(
       decoration: BoxDecoration(
         gradient: Warm.contCardGradient,
@@ -576,7 +639,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '继续阅读',
+                      _l.continueReading,
                       style: Warm.sans(
                         size: 11.5,
                         weight: FontWeight.w700,
@@ -595,7 +658,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '读到 $curLabel',
+                  curLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Warm.sans(size: 12.5, color: Warm.muted2),
@@ -633,7 +696,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
           TextSpan(
             children: <InlineSpan>[
               TextSpan(
-                text: '全部书籍 ',
+                text: '${_l.allBooks} ',
                 style: Warm.serif(size: 16, weight: FontWeight.w700),
               ),
               TextSpan(
@@ -778,7 +841,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
   Widget _empty() {
     return Center(
       child: Text(
-        _query.trim().isNotEmpty ? '没有匹配的书籍' : '暂无书籍，点击右上角导入 TXT',
+        _query.trim().isNotEmpty ? _l.noMatches : _l.emptyShelf,
         style: Warm.sans(color: Warm.muted2),
       ),
     );

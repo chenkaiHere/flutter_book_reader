@@ -48,6 +48,9 @@ dependencies:
   drift: ^2.34.2
   drift_flutter: ^0.3.1
   sqlite3_flutter_libs: ^0.6.0+eol
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +75,7 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  generate: true
 
   # 书籍数据以 JSON 形式外置，运行时从此 asset 读取
   assets:

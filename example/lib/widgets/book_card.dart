@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/db/app_database.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/warm_theme.dart';
 import 'book_cover.dart';
 import 'warm_widgets.dart';
@@ -22,6 +23,7 @@ class BookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l = AppLocalizations.of(context);
     final bool started = progress > 0;
     return Material(
       color: Warm.card,
@@ -67,13 +69,13 @@ class BookCard extends StatelessWidget {
                         ),
                         if (book.imported) ...<Widget>[
                           const SizedBox(width: 8),
-                          const TagChip('本地'),
+                          TagChip(l.localTag),
                         ],
                       ],
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '${book.author} · 共 ${book.chapterCount} 章',
+                      '${book.author} · ${l.chapterCountLabel(book.chapterCount)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Warm.sans(size: 12.5, color: Warm.muted),
@@ -93,7 +95,9 @@ class BookCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 9),
                         Text(
-                          started ? '已读 ${(progress * 100).round()}%' : '未读',
+                          started
+                              ? l.readPercent((progress * 100).round())
+                              : l.unread,
                           style: Warm.sans(size: 11.5, color: Warm.muted),
                         ),
                       ],
