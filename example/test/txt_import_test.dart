@@ -1,12 +1,13 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:drift/native.dart';
 import 'package:enough_convert/big5.dart';
 import 'package:enough_convert/gbk.dart';
-import 'package:flutter_book_reader_example/data/book.dart';
-import 'package:flutter_book_reader_example/import/imported_book_store.dart';
-import 'package:flutter_book_reader_example/import/memory_book_source.dart';
+import 'package:flutter_book_reader/flutter_book_reader.dart';
+import 'package:flutter_book_reader_example/data/db/app_database.dart';
+import 'package:flutter_book_reader_example/data/db/book_db.dart';
+import 'package:flutter_book_reader_example/data/db/db_book_source.dart';
 import 'package:flutter_book_reader_example/import/txt_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -145,46 +146,38 @@ void main() {
     });
   });
 
-  test('ImportedBookStore：落库到内部目录并可读回', () async {
-    final Directory tmp = Directory.systemTemp.createTempSync('imp_test');
-    addTearDown(() => tmp.deleteSync(recursive: true));
-    final ImportedBookStore store = ImportedBookStore(baseDir: tmp);
+  test('导入落库到 drift，列表只读信息、正文按章读回', () async {
+    final AppDatabase db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
 
-    final Book book = await store.importText(_sample, fileName: '山海孤旅.txt');
-    expect(book.title, '山海孤旅');
-    expect(book.chapters.length, 3);
+    final Map<String, dynamic> json = TxtBookParser.parseText(
+      _sample,
+      fileName: '山海孤旅.txt',
+    );
+    final int id = await BookDb.importParsed(db, json, nowMs: 1000);
 
-    // 目录里应有一个 <id>.json
-    final Directory dir = Directory('${tmp.path}/imported_books');
-    expect(dir.listSync().whereType<File>().length, 1);
+    // 列表：只含书籍信息（标题/作者/章节数/来源），不含正文。
+    final List<BookRow> rows = await db.listBooks();
+    expect(rows.length, 1);
+    expect(rows.first.title, '山海孤旅');
+    expect(rows.first.chapterCount, 3);
+    expect(rows.first.imported, isTrue);
 
-    // 列表 / 按 id 读取
-    expect((await store.listImported()).length, 1);
-    final Book? loaded = await store.loadImported(book.id);
-    expect(loaded, isNotNull);
-    expect(loaded!.title, '山海孤旅');
+    // 目录：只取章节标题。
+    final List<String> titles = await db.chapterTitles(id);
+    expect(titles.length, 3);
 
-    // 可作为数据源阅读
-    final MemoryBookSource src = MemoryBookSource(loaded);
-    final BookManifestLike m = await _manifest(src);
+    // 数据源：按章懒读正文。
+    final DbBookSource src = DbBookSource(db, id);
+    final BookManifest m = await src.loadManifest();
     expect(m.title, '山海孤旅');
-    expect(m.chapterCount, 3);
-    final String body = await src.loadChapterBody(0);
-    expect(body.contains('海风从礁石间穿过'), isTrue);
+    expect(m.chapterTitles.length, 3);
+    final String body0 = await src.loadChapterBody(0);
+    expect(body0.contains('海风从礁石间穿过'), isTrue);
 
-    await store.deleteImported(book.id);
-    expect(await store.loadImported(book.id), isNull);
+    // 删除：书与章节一并移除。
+    await db.deleteBook(id);
+    expect((await db.listBooks()).isEmpty, isTrue);
+    expect(await db.chapterBody(id, 0), isNull);
   });
-}
-
-// 轻量断言辅助（避免直接依赖包内类型的字段名变化）
-class BookManifestLike {
-  BookManifestLike(this.title, this.chapterCount);
-  final String title;
-  final int chapterCount;
-}
-
-Future<BookManifestLike> _manifest(MemoryBookSource src) async {
-  final dynamic m = await src.loadManifest();
-  return BookManifestLike(m.title as String, (m.chapterTitles as List).length);
 }

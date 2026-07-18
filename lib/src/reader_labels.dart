@@ -17,7 +17,8 @@ class ReaderLabels {
     this.bookmarkTab = '书签',
     this.addBookmark = '加入书签',
     this.removeBookmark = '移除书签',
-    this.noBookmarks = '暂无书签',
+    this.noBookmarks = '还没有书签',
+    this.noBookmarksHint = '阅读时点击右上角即可添加书签，\n方便随时回到精彩之处。',
     this.noIntro = '暂无简介',
     this.orderAsc = '正序',
     this.orderDesc = '倒序',
@@ -46,6 +47,7 @@ class ReaderLabels {
   final String addBookmark;
   final String removeBookmark;
   final String noBookmarks;
+  final String noBookmarksHint;
   final String noIntro;
   final String orderAsc;
   final String orderDesc;

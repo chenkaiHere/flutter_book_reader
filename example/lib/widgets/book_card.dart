@@ -1,127 +1,108 @@
-import 'package:flutter_book_reader/flutter_book_reader.dart';
 import 'package:flutter/material.dart';
 
-import '../data/asset_json_book_source.dart';
-import '../data/book.dart';
-import '../import/memory_book_source.dart';
+import '../data/db/app_database.dart';
+import '../theme/warm_theme.dart';
+import 'book_cover.dart';
+import 'warm_widgets.dart';
 
-/// 书架中的单本书卡片：模拟封面 + 书名/作者/简介，点击进入阅读器。
+/// 书架列表视图中的单本书卡片（纯展示；数据来自 drift 的轻量 [BookRow]，不含正文）。
 class BookCard extends StatelessWidget {
   const BookCard({
     super.key,
     required this.book,
-    required this.progressStore,
-    required this.bookmarkStore,
-    this.imported = false,
+    required this.progress,
+    required this.onTap,
   });
 
-  final Book book;
+  final BookRow book;
 
-  /// 全书架共享的进度存储，用于跨书记忆阅读位置
-  final ReaderProgressStore progressStore;
-
-  /// 全书架共享的书签存储
-  final ReaderBookmarkStore bookmarkStore;
-
-  /// 是否为导入的书（导入书直接用内存中的 [Book] 作为数据源）
-  final bool imported;
+  /// 阅读进度 0..1（0 表示未读）。
+  final double progress;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => BookReader(
-            source: imported
-                ? MemoryBookSource(book)
-                : AssetJsonBookSource(bookId: book.id),
-            progressStore: progressStore,
-            bookmarkStore: bookmarkStore,
+    final bool started = progress > 0;
+    return Material(
+      color: Warm.card,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Warm.card,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Warm.hairline),
+            boxShadow: Warm.softCard,
           ),
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            _Cover(book: book),
-            const SizedBox(width: 14),
-            Expanded(child: _info(context)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _info(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          book.title,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${book.author} · 共 ${book.chapterCount} 章',
-          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          book.intro,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 13, height: 1.5, color: Colors.grey[700]),
-        ),
-      ],
-    );
-  }
-}
-
-class _Cover extends StatelessWidget {
-  const _Cover({required this.book});
-
-  final Book book;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 72,
-      height: 96,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            book.coverColor,
-            book.coverColor.withValues(alpha: 0.7),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      alignment: Alignment.center,
-      padding: const EdgeInsets.all(8),
-      child: Text(
-        book.title,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          height: 1.3,
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              BookCover(
+                title: book.title,
+                color: Color(book.coverColor),
+                width: 66,
+                height: 92,
+                fontSize: 15,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            book.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Warm.serif(
+                              size: 18,
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        if (book.imported) ...<Widget>[
+                          const SizedBox(width: 8),
+                          const TagChip('本地'),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${book.author} · 共 ${book.chapterCount} 章',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Warm.sans(size: 12.5, color: Warm.muted),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      book.intro,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Warm.sans(size: 13, height: 1.6, color: Warm.ink2),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: WarmProgressBar(value: progress, height: 5),
+                        ),
+                        const SizedBox(width: 9),
+                        Text(
+                          started ? '已读 ${(progress * 100).round()}%' : '未读',
+                          style: Warm.sans(size: 11.5, color: Warm.muted),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

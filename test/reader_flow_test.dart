@@ -237,7 +237,7 @@ void main() {
     await tester.tap(find.text('书签'));
     await tester.pumpAndSettle();
     expect(find.byType(CatalogSheet), findsOneWidget);
-    expect(find.text('暂无书签'), findsNothing);
+    expect(find.text('还没有书签'), findsNothing);
     expect(
       find.descendant(
         of: find.byType(CatalogSheet),
@@ -264,7 +264,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('书签'));
     await tester.pumpAndSettle();
-    expect(find.text('暂无书签'), findsOneWidget, reason: '移除后书签页应为空');
+    expect(find.text('还没有书签'), findsOneWidget, reason: '移除后书签页应为空');
   });
 
   testWidgets('书籍抽屉可在详情 / 目录标签间切换', (WidgetTester tester) async {

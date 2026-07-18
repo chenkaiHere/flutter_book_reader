@@ -5,28 +5,38 @@ import 'dart:typed_data';
 
 import 'package:enough_convert/big5.dart';
 import 'package:enough_convert/gbk.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// 本地 txt 小说解析工具（App 侧）。
 ///
-/// 在后台 isolate 中把一个 txt 文件解析成「书籍 JSON」（结构与 books.json 中单本一致：
+/// 把一个 txt 文件解析成「书籍 JSON」（结构与 books.json 中单本一致：
 /// id / title / author / intro / coverColor / chapters[{id,index,title,paragraphs}]），
-/// 便于随后落库（见 ImportedBookStore）与阅读。解析尽量识别：书名、作者、简介、
+/// 便于随后落库（见 BookDb）与阅读。解析尽量识别：书名、作者、简介、
 /// 章节标题、章节正文与分段。
+///
+/// 性能：原生平台在后台 isolate 中解析，避免卡 UI；Web 无 isolate（dart:isolate
+/// 不支持），退化为主线程同步解析。
 ///
 /// 编码：自动检测常见小说编码——UTF-8 / UTF-8-BOM / UTF-16(LE/BE) /
 /// GBK(含 GB2312) / Big5，不假设固定编码（见 [_decode]）。
 class TxtBookParser {
   const TxtBookParser._();
 
-  /// 后台解析一个 txt 文件，返回书籍 JSON（不写盘）。
+  /// 解析一个 txt 文件，返回书籍 JSON（不写盘）。仅原生平台可用（Web 无文件路径）。
   static Future<Map<String, dynamic>> parseFile(String path) =>
       Isolate.run(() => _parseFileSync(path));
 
-  /// 后台解析一段 txt 字节（如文件选择器在 Web 上只给 bytes 时用）。
+  /// 解析一段 txt 字节（文件选择器在 Web 上只给 bytes 时用）。
+  /// Web 上同步解析（无 isolate）；原生上放后台 isolate。
   static Future<Map<String, dynamic>> parseBytes(
     Uint8List bytes, {
     String fileName = '',
-  }) => Isolate.run(() => parseText(_decode(bytes), fileName: fileName));
+  }) async {
+    if (kIsWeb) {
+      return parseText(_decode(bytes), fileName: fileName);
+    }
+    return Isolate.run(() => parseText(_decode(bytes), fileName: fileName));
+  }
 
   static Map<String, dynamic> _parseFileSync(String path) {
     final Uint8List bytes = File(path).readAsBytesSync();

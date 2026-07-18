@@ -6,7 +6,9 @@ import '../reader_theme.dart';
 
 /// 阅读器悬浮菜单：顶部标题栏 + 底部控制栏 + 设置/主题面板。
 ///
-/// 通过 [visible] 控制显隐（带滑入滑出动画）。所有交互通过回调上抛给阅读页。
+/// 视觉参考「阅读器菜单」设计稿：顶栏为返回 + 衬线书名 + 书签；底栏为面板色卡片，
+/// 含「上一章 / 进度 / 下一章」与「目录 / 日夜 / 设置」，设置面板内含字号、行距、
+/// 背景主题、翻页方式。通过 [visible] 控制显隐（滑入滑出）。
 class ReaderMenu extends StatefulWidget {
   const ReaderMenu({
     super.key,
@@ -59,13 +61,38 @@ class ReaderMenu extends StatefulWidget {
 enum _Panel { none, settings }
 
 class _ReaderMenuState extends State<ReaderMenu> {
+  /// 标题类文字用衬线中文字体（宋体系）回退，与设计稿一致，无需额外依赖。
+  static const List<String> _serifFallback = <String>[
+    'Songti SC',
+    'STSong',
+    'SimSun',
+    'Noto Serif CJK SC',
+    'Noto Serif SC',
+    'serif',
+  ];
+
   _Panel _panel = _Panel.none;
   late ReaderLabels _labels;
 
   /// 记住切到夜间前的日间主题，切回时还原。
   ReaderTheme? _lastLight;
 
-  Color get _accent => widget.config.theme.accentColor;
+  ReaderTheme get _t => widget.config.theme;
+  Color get _accent => _t.accentColor;
+  Color get _text => _t.textColor;
+  Color get _sub => _t.subTextColor;
+
+  TextStyle _serif({
+    required double size,
+    FontWeight weight = FontWeight.w700,
+    Color? color,
+  }) =>
+      TextStyle(
+        fontFamilyFallback: _serifFallback,
+        fontSize: size,
+        fontWeight: weight,
+        color: color ?? _text,
+      );
 
   /// 日间 / 夜间一键切换。
   void _toggleDayNight() {
@@ -92,12 +119,6 @@ class _ReaderMenuState extends State<ReaderMenu> {
   @override
   Widget build(BuildContext context) {
     _labels = ReaderLabels.of(context);
-    final ReaderTheme t = widget.config.theme;
-    // 沉浸式：菜单栏用当前主题纸张色（不再是纯白），无边界线，完全融入背景
-    final Color barColor = t.paperColor;
-    final Color iconColor =
-        t.isDark ? const Color(0xFFCACACA) : const Color(0xFF33373D);
-
     return IgnorePointer(
       ignoring: !widget.visible,
       child: AnimatedOpacity(
@@ -108,26 +129,23 @@ class _ReaderMenuState extends State<ReaderMenu> {
             Positioned.fill(
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onTap: () {
-                  if (_panel != _Panel.none) {
-                    setState(() => _panel = _Panel.none);
-                  } else {
-                    widget.onRequestClose();
-                  }
-                },
+                // 点击中间阅读区：直接关闭整个菜单（含设置面板），
+                // 面板状态在菜单隐藏时由 didUpdateWidget 复位。
+                onTap: widget.onRequestClose,
               ),
             ),
-            _buildTopBar(barColor, iconColor),
-            _buildBottomArea(barColor, iconColor),
+            _buildTopBar(),
+            _buildBottomArea(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTopBar(Color barColor, Color iconColor) {
-    // 全屏沉浸下没有系统状态栏，为顶栏预留一段“状态栏高度”的呼吸空间，
-    // 避免返回按钮/标题贴着屏幕最顶端，显得局促（刘海屏则按安全区留白）。
+  // ————————————————————— 顶栏 —————————————————————
+
+  Widget _buildTopBar() {
+    // 全屏沉浸下没有系统状态栏，为顶栏预留一段“状态栏高度”的呼吸空间。
     final double sysTop = MediaQuery.of(context).padding.top;
     final double topInset = sysTop > 20 ? sysTop : 24;
     return AnimatedPositioned(
@@ -137,56 +155,40 @@ class _ReaderMenuState extends State<ReaderMenu> {
       left: 0,
       right: 0,
       child: ColoredBox(
-        color: barColor,
+        color: _t.paperColor,
         child: Padding(
           padding: EdgeInsets.only(top: topInset),
           child: SizedBox(
-            height: kReaderMenuBarHeight,
+            height: 56,
             child: Row(
               children: <Widget>[
-                IconButton(
+                const SizedBox(width: 14),
+                _iconTap(
+                  Icons.arrow_back_ios_new,
+                  20,
+                  _text,
+                  widget.onBack,
                   tooltip: _labels.back,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: kReaderMenuBarHeight,
-                    minHeight: kReaderMenuBarHeight,
-                  ),
-                  icon: Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 20,
-                    color: iconColor,
-                  ),
-                  onPressed: widget.onBack,
                 ),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     widget.bookTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: iconColor,
-                    ),
+                    style: _serif(size: 20),
                   ),
                 ),
-                // 顶栏右侧：加入 / 移除书签。已加书签为实心强调色，否则空心。
-                IconButton(
+                _iconTap(
+                  widget.bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  22,
+                  widget.bookmarked ? _accent : _sub,
+                  widget.onToggleBookmark,
                   tooltip: widget.bookmarked
                       ? _labels.removeBookmark
                       : _labels.addBookmark,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: kReaderMenuBarHeight,
-                    minHeight: kReaderMenuBarHeight,
-                  ),
-                  icon: Icon(
-                    widget.bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    color: widget.bookmarked ? _accent : iconColor,
-                  ),
-                  onPressed: widget.onToggleBookmark,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 12),
               ],
             ),
           ),
@@ -195,25 +197,55 @@ class _ReaderMenuState extends State<ReaderMenu> {
     );
   }
 
-  Widget _buildBottomArea(Color barColor, Color iconColor) {
+  Widget _iconTap(
+    IconData icon,
+    double size,
+    Color color,
+    VoidCallback onTap, {
+    String? tooltip,
+  }) {
+    final Widget btn = InkResponse(
+      onTap: onTap,
+      radius: 22,
+      child: SizedBox(
+        width: 34,
+        height: 34,
+        child: Icon(icon, size: size, color: color),
+      ),
+    );
+    return tooltip == null ? btn : Tooltip(message: tooltip, child: btn);
+  }
+
+  // ————————————————————— 底栏 —————————————————————
+
+  Widget _buildBottomArea() {
+    final bool dark = _t.isDark;
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOut,
-      bottom: widget.visible ? 0 : -320,
+      bottom: widget.visible ? 0 : -360,
       left: 0,
       right: 0,
-      child: ColoredBox(
-        color: barColor,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: _t.panelColor,
+          border: Border(top: BorderSide(color: _t.dividerColor)),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Color.fromRGBO(20, 12, 4, dark ? 0.4 : 0.12),
+              blurRadius: 30,
+              offset: const Offset(0, -10),
+            ),
+          ],
+        ),
         child: SafeArea(
           top: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              // 设置面板与“上一章/下一章”共用同一区域：打开设置时覆盖住快捷条，
-              // 收起设置时快捷条重新出现。
-              _buildPanelArea(iconColor),
-              Divider(height: 1, color: iconColor.withValues(alpha: 0.08)),
-              _buildActionRow(iconColor),
+              // 设置面板与“上一章/下一章”共用同一区域：打开设置时覆盖住快捷条。
+              _buildPanelArea(),
+              _buildNavRow(),
             ],
           ),
         ),
@@ -221,17 +253,15 @@ class _ReaderMenuState extends State<ReaderMenu> {
     );
   }
 
-  /// 设置面板与章节快捷条共用区域：设置打开时显示设置面板（覆盖快捷条），
-  /// 关闭时显示“上一章 / 进度 / 下一章”。切换带平滑动画（高度渐变 + 交叉淡入）。
-  Widget _buildPanelArea(Color iconColor) {
+  Widget _buildPanelArea() {
     final Widget child = _panel == _Panel.settings
         ? KeyedSubtree(
             key: const ValueKey<String>('settings'),
-            child: _buildSettingsPanel(iconColor),
+            child: _buildSettingsPanel(),
           )
         : KeyedSubtree(
             key: const ValueKey<String>('seek'),
-            child: _buildChapterSeek(iconColor),
+            child: _buildChapterSeek(),
           );
     return AnimatedSize(
       duration: const Duration(milliseconds: 220),
@@ -244,82 +274,95 @@ class _ReaderMenuState extends State<ReaderMenu> {
     );
   }
 
-  Widget _buildChapterSeek(Color iconColor) {
+  // 上一章 / 进度 / 下一章
+  Widget _buildChapterSeek() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.fromLTRB(26, 18, 26, 4),
       child: Row(
         children: <Widget>[
-          TextButton(
-            onPressed: widget.onPrevChapter,
-            child: Text(
-              _labels.prevChapter,
-              style: TextStyle(color: iconColor, fontSize: 13),
-            ),
-          ),
+          _seekText(_labels.prevChapter, widget.onPrevChapter),
           Expanded(
-            child: SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 2,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                activeTrackColor: _accent,
-                thumbColor: _accent,
-                inactiveTrackColor: iconColor.withValues(alpha: 0.2),
-              ),
-              child: Slider(
-                value: widget.chapterCount <= 1
-                    ? 0
-                    : widget.chapterIndex / (widget.chapterCount - 1),
-                onChanged: (double v) {
-                  final int idx = (v * (widget.chapterCount - 1)).round();
-                  widget.onSeekChapter(idx);
-                },
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: widget.onNextChapter,
-            child: Text(
-              _labels.nextChapter,
-              style: TextStyle(color: iconColor, fontSize: 13),
-            ),
-          ),
+              child: _buildSlider(
+            value: widget.chapterCount <= 1
+                ? 0
+                : widget.chapterIndex / (widget.chapterCount - 1),
+            onChanged: (double v) =>
+                widget.onSeekChapter((v * (widget.chapterCount - 1)).round()),
+          )),
+          _seekText(_labels.nextChapter, widget.onNextChapter),
         ],
       ),
     );
   }
 
-  Widget _buildActionRow(Color iconColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+  Widget _seekText(String text, VoidCallback onTap) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Text(
+            text,
+            style: TextStyle(
+                fontSize: 15, fontWeight: FontWeight.w600, color: _sub),
+          ),
+        ),
+      );
+
+  Widget _buildSlider({
+    required double value,
+    required ValueChanged<double> onChanged,
+    double min = 0,
+    double max = 1,
+  }) {
+    return SliderTheme(
+      data: SliderThemeData(
+        trackHeight: 4,
+        activeTrackColor: _accent,
+        inactiveTrackColor: _t.trackColor,
+        thumbColor: _accent,
+        overlayColor: _accent.withValues(alpha: 0.15),
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+        overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+        trackShape: const RoundedRectSliderTrackShape(),
+      ),
+      child: Slider(
+          min: min,
+          max: max,
+          value: value.clamp(min, max),
+          onChanged: onChanged),
+    );
+  }
+
+  // 目录 / 日夜 / 设置
+  Widget _buildNavRow() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: _t.dividerColor)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
-          _menuBtn(Icons.list, _labels.catalog, iconColor, () {
+          _navBtn(Icons.format_list_bulleted, _labels.catalog, _sub, () {
             setState(() => _panel = _Panel.none);
             widget.onOpenCatalog();
           }),
-          // 中间：日间 / 夜间一键切换
-          _menuBtn(
-            widget.config.theme.isDark
-                ? Icons.wb_sunny_outlined
-                : Icons.nightlight_round,
-            widget.config.theme.isDark ? _labels.dayMode : _labels.nightMode,
-            iconColor,
+          _navBtn(
+            _t.isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round,
+            _t.isDark ? _labels.dayMode : _labels.nightMode,
+            _t.isDark ? _accent : _sub,
             _toggleDayNight,
           ),
-          _menuBtn(
+          _navBtn(
             _panel == _Panel.settings
                 ? Icons.settings
                 : Icons.settings_outlined,
             _labels.settingsMenu,
-            iconColor,
-            () {
-              setState(
-                () => _panel =
-                    _panel == _Panel.settings ? _Panel.none : _Panel.settings,
-              );
-            },
+            _panel == _Panel.settings ? _accent : _sub,
+            () => setState(
+              () => _panel =
+                  _panel == _Panel.settings ? _Panel.none : _Panel.settings,
+            ),
             active: _panel == _Panel.settings,
           ),
         ],
@@ -327,34 +370,32 @@ class _ReaderMenuState extends State<ReaderMenu> {
     );
   }
 
-  Widget _menuBtn(
+  Widget _navBtn(
     IconData icon,
     String label,
     Color color,
     VoidCallback onTap, {
     bool active = false,
   }) {
-    // 选中态：图标/文字用强调色，突出当前打开的面板。
-    final Color fg = active ? _accent : color;
     return Semantics(
       button: true,
       selected: active,
       label: label,
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(icon, size: 24, color: fg),
-              const SizedBox(height: 4),
+              Icon(icon, size: 24, color: color),
+              const SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 12,
-                  color: fg,
+                  color: color,
                   fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
@@ -365,146 +406,173 @@ class _ReaderMenuState extends State<ReaderMenu> {
     );
   }
 
-  // —— 设置面板：字号、行距、翻页方式 ——
-  Widget _buildSettingsPanel(Color iconColor) {
+  // ————————————————————— 设置面板 —————————————————————
+
+  Widget _buildSettingsPanel() {
     final ReaderConfig c = widget.config;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+      padding: const EdgeInsets.fromLTRB(24, 18, 24, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _rowLabel(_labels.fontSize, iconColor),
+          // 字号
+          _sectionLabel(_labels.fontSize),
+          const SizedBox(height: 10),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              _stepBtn('A-', iconColor, c.decreaseFont),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    '${c.fontSize.toInt()}',
-                    style: TextStyle(fontSize: 15, color: iconColor),
-                  ),
-                ),
-              ),
-              _stepBtn('A+', iconColor, c.increaseFont),
+              _stepBtn('A-', c.decreaseFont),
+              Text('${c.fontSize.toInt()}', style: _serif(size: 22)),
+              _stepBtn('A+', c.increaseFont),
             ],
           ),
-          const SizedBox(height: 6),
-          _rowLabel(_labels.lineSpacing, iconColor),
+          const SizedBox(height: 20),
+
+          // 行距
+          _sectionLabel(_labels.lineSpacing),
+          const SizedBox(height: 4),
           Row(
             children: <Widget>[
-              Icon(Icons.density_small, size: 18, color: iconColor),
+              Icon(Icons.density_small, size: 20, color: _sub),
               Expanded(
-                child: Slider(
+                child: _buildSlider(
                   min: ReaderConfig.minLineHeight,
                   max: ReaderConfig.maxLineHeight,
-                  activeColor: _accent,
                   value: c.lineHeight,
                   onChanged: c.setLineHeight,
                 ),
               ),
-              Icon(Icons.density_large, size: 18, color: iconColor),
+              Icon(Icons.density_large, size: 20, color: _sub),
             ],
           ),
+          const SizedBox(height: 18),
+
+          // 背景 / 主题
+          _sectionLabel(_labels.background),
+          const SizedBox(height: 14),
+          _buildThemeRow(),
+          const SizedBox(height: 22),
+
+          // 翻页
+          _sectionLabel(_labels.flipMode),
+          const SizedBox(height: 12),
+          _buildFlipRow(c),
           const SizedBox(height: 6),
-          _rowLabel(_labels.background, iconColor),
-          const SizedBox(height: 10),
-          _buildBackgroundRow(iconColor),
-          const SizedBox(height: 6),
-          _rowLabel(_labels.flipMode, iconColor),
-          const SizedBox(height: 8),
-          _buildFlipSelector(c, iconColor),
-          const SizedBox(height: 8),
         ],
       ),
     );
   }
 
-  // —— 翻页方式：水平分段指示器（选中项高亮圆角药丸，其余纯文字）——
-  Widget _buildFlipSelector(ReaderConfig c, Color iconColor) {
-    final bool dark = widget.config.theme.isDark;
-    final Color highlight = dark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.7);
-    return Row(
-      children: FlipType.values.map((FlipType f) {
-        final bool active = c.flipType == f;
-        return Expanded(
-          child: Semantics(
-            button: true,
-            selected: active,
-            label: f.label,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => c.setFlipType(f),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: active ? highlight : Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Center(
-                  child: Text(
-                    f.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                      color:
-                          active ? iconColor : iconColor.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
+  Widget _sectionLabel(String text) => Text(
+        text,
+        style:
+            TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _sub),
+      );
 
-  // —— 背景 / 主题：纸张配色（含夜间）——
-  Widget _buildBackgroundRow(Color iconColor) {
+  Widget _stepBtn(String text, VoidCallback onTap) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          width: 96,
+          height: 50,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: _t.borderColor, width: 1.5),
+          ),
+          child: Text(
+            text,
+            style: TextStyle(
+                fontSize: 19, fontWeight: FontWeight.w600, color: _text),
+          ),
+        ),
+      );
+
+  // 6 套主题圆形色板
+  Widget _buildThemeRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: ReaderTheme.presets.map((ReaderTheme t) {
-        final bool active = widget.config.theme.alias == t.alias;
+        final bool active = _t.alias == t.alias;
         return GestureDetector(
           onTap: () => widget.config.setTheme(t),
           child: Container(
-            width: 38,
-            height: 38,
+            width: 52,
+            height: 52,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: t.paperColor,
               shape: BoxShape.circle,
               border: Border.all(
-                color: active ? _accent : iconColor.withValues(alpha: 0.25),
-                width: active ? 2.5 : 1,
+                color: active ? _accent : Colors.transparent,
+                width: 2.5,
               ),
             ),
-            child: active ? Icon(Icons.check, size: 16, color: _accent) : null,
+            child: Container(
+              width: active ? 42 : 46,
+              height: active ? 42 : 46,
+              decoration: BoxDecoration(
+                color: t.paperColor,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: t.isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : Colors.black.withValues(alpha: 0.1),
+                ),
+              ),
+              child:
+                  active ? Icon(Icons.check, size: 18, color: _accent) : null,
+            ),
           ),
         );
       }).toList(),
     );
   }
 
-  Widget _rowLabel(String text, Color color) => Text(
-        text,
-        style: TextStyle(fontSize: 12, color: color.withValues(alpha: 0.6)),
-      );
-
-  Widget _stepBtn(String text, Color color, VoidCallback onTap) =>
-      OutlinedButton(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: color,
-          minimumSize: const Size(64, 34),
-          side: BorderSide(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Text(text),
-      );
+  // 翻页方式：5 个药丸，选中项强调色文字 + 亮底 + 阴影
+  Widget _buildFlipRow(ReaderConfig c) {
+    final bool dark = _t.isDark;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: FlipType.values.map((FlipType f) {
+        final bool active = c.flipType == f;
+        return Semantics(
+          button: true,
+          selected: active,
+          label: f.label,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => c.setFlipType(f),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              padding: EdgeInsets.symmetric(
+                  horizontal: active ? 15 : 9, vertical: 9),
+              decoration: BoxDecoration(
+                color: active ? _t.segActiveColor : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: active
+                    ? <BoxShadow>[
+                        BoxShadow(
+                          color: Color.fromRGBO(20, 12, 4, dark ? 0.35 : 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Text(
+                f.label,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                  color: active ? _accent : _sub,
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
 }
