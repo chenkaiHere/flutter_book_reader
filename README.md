@@ -17,6 +17,12 @@
   <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="270" alt="flutter_book_reader demo — themes & settings">
 </p>
 
+<p align="center">
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_1.jpeg" width="270" alt="flutter_book_reader — bookshelf">
+  &nbsp;&nbsp;
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_2.jpeg" width="270" alt="flutter_book_reader — reader">
+</p>
+
 Point `BookReader` at your own data and you instantly get real pagination,
 finger-following page-curl animations, chapter navigation, themes, and
 reading-progress persistence. Everything is driven by small, replaceable
@@ -57,13 +63,16 @@ anywhere else — without touching the reader's internals.
 - **Debounced progress saving** with a flush when the app goes to background.
 - **Theming & typography** — six built-in paper themes, per-theme accent color,
   and runtime controls for font size / line height / brightness.
-- **Localizable** UI strings (`ReaderLabels`) and basic accessibility semantics.
+- **Localization built in** — `ReaderLabels` ships **12 languages** (en, zh, es,
+  fr, ar, bn, pt, ru, hi, ur, ja, ko) via `ReaderLabels.forLanguageCode(code)`
+  (English fallback); every string is still overridable. Basic accessibility
+  semantics.
 
 ## Install
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.1.0
+  flutter_book_reader: ^1.2.0
 ```
 
 ```dart
@@ -138,15 +147,24 @@ the in-reader settings menu at runtime.
 
 ### 4. Localize the UI
 
+Twelve languages are built in — just pass the current language code (anything
+outside the 12 falls back to English):
+
 ```dart
 BookReader(
   source: MyBookSource(),
-  labels: const ReaderLabels(
-    prevChapter: 'Previous',
-    nextChapter: 'Next',
-    catalog: 'Contents',
-    // …
+  labels: ReaderLabels.forLanguageCode(
+    Localizations.localeOf(context).languageCode, // 'zh', 'en', 'ja', …
   ),
+)
+```
+
+Or supply your own strings for full control / white-labeling:
+
+```dart
+BookReader(
+  source: MyBookSource(),
+  labels: const ReaderLabels(prevChapter: 'Previous', catalog: 'Contents'),
 )
 ```
 

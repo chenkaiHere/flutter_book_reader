@@ -68,6 +68,7 @@ class _CatalogSheetState extends State<CatalogSheet>
 
   /// 仅在未外部提供控制器时创建，负责其生命周期。
   ScrollController? _own;
+
   ScrollController get _listController => widget.scrollController ?? _own!;
 
   /// 详情 / 书签页各自的独立滚动控制器（面板控制器只给「目录」用）。
@@ -123,11 +124,15 @@ class _CatalogSheetState extends State<CatalogSheet>
 
   // 颜色便捷取值
   Color get _text => widget.theme.textColor;
+
   Color get _sub => widget.theme.subTextColor;
+
   Color get _accent => widget.theme.accentColor;
+
   Color get _cardColor => widget.theme.isDark
       ? Colors.white.withValues(alpha: 0.06)
       : Colors.black.withValues(alpha: 0.03);
+
   Color get _hairline => _text.withValues(alpha: 0.08);
 
   TextStyle _serif({
@@ -385,15 +390,15 @@ class _CatalogSheetState extends State<CatalogSheet>
       children: <Widget>[
         Row(
           children: <Widget>[
-            stat('$_count', '章节'),
+            stat('$_count', labels.statChapters),
             const SizedBox(width: 10),
-            stat('${widget.currentIndex + 1}', '当前章'),
+            stat('${widget.currentIndex + 1}', labels.statCurrentChapter),
             const SizedBox(width: 10),
-            stat('$pct%', '进度'),
+            stat('$pct%', labels.statProgress),
           ],
         ),
         const SizedBox(height: 18),
-        Text('内容简介', style: _serif(size: 15)),
+        Text(labels.introHeading, style: _serif(size: 15)),
         const SizedBox(height: 9),
         Text(
           intro.isEmpty ? labels.noIntro : intro,

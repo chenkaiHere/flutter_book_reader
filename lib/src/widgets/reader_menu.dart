@@ -78,8 +78,11 @@ class _ReaderMenuState extends State<ReaderMenu> {
   ReaderTheme? _lastLight;
 
   ReaderTheme get _t => widget.config.theme;
+
   Color get _accent => _t.accentColor;
+
   Color get _text => _t.textColor;
+
   Color get _sub => _t.subTextColor;
 
   TextStyle _serif({
@@ -528,6 +531,22 @@ class _ReaderMenuState extends State<ReaderMenu> {
     );
   }
 
+  /// 翻页方式的多语言文案（按类型取 [ReaderLabels]，而非枚举内置中文 label）。
+  String _flipLabel(FlipType f) {
+    switch (f) {
+      case FlipType.simulation:
+        return _labels.flipSimulation;
+      case FlipType.cover:
+        return _labels.flipCover;
+      case FlipType.slideHorizontal:
+        return _labels.flipSlide;
+      case FlipType.scrollVertical:
+        return _labels.flipVertical;
+      case FlipType.none:
+        return _labels.flipNone;
+    }
+  }
+
   // 翻页方式：5 个药丸，选中项强调色文字 + 亮底 + 阴影
   Widget _buildFlipRow(ReaderConfig c) {
     final bool dark = _t.isDark;
@@ -535,10 +554,11 @@ class _ReaderMenuState extends State<ReaderMenu> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: FlipType.values.map((FlipType f) {
         final bool active = c.flipType == f;
+        final String label = _flipLabel(f);
         return Semantics(
           button: true,
           selected: active,
-          label: f.label,
+          label: label,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => c.setFlipType(f),
@@ -561,7 +581,7 @@ class _ReaderMenuState extends State<ReaderMenu> {
                     : null,
               ),
               child: Text(
-                f.label,
+                label,
                 maxLines: 1,
                 style: TextStyle(
                   fontSize: 14.5,

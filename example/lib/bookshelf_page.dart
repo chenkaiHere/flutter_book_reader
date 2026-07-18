@@ -160,10 +160,15 @@ class _BookshelfPageState extends State<BookshelfPage> {
   Future<void> _openReader(BookRow book, {int? startChapter}) async {
     await _progressStore.markLastRead(book.id);
     if (!mounted) return;
+    // 把当前 App 语言传给插件：插件按语言码取内置文案，未命中回退英文。
+    final ReaderLabels labels = ReaderLabels.forLanguageCode(
+      Localizations.localeOf(context).languageCode,
+    );
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => BookReader(
           source: DbBookSource(_db, book.id),
+          labels: labels,
           progressStore: _progressStore,
           bookmarkStore: _bookmarkStore,
           startChapter: startChapter,

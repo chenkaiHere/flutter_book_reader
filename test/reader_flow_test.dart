@@ -20,12 +20,14 @@ void main() {
         theme: ThemeData(splashFactory: NoSplash.splashFactory),
         home: BookReader(
           source: FakeBookSource(),
+          labels: ReaderLabels.chinese,
           bookmarkStore: InMemoryReaderBookmarkStore(),
         ),
       );
 
-  Widget host(FakeBookSource source) =>
-      MaterialApp(home: BookReader(source: source));
+  Widget host(FakeBookSource source) => MaterialApp(
+        home: BookReader(source: source, labels: ReaderLabels.chinese),
+      );
 
   testWidgets('阅读器可打开并翻页', (WidgetTester tester) async {
     await tester.pumpWidget(host(FakeBookSource()));
@@ -191,7 +193,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(splashFactory: NoSplash.splashFactory),
-        home: BookReader(source: FakeBookSource()),
+        home:
+            BookReader(source: FakeBookSource(), labels: ReaderLabels.chinese),
       ),
     );
     await tester.pumpAndSettle();
@@ -271,7 +274,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(splashFactory: NoSplash.splashFactory),
-        home: BookReader(source: FakeBookSource()),
+        home:
+            BookReader(source: FakeBookSource(), labels: ReaderLabels.chinese),
       ),
     );
     await tester.pumpAndSettle();
@@ -296,7 +300,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(splashFactory: NoSplash.splashFactory),
-        home: BookReader(source: FakeBookSource()),
+        home:
+            BookReader(source: FakeBookSource(), labels: ReaderLabels.chinese),
       ),
     );
     await tester.pumpAndSettle();
