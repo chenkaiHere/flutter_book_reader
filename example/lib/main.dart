@@ -32,6 +32,7 @@ class ReadBookApp extends StatelessWidget {
         return MaterialApp(
           title: 'ReadBook',
           debugShowCheckedModeBanner: false,
+          scaffoldMessengerKey: rootMessengerKey,
           // 未手动选择时 locale 为 null → 跟随系统语言；
           // 系统语言不在支持列表内则回退英文（而非 supportedLocales 的首个 ar）。
           locale: locale,

@@ -270,6 +270,7 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
         pageIndex: pageIdx,
         pageCount: pages.length,
         progress: controller.progressFor(chapterIdx, pages, pageIdx),
+        pageStartOffset: controller.startOffsetOfPageIn(pages, pageIdx),
       ),
     );
   }

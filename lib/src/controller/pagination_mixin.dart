@@ -121,10 +121,13 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
     return sum;
   }
 
-  int startOffsetOfPage(int index) {
+  int startOffsetOfPage(int index) => startOffsetOfPageIn(pages, index);
+
+  /// 给定任意章节的 [pgs]，计算第 [index] 页首字符的章内偏移（划线/书签锚点用）。
+  int startOffsetOfPageIn(List<ReaderPage> pgs, int index) {
     int sum = 0;
-    for (int i = 0; i < index && i < pages.length; i++) {
-      sum += _pageLength(pages[i]);
+    for (int i = 0; i < index && i < pgs.length; i++) {
+      sum += _pageLength(pgs[i]);
     }
     return sum;
   }

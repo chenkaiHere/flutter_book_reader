@@ -147,13 +147,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(menuOpacity(), 1);
 
-    // 菜单可见时滑动正文 —— 滑动那一刻菜单隐藏
+    // 菜单可见时滑动正文 —— 滑动那一刻菜单隐藏，但不翻页
     await tester.fling(find.byType(PageView), const Offset(-400, 0), 1200);
     await tester.pumpAndSettle();
     expect(menuOpacity(), 0, reason: '滑动应隐藏菜单');
+    expect(find.textContaining('1/'), findsWidgets, reason: '菜单可见时滑动不翻页');
   });
 
-  testWidgets('菜单唤起后单击只隐藏菜单、不翻页；滑动才翻页', (WidgetTester tester) async {
+  testWidgets('菜单唤起后单击/滑动都只关闭菜单、不翻页；关闭后滑动才翻页',
+      (WidgetTester tester) async {
     await tester.pumpWidget(host(FakeBookSource()));
     await tester.pumpAndSettle();
 
@@ -179,14 +181,20 @@ void main() {
     expect(menuOpacity(), 0, reason: '单击应隐藏菜单');
     expect(find.textContaining('1/'), findsWidgets, reason: '单击不应翻页');
 
-    // 再次唤起，滑动 —— 隐藏菜单并翻页
+    // 再次唤起，滑动 —— 只隐藏菜单、不翻页（菜单挡住翻页）
     await tester.tapAt(Offset(size.width * 0.5, size.height * 0.5));
     await tester.pumpAndSettle();
     expect(menuOpacity(), 1);
     await tester.fling(find.byType(PageView), const Offset(-400, 0), 1200);
     await tester.pumpAndSettle();
     expect(menuOpacity(), 0, reason: '滑动应隐藏菜单');
-    expect(find.textContaining('2/'), findsWidgets, reason: '滑动应翻到下一页');
+    expect(find.textContaining('1/'), findsWidgets,
+        reason: '菜单可见时滑动只关闭菜单，不翻页');
+
+    // 菜单已关闭，再滑动 —— 才翻到下一页
+    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1200);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('2/'), findsWidgets, reason: '关闭菜单后滑动才翻页');
   });
 
   testWidgets('目录弹窗滚到顶部后下拉可关闭', (WidgetTester tester) async {
@@ -234,20 +242,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.bookmark), findsWidgets);
 
-    // 打开目录 → 切到「书签」标签 → 列表出现一条书签
+    // 打开目录 → 切到「笔记」标签 → 列表出现一条书签笔记
     await tester.tap(find.text('目录'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('书签'));
+    await tester.tap(find.textContaining('笔记'));
     await tester.pumpAndSettle();
     expect(find.byType(CatalogSheet), findsOneWidget);
-    expect(find.text('还没有书签'), findsNothing);
+    expect(find.text('还没有笔记'), findsNothing);
     expect(
       find.descendant(
         of: find.byType(CatalogSheet),
-        matching: find.byIcon(Icons.bookmark),
+        matching: find.byIcon(Icons.bookmark_border),
       ),
-      findsOneWidget,
-      reason: '书签页应有一条书签',
+      findsWidgets,
+      reason: '笔记页应有一条书签笔记',
     );
   });
 
@@ -265,9 +273,9 @@ void main() {
 
     await tester.tap(find.text('目录'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('书签'));
+    await tester.tap(find.textContaining('笔记'));
     await tester.pumpAndSettle();
-    expect(find.text('还没有书签'), findsOneWidget, reason: '移除后书签页应为空');
+    expect(find.text('还没有笔记'), findsOneWidget, reason: '移除后笔记页应为空');
   });
 
   testWidgets('书籍抽屉可在详情 / 目录标签间切换', (WidgetTester tester) async {

@@ -131,10 +131,13 @@ class _ReaderMenuState extends State<ReaderMenu> {
           children: <Widget>[
             Positioned.fill(
               child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                // 点击中间阅读区：直接关闭整个菜单（含设置面板），
-                // 面板状态在菜单隐藏时由 didUpdateWidget 复位。
+                // opaque：菜单可见时全屏拦截，正文 PageView 不进入命中测试，
+                // 因此菜单开着时无法翻页/滑动；点击或滑动都只“先关闭菜单”，
+                // 关闭后再滑动才会翻页。面板状态在菜单隐藏时由 didUpdateWidget 复位。
+                behavior: HitTestBehavior.opaque,
                 onTap: widget.onRequestClose,
+                onHorizontalDragStart: (_) => widget.onRequestClose(),
+                onVerticalDragStart: (_) => widget.onRequestClose(),
               ),
             ),
             _buildTopBar(),

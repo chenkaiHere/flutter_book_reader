@@ -14,9 +14,12 @@ library;
 
 export 'src/book_reader_widget.dart';
 export 'src/bookmark/reader_bookmark_store.dart';
+export 'src/comment/reader_comment_store.dart';
 export 'src/paginator.dart' show Paginator;
 export 'src/progress/reader_progress_store.dart';
 export 'src/reader_config.dart' show ReaderConfig, FlipType;
 export 'src/reader_labels.dart' show ReaderLabels;
 export 'src/reader_theme.dart';
 export 'src/source/book_source.dart';
+export 'src/text_actions.dart';
+export 'src/underline/reader_underline_store.dart';

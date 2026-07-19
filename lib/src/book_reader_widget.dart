@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'bookmark/reader_bookmark_store.dart';
+import 'comment/reader_comment_store.dart';
 import 'controller/reading_controller.dart';
 import 'paginator.dart';
 import 'progress/reader_progress_store.dart';
@@ -11,6 +12,8 @@ import 'reader_config.dart';
 import 'reader_labels.dart';
 import 'reader_theme.dart';
 import 'source/book_source.dart';
+import 'text_actions.dart';
+import 'underline/reader_underline_store.dart';
 import 'views/horizontal_reader.dart';
 import 'views/simulation_reader.dart';
 import 'views/vertical_reader.dart';
@@ -31,11 +34,15 @@ class BookReader extends StatefulWidget {
     this.config,
     this.progressStore = const NoopReaderProgressStore(),
     this.bookmarkStore = const NoopReaderBookmarkStore(),
+    this.underlineStore = const NoopReaderUnderlineStore(),
+    this.commentStore = const NoopReaderCommentStore(),
     this.labels = const ReaderLabels(),
     this.startChapter,
     this.onChapterChanged,
     this.onPositionChanged,
     this.onClose,
+    this.onTextAction,
+    this.enableTextSelection = true,
   });
 
   /// 书籍数据源
@@ -49,6 +56,12 @@ class BookReader extends StatefulWidget {
 
   /// 书签存储；默认不持久化（仅当前会话内有效）
   final ReaderBookmarkStore bookmarkStore;
+
+  /// 划线存储；默认不持久化（仅当前会话内有效）
+  final ReaderUnderlineStore underlineStore;
+
+  /// 评论存储；默认不持久化（仅当前会话内有效）
+  final ReaderCommentStore commentStore;
 
   /// 界面文案（支持本地化 / 白标）
   final ReaderLabels labels;
@@ -65,6 +78,14 @@ class BookReader extends StatefulWidget {
   /// 返回 / 关闭回调；为空时默认 pop
   final VoidCallback? onClose;
 
+  /// 长按选中正文后，气泡工具条上「复制 / 评论 / 查询 / 分享」的点击回调。
+  /// 这四个动作插件不做任何内部处理（不写剪贴板、不弹输入框），只把选中详情
+  /// [ReaderSelection] 回调给业务方自行处理。「划线」由插件内部渲染/持久化，不走此回调。
+  final ReaderTextActionCallback? onTextAction;
+
+  /// 是否启用「长按选中正文」功能（默认开启）。
+  final bool enableTextSelection;
+
   @override
   State<BookReader> createState() => _BookReaderState();
 }
@@ -79,6 +100,13 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
 
   /// 当前书籍的书签（会话内的权威副本，变更后写回 [BookReader.bookmarkStore]）。
   List<Bookmark> _bookmarks = <Bookmark>[];
+
+  /// 当前书籍的划线（会话内的权威副本，变更后写回 [BookReader.underlineStore]）。
+  /// 使用不可变 [List] 引用整体替换，供 [ReaderUnderlineScope] 触发子树刷新。
+  List<Underline> _underlines = const <Underline>[];
+
+  /// 当前书籍的评论（会话内的权威副本，变更后写回 [BookReader.commentStore]）。
+  List<Comment> _comments = const <Comment>[];
 
   ReaderConfig get _config => widget.config ?? ReaderConfig.instance;
 
@@ -104,6 +132,10 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       );
       final List<Bookmark> bookmarks =
           await widget.bookmarkStore.load(manifest.id);
+      final List<Underline> underlines =
+          await widget.underlineStore.load(manifest.id);
+      final List<Comment> comments =
+          await widget.commentStore.load(manifest.id);
       final int start = widget.startChapter ?? saved?.chapterIndex ?? 0;
       final int offset =
           widget.startChapter != null ? 0 : (saved?.charOffset ?? 0);
@@ -121,6 +153,8 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       setState(() {
         _controller = controller;
         _bookmarks = bookmarks;
+        _underlines = List<Underline>.unmodifiable(underlines);
+        _comments = List<Comment>.unmodifiable(comments);
         _error = null;
       });
     } catch (e) {
@@ -240,9 +274,61 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     widget.bookmarkStore.save(c.manifest.id, next);
   }
 
+  /// 新增一条划线（去重同区间），补全标题/时间后写回存储。
+  void _addUnderline(int chapterIndex, int start, int end, String text) {
+    final ReadingController c = _controller!;
+    final Underline u = Underline(
+      chapterIndex: chapterIndex,
+      start: start,
+      end: end,
+      text: text,
+      chapterTitle: c.chapterTitleAt(chapterIndex),
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+    );
+    final List<Underline> next = List<Underline>.of(_underlines)
+      ..removeWhere((Underline e) => e.key == u.key)
+      ..add(u);
+    setState(() => _underlines = List<Underline>.unmodifiable(next));
+    widget.underlineStore.save(c.manifest.id, next);
+  }
+
+  /// 删除若干条划线，并写回存储。
+  void _removeUnderlines(List<Underline> targets) {
+    if (targets.isEmpty) return;
+    final ReadingController c = _controller!;
+    final Set<String> keys = targets.map((Underline u) => u.key).toSet();
+    final List<Underline> next = List<Underline>.of(_underlines)
+      ..removeWhere((Underline e) => keys.contains(e.key));
+    setState(() => _underlines = List<Underline>.unmodifiable(next));
+    widget.underlineStore.save(c.manifest.id, next);
+  }
+
+  /// 删除若干条评论，并写回存储。
+  void _removeComments(List<Comment> targets) {
+    if (targets.isEmpty) return;
+    final ReadingController c = _controller!;
+    final Set<String> keys = targets.map((Comment e) => e.key).toSet();
+    final List<Comment> next = List<Comment>.of(_comments)
+      ..removeWhere((Comment e) => keys.contains(e.key));
+    setState(() => _comments = List<Comment>.unmodifiable(next));
+    widget.commentStore.save(c.manifest.id, next);
+  }
+
   Future<void> _openCatalog() async {
     final ReadingController c = _controller!;
     _menuVisible.value = false;
+    // 评论由业务方在选中回调里自行写入 commentStore（插件不再内部新增），因此打开
+    // 目录/笔记前从存储重新拉取，确保刚写入的评论也能出现在笔记列表。
+    try {
+      final List<Comment> latest =
+          await widget.commentStore.load(c.manifest.id);
+      if (mounted) {
+        setState(() => _comments = List<Comment>.unmodifiable(latest));
+      }
+    } catch (_) {
+      // 读取失败保持现有内存副本
+    }
+    if (!mounted) return;
     final ReadingPosition? picked = await showModalBottomSheet<ReadingPosition>(
       context: context,
       isScrollControlled: true,
@@ -270,6 +356,18 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
                   chapterTitles: c.manifest.chapterTitles,
                   currentIndex: c.chapterIndex,
                   bookmarks: _bookmarks,
+                  underlines: _underlines,
+                  comments: _comments,
+                  onDeleteBookmark: (Bookmark b) {
+                    final List<Bookmark> next = List<Bookmark>.of(_bookmarks)
+                      ..removeWhere((Bookmark e) => e.key == b.key);
+                    setState(() => _bookmarks = next);
+                    widget.bookmarkStore.save(c.manifest.id, next);
+                  },
+                  onDeleteUnderline: (Underline u) =>
+                      _removeUnderlines(<Underline>[u]),
+                  onDeleteComment: (Comment cm) =>
+                      _removeComments(<Comment>[cm]),
                   theme: _config.theme,
                   scrollController: scrollController,
                 ),
@@ -301,9 +399,18 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return ReaderLabelsScope(
-      labels: widget.labels,
-      child: _buildScaffold(),
+    return ReaderSelectionScope(
+      enabled: widget.enableTextSelection,
+      onAction: widget.onTextAction,
+      child: ReaderUnderlineScope(
+        underlines: _underlines,
+        onAdd: _addUnderline,
+        onRemove: _removeUnderlines,
+        child: ReaderLabelsScope(
+          labels: widget.labels,
+          child: _buildScaffold(),
+        ),
+      ),
     );
   }
 
@@ -344,21 +451,9 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
             backgroundColor: t.paperColor,
             body: Stack(
               children: <Widget>[
-                // 正文始终可交互；菜单唤起时一旦开始滑动（用户拖动），立即隐藏菜单，
-                // 让翻页/滚动照常进行。菜单自身的章节滑杆不属于此监听，不受影响。
-                Positioned.fill(
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (ScrollNotification n) {
-                      if (_menuVisible.value &&
-                          n is ScrollStartNotification &&
-                          n.dragDetails != null) {
-                        _menuVisible.value = false;
-                      }
-                      return false;
-                    },
-                    child: _buildContent(t, c),
-                  ),
-                ),
+                // 正文始终可交互。菜单唤起时由 ReaderMenu 的全屏 opaque 遮罩拦截手势：
+                // 点击或滑动都只关闭菜单，不翻页；菜单关闭后再滑动才会翻页。
+                Positioned.fill(child: _buildContent(t, c)),
                 if (_config.dimLevel > 0)
                   Positioned.fill(
                     child: IgnorePointer(

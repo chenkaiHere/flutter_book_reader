@@ -22,6 +22,12 @@
   <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_2.jpeg" width="270" alt="flutter_book_reader 演示 —— 阅读器">
 </p>
 
+<p align="center">
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_3.jpeg" width="270" alt="flutter_book_reader 演示 —— 选中文字、划线与评论">
+  &nbsp;&nbsp;
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_4.jpeg" width="270" alt="flutter_book_reader 演示 —— 笔记面板（书签 / 划线 / 评论）">
+</p>
+
 把 `BookReader` 接上你自己的数据，立刻就能得到真实分页、跟随手指的仿真翻页、章节导航、
 主题与阅读进度持久化。一切都由小而可替换的抽象驱动 —— 正文可以来自接口、数据库、本地文件，
 或任何地方，无需改动组件内部。
@@ -32,6 +38,7 @@
 - 📐 **是真分页，不是滚动凑数。** 基于 `TextPainter` 的段落级排版，首行缩进与两端对齐都正确。
 - 🔌 **一切自带、皆可替换。** 数据与进度存储都是纯抽象 —— 网络、数据库、云同步、离线文件皆可接入。
 - 🎨 **开箱即美。** 六套纸张主题、日间 / 夜间一键切换、字号 / 行距 / 间距可调、全屏沉浸阅读。
+- ✍️ **可选中、划线、写想法。** 长按选中（指示器可拖动）、波浪划线、评论 —— 统一汇入笔记面板。
 - 🧪 **经得起用。** 不含 Widget 的纯逻辑核心，完全可单元测试，架构清晰且有注释。
 
 ## 特性
@@ -47,6 +54,12 @@
 - **可替换的数据源**（`BookSource`）与**进度存储**（`ReaderProgressStore`）——
   自行实现网络 / 数据库 / 云端版本即可接入。
 - **进度防抖保存**，应用进入后台时立即落盘。
+- **选中文字与标注** —— 长按选中，起 / 止指示器可拖动并吸附到字符边界；气泡工具条含
+  **复制 / 划线 / 评论 / 查询 / 分享**。**划线**（波浪线）由阅读器渲染并持久化；
+  **复制 / 评论 / 查询 / 分享**为纯回调（`onTextAction(action, ReaderSelection)`），
+  行为完全交给业务方。**书签、划线、评论**统一汇入一个**笔记**面板（可按 全部 / 书签 /
+  划线 / 评论 筛选，点击跳转或删除），各自有可替换的存储（`ReaderBookmarkStore`、
+  `ReaderUnderlineStore`、`ReaderCommentStore`）。
 - **主题与排版**：六套内置纸张主题、每套可定制强调色，字号 / 行距 / 亮度可运行时调节。
 - **内置多语言** —— `ReaderLabels` 内置 **12 种语言**（en、zh、es、fr、ar、bn、pt、
   ru、hi、ur、ja、ko），通过 `ReaderLabels.forLanguageCode(code)` 选择（非内置语言
@@ -56,7 +69,7 @@
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.2.0
+  flutter_book_reader: ^1.3.0
 ```
 
 ```dart
@@ -148,6 +161,48 @@ BookReader(
   labels: const ReaderLabels(prevChapter: '上一章', catalog: '目录'),
 )
 ```
+
+### 5. 选中操作、划线与笔记
+
+**划线**由阅读器内部处理 —— 只需接入存储（`ReaderBookmarkStore` /
+`ReaderCommentStore` 同理），即可自动渲染并持久化：
+
+```dart
+BookReader(
+  source: MyBookSource(),
+  underlineStore: MyUnderlineStore(), // 继承 ReaderUnderlineStore
+  commentStore: MyCommentStore(),     // 继承 ReaderCommentStore
+)
+```
+
+每种存储都内置：`Noop…Store`（默认，不持久化）与 `InMemory…Store`（内存）。
+
+**复制 / 评论 / 查询 / 分享**通过 `onTextAction` 回调交给你 —— 阅读器不做任何副作用
+（不写剪贴板、不弹内置弹层），行为完全由你掌控。`ReaderSelection` 携带章节、章内区间与
+文字，足以让你自行构造并保存一条 `Comment`：
+
+```dart
+BookReader(
+  source: MyBookSource(),
+  onTextAction: (ReaderTextAction action, ReaderSelection sel) {
+    switch (action) {
+      case ReaderTextAction.copy:
+        Clipboard.setData(ClipboardData(text: sel.text));
+      case ReaderTextAction.comment:
+        showMyCommentSheet(sel); // 你自己的界面，再 commentStore.save(...)
+      case ReaderTextAction.query:
+        openDictionary(sel.text);
+      case ReaderTextAction.share:
+        Share.share(sel.text);
+      case ReaderTextAction.highlight:
+        break; // 由阅读器内部处理
+    }
+  },
+)
+```
+
+书签、划线、评论都会一起出现在阅读器内的**笔记**面板（可按 全部 / 书签 / 划线 / 评论
+筛选，点击跳转或删除）。
 
 ## 架构
 

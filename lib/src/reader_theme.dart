@@ -12,8 +12,10 @@ class ReaderTheme {
     this.accentColor = const Color(0xFFE8622A),
     Color? panelColor,
     Color? segActiveColor,
+    Color? selectionColor,
   })  : _panelColor = panelColor,
-        _segActiveColor = segActiveColor;
+        _segActiveColor = segActiveColor,
+        _selectionColor = selectionColor;
 
   final String alias;
   final String name;
@@ -29,6 +31,7 @@ class ReaderTheme {
 
   final Color? _panelColor;
   final Color? _segActiveColor;
+  final Color? _selectionColor;
 
   /// 菜单栏 / 设置面板背景色（较纸张略有区分）；未提供时回退纸张色。
   Color get panelColor => _panelColor ?? paperColor;
@@ -51,6 +54,22 @@ class ReaderTheme {
   /// 描边色
   Color get borderColor => textColor.withValues(alpha: 0.16);
 
+  /// 选中文字的高亮底色（不透明铺在文字后，正文仍清晰可读）。
+  /// 各预设按其纸张背景显式配色（见下方 presets）；未提供时按纸张派生。
+  Color get selectionColor {
+    if (_selectionColor != null) return _selectionColor;
+    if (isDark) {
+      final HSLColor h = HSLColor.fromColor(paperColor);
+      return h.withLightness((h.lightness + 0.16).clamp(0.0, 1.0)).toColor();
+    }
+    final Color warmed = Color.alphaBlend(
+      accentColor.withValues(alpha: 0.14),
+      paperColor,
+    );
+    final HSLColor h = HSLColor.fromColor(warmed);
+    return h.withLightness((h.lightness + 0.04).clamp(0.0, 1.0)).toColor();
+  }
+
   /// 复制并覆盖部分字段，便于业务方基于预设微调。
   ReaderTheme copyWith({
     String? alias,
@@ -60,6 +79,7 @@ class ReaderTheme {
     Color? accentColor,
     Color? panelColor,
     Color? segActiveColor,
+    Color? selectionColor,
   }) {
     return ReaderTheme(
       alias: alias ?? this.alias,
@@ -69,6 +89,7 @@ class ReaderTheme {
       accentColor: accentColor ?? this.accentColor,
       panelColor: panelColor ?? _panelColor,
       segActiveColor: segActiveColor ?? _segActiveColor,
+      selectionColor: selectionColor ?? _selectionColor,
     );
   }
 
@@ -81,6 +102,7 @@ class ReaderTheme {
     textColor: Color(0xFF2B2B2B),
     panelColor: Color(0xFFF7F6F4),
     segActiveColor: Color(0xFFFFFFFF),
+    selectionColor: Color(0xFFF6E6C4),
   );
 
   static const ReaderTheme grey = ReaderTheme(
@@ -90,6 +112,7 @@ class ReaderTheme {
     textColor: Color(0xFF33322E),
     panelColor: Color(0xFFF0EEE8),
     segActiveColor: Color(0xFFFAF9F5),
+    selectionColor: Color(0xFFDCD2BB),
   );
 
   static const ReaderTheme yellow = ReaderTheme(
@@ -99,6 +122,7 @@ class ReaderTheme {
     textColor: Color(0xFF3A322B),
     panelColor: Color(0xFFEFE6D5),
     segActiveColor: Color(0xFFFDFAF3),
+    selectionColor: Color(0xFFE7D3A8),
   );
 
   static const ReaderTheme green = ReaderTheme(
@@ -108,6 +132,7 @@ class ReaderTheme {
     textColor: Color(0xFF2F3A34),
     panelColor: Color(0xFFD7E4DC),
     segActiveColor: Color(0xFFF1F7F4),
+    selectionColor: Color(0xFFBFCEB4),
   );
 
   static const ReaderTheme blue = ReaderTheme(
@@ -117,6 +142,7 @@ class ReaderTheme {
     textColor: Color(0xFF2D3540),
     panelColor: Color(0xFFD5E1F0),
     segActiveColor: Color(0xFFF0F4FB),
+    selectionColor: Color(0xFFAEBACB),
   );
 
   static const ReaderTheme night = ReaderTheme(
@@ -126,6 +152,7 @@ class ReaderTheme {
     textColor: Color(0xFFB5AB9C),
     panelColor: Color(0xFF221F19),
     segActiveColor: Color(0xFF3A352A),
+    selectionColor: Color(0xFF4C3A28),
   );
 
   static const List<ReaderTheme> presets = <ReaderTheme>[
