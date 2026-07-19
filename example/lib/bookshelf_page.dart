@@ -10,15 +10,23 @@ import 'data/db/app_database.dart';
 import 'data/db/book_db.dart';
 import 'data/db/db_book_source.dart';
 import 'data/shared_prefs_bookmark_store.dart';
+import 'data/shared_prefs_comment_store.dart';
 import 'data/shared_prefs_progress_store.dart';
+import 'data/shared_prefs_underline_store.dart';
 import 'import/txt_parser.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/warm_theme.dart';
 import 'widgets/book_card.dart';
 import 'widgets/book_cover.dart';
 import 'widgets/book_detail_sheet.dart';
+import 'widgets/comment_input_sheet.dart';
 import 'widgets/language_sheet.dart';
 import 'widgets/warm_widgets.dart';
+
+/// 全局 ScaffoldMessenger key：用于在阅读页（独立路由）上层弹出 SnackBar，
+/// 例如长按选中文字后的操作提示。挂在 [MaterialApp.scaffoldMessengerKey] 上。
+final GlobalKey<ScaffoldMessengerState> rootMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 /// 书架及 App 主界面的系统栏样式：状态栏透明 + 深色图标，底部导航栏白底黑字。
 /// 与阅读页退出时恢复的样式一致，避免进入 App 时出现灰色遮罩 / 黑色导航栏。
@@ -51,6 +59,8 @@ class _BookshelfPageState extends State<BookshelfPage> {
 
   final SharedPrefsProgressStore _progressStore = SharedPrefsProgressStore();
   final ReaderBookmarkStore _bookmarkStore = SharedPrefsBookmarkStore();
+  final ReaderUnderlineStore _underlineStore = SharedPrefsUnderlineStore();
+  final ReaderCommentStore _commentStore = SharedPrefsCommentStore();
 
   static const String _kImportIntroShownKey = 'import_intro_shown';
 
@@ -150,6 +160,8 @@ class _BookshelfPageState extends State<BookshelfPage> {
       progress: _progressOf(book),
       position: _progress[book.id],
       bookmarkStore: _bookmarkStore,
+      underlineStore: _underlineStore,
+      commentStore: _commentStore,
     );
     if (intent != null) {
       await _openReader(book, startChapter: intent.startChapter);
@@ -171,11 +183,64 @@ class _BookshelfPageState extends State<BookshelfPage> {
           labels: labels,
           progressStore: _progressStore,
           bookmarkStore: _bookmarkStore,
+          underlineStore: _underlineStore,
+          commentStore: _commentStore,
           startChapter: startChapter,
+          // 气泡菜单「复制 / 评论 / 查询 / 分享」全部回调到 App 侧自行处理。
+          onTextAction: (ReaderTextAction action, ReaderSelection sel) =>
+              _onReaderTextAction(book, labels, action, sel),
         ),
       ),
     );
     await _refreshProgress();
+  }
+
+  /// 气泡工具条动作全部由 App 处理：复制→写剪贴板；查询/分享→示意提示；
+  /// 评论→弹 App 自己的输入弹层并写入 [_commentStore]（阅读器打开笔记时会重新读取）。
+  Future<void> _onReaderTextAction(
+    BookRow book,
+    ReaderLabels labels,
+    ReaderTextAction action,
+    ReaderSelection sel,
+  ) async {
+    void toast(String msg) => rootMessengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+
+    switch (action) {
+      case ReaderTextAction.copy:
+        await Clipboard.setData(ClipboardData(text: sel.text));
+        toast('已复制');
+      case ReaderTextAction.query:
+        toast('查询：${sel.text}');
+      case ReaderTextAction.share:
+        toast('分享：${sel.text}');
+      case ReaderTextAction.comment:
+        if (!mounted) return;
+        final String? body = await CommentInputSheet.show(
+          context,
+          labels: labels,
+          quote: sel.text,
+        );
+        if (body == null || body.trim().isEmpty) return;
+        if (sel.start < 0 || sel.end < 0) return;
+        final Comment comment = Comment(
+          chapterIndex: sel.chapterIndex,
+          start: sel.start,
+          end: sel.end,
+          quote: sel.text,
+          text: body.trim(),
+          chapterTitle: sel.chapterTitle,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
+        );
+        final List<Comment> list = await _commentStore.load(book.id)
+          ..add(comment);
+        await _commentStore.save(book.id, list);
+        toast('已评论');
+      case ReaderTextAction.highlight:
+        // 划线由插件内部处理，正常不会回调到这里。
+        break;
+    }
   }
 
   // ————————————————————— 删除 —————————————————————

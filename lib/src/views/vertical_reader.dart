@@ -167,7 +167,12 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader> {
 
   Widget _sectionBody(int idx, String? body, ReaderLabels labels) {
     if (body != null) {
-      return ReaderProse(page: controller.chapterBlocks(body), config: config);
+      return ReaderProse(
+        page: controller.chapterBlocks(body),
+        config: config,
+        chapterIndex: idx,
+        chapterTitle: controller.chapterTitleAt(idx),
+      );
     }
     if (controller.hasError(idx)) {
       return Padding(

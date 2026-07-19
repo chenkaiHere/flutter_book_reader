@@ -47,8 +47,29 @@ class ReaderLabels {
     this.loadingNext = 'Loading next chapter…',
     this.more = 'More',
     this.back = 'Back',
+    this.selectCopy = 'Copy',
+    this.selectHighlight = 'Highlight',
+    this.selectRemoveHighlight = 'Remove',
+    this.selectQuery = 'Look up',
+    this.selectShare = 'Share',
+    this.selectComment = 'Comment',
+    this.commentTitle = 'Write a comment',
+    this.commentHint = 'Write your thoughts…',
+    this.commentSend = 'Send',
+    this.noteFilterComment = 'Comments',
     this.chapterProgressTemplate = 'Ch. {i}/{n}',
     this.chapterTotalTemplate = '{n} chapters',
+    this.notesTab = 'Notes',
+    this.noteFilterAll = 'All',
+    this.noteDelete = 'Delete',
+    this.noteJump = 'Go to',
+    this.noNotes = 'No notes yet',
+    this.noNotesHint =
+        'Highlights, comments and bookmarks you add while reading show up here.',
+    this.timeJustNow = 'just now',
+    this.timeMinutesAgoTemplate = '{n} min ago',
+    this.timeHoursAgoTemplate = '{n} h ago',
+    this.timeDaysAgoTemplate = '{n} d ago',
   });
 
   final String loading;
@@ -94,6 +115,24 @@ class ReaderLabels {
   final String more;
   final String back;
 
+  /// 选中文字后的操作菜单：复制 / 划线 / 删除划线 / 查询 / 分享。
+  final String selectCopy;
+  final String selectHighlight;
+
+  /// 选区与已有划线相交时，工具条上「划线」替换为「删除划线」。
+  final String selectRemoveHighlight;
+  final String selectQuery;
+  final String selectShare;
+
+  /// 选中文字后「评论」：气泡按钮文案 / 底部输入弹层标题 / 输入占位 / 发送按钮。
+  final String selectComment;
+  final String commentTitle;
+  final String commentHint;
+  final String commentSend;
+
+  /// 笔记面板筛选「评论」。
+  final String noteFilterComment;
+
   /// “第 x/N 章” 模板：{i}=当前章号（从 1 起），{n}=总章数。
   final String chapterProgressTemplate;
 
@@ -108,6 +147,39 @@ class ReaderLabels {
   /// “共 N 章”
   String chapterTotal(int count) =>
       chapterTotalTemplate.replaceFirst('{n}', '$count');
+
+  /// 笔记面板：Tab 标题 / 筛选「全部」/ 条目菜单「删除」「跳转」/ 空态文案。
+  final String notesTab;
+  final String noteFilterAll;
+  final String noteDelete;
+  final String noteJump;
+  final String noNotes;
+  final String noNotesHint;
+
+  /// 相对时间文案：刚刚 / N 分钟前 / N 小时前 / N 天前（更久用绝对日期）。
+  final String timeJustNow;
+  final String timeMinutesAgoTemplate;
+  final String timeHoursAgoTemplate;
+  final String timeDaysAgoTemplate;
+
+  /// 把时间戳（毫秒）格式化为相对时间；超过 7 天用 “yyyy-MM-dd”。
+  String relativeTime(int ms, {DateTime? now}) {
+    if (ms <= 0) return '';
+    final DateTime t = DateTime.fromMillisecondsSinceEpoch(ms);
+    final Duration d = (now ?? DateTime.now()).difference(t);
+    if (d.inMinutes < 1) return timeJustNow;
+    if (d.inMinutes < 60) {
+      return timeMinutesAgoTemplate.replaceFirst('{n}', '${d.inMinutes}');
+    }
+    if (d.inHours < 24) {
+      return timeHoursAgoTemplate.replaceFirst('{n}', '${d.inHours}');
+    }
+    if (d.inDays <= 7) {
+      return timeDaysAgoTemplate.replaceFirst('{n}', '${d.inDays}');
+    }
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${t.year}-${two(t.month)}-${two(t.day)}';
+  }
 
   // ————————————————————— 内置 12 种语言预设 —————————————————————
 
@@ -150,8 +222,28 @@ class ReaderLabels {
     loadingNext: '正在载入下一章…',
     more: '更多',
     back: '返回',
+    selectCopy: '复制',
+    selectHighlight: '划线',
+    selectRemoveHighlight: '删除划线',
+    selectQuery: '查询',
+    selectShare: '分享',
+    selectComment: '评论',
+    commentTitle: '写评论',
+    commentHint: '写下你的想法…',
+    commentSend: '发送',
+    noteFilterComment: '评论',
     chapterProgressTemplate: '第 {i}/{n} 章',
     chapterTotalTemplate: '共 {n} 章',
+    notesTab: '笔记',
+    noteFilterAll: '全部',
+    noteDelete: '删除',
+    noteJump: '跳转',
+    noNotes: '还没有笔记',
+    noNotesHint: '阅读时划线、写评论、点右上角加书签，都会出现在这里。',
+    timeJustNow: '刚刚',
+    timeMinutesAgoTemplate: '{n} 分钟前',
+    timeHoursAgoTemplate: '{n} 小时前',
+    timeDaysAgoTemplate: '{n} 天前',
   );
 
   static const ReaderLabels spanish = ReaderLabels(
@@ -192,6 +284,11 @@ class ReaderLabels {
     loadingNext: 'Cargando el siguiente capítulo…',
     more: 'Más',
     back: 'Atrás',
+    selectCopy: 'Copiar',
+    selectHighlight: 'Subrayar',
+    selectRemoveHighlight: 'Quitar',
+    selectQuery: 'Buscar',
+    selectShare: 'Compartir',
     chapterProgressTemplate: 'Cap. {i}/{n}',
     chapterTotalTemplate: '{n} capítulos',
   );
@@ -234,6 +331,11 @@ class ReaderLabels {
     loadingNext: 'Chargement du chapitre suivant…',
     more: 'Plus',
     back: 'Retour',
+    selectCopy: 'Copier',
+    selectHighlight: 'Surligner',
+    selectRemoveHighlight: 'Retirer',
+    selectQuery: 'Rechercher',
+    selectShare: 'Partager',
     chapterProgressTemplate: 'Ch. {i}/{n}',
     chapterTotalTemplate: '{n} chapitres',
   );
@@ -276,6 +378,11 @@ class ReaderLabels {
     loadingNext: 'جارٍ تحميل الفصل التالي…',
     more: 'المزيد',
     back: 'رجوع',
+    selectCopy: 'نسخ',
+    selectHighlight: 'تحديد',
+    selectRemoveHighlight: 'إزالة',
+    selectQuery: 'بحث',
+    selectShare: 'مشاركة',
     chapterProgressTemplate: 'الفصل {i}/{n}',
     chapterTotalTemplate: '{n} فصلًا',
   );
@@ -318,6 +425,11 @@ class ReaderLabels {
     loadingNext: 'পরের অধ্যায় লোড হচ্ছে…',
     more: 'আরও',
     back: 'ফিরুন',
+    selectCopy: 'কপি',
+    selectHighlight: 'হাইলাইট',
+    selectRemoveHighlight: 'সরান',
+    selectQuery: 'অনুসন্ধান',
+    selectShare: 'শেয়ার',
     chapterProgressTemplate: 'অধ্যায় {i}/{n}',
     chapterTotalTemplate: '{n}টি অধ্যায়',
   );
@@ -360,6 +472,11 @@ class ReaderLabels {
     loadingNext: 'Carregando o próximo capítulo…',
     more: 'Mais',
     back: 'Voltar',
+    selectCopy: 'Copiar',
+    selectHighlight: 'Destacar',
+    selectRemoveHighlight: 'Remover',
+    selectQuery: 'Consultar',
+    selectShare: 'Compartilhar',
     chapterProgressTemplate: 'Cap. {i}/{n}',
     chapterTotalTemplate: '{n} capítulos',
   );
@@ -402,6 +519,11 @@ class ReaderLabels {
     loadingNext: 'Загрузка следующей главы…',
     more: 'Ещё',
     back: 'Назад',
+    selectCopy: 'Копировать',
+    selectHighlight: 'Выделить',
+    selectRemoveHighlight: 'Убрать',
+    selectQuery: 'Найти',
+    selectShare: 'Поделиться',
     chapterProgressTemplate: 'Гл. {i}/{n}',
     chapterTotalTemplate: 'Глав: {n}',
   );
@@ -444,6 +566,11 @@ class ReaderLabels {
     loadingNext: 'अगला अध्याय लोड हो रहा है…',
     more: 'और',
     back: 'वापस',
+    selectCopy: 'कॉपी',
+    selectHighlight: 'हाइलाइट',
+    selectRemoveHighlight: 'हटाएँ',
+    selectQuery: 'खोजें',
+    selectShare: 'शेयर',
     chapterProgressTemplate: 'अध्याय {i}/{n}',
     chapterTotalTemplate: '{n} अध्याय',
   );
@@ -486,6 +613,11 @@ class ReaderLabels {
     loadingNext: 'اگلا باب لوڈ ہو رہا ہے…',
     more: 'مزید',
     back: 'واپس',
+    selectCopy: 'کاپی',
+    selectHighlight: 'نمایاں',
+    selectRemoveHighlight: 'ہٹائیں',
+    selectQuery: 'تلاش',
+    selectShare: 'شیئر',
     chapterProgressTemplate: 'باب {i}/{n}',
     chapterTotalTemplate: '{n} ابواب',
   );
@@ -527,6 +659,11 @@ class ReaderLabels {
     loadingNext: '次の章を読み込み中…',
     more: 'その他',
     back: '戻る',
+    selectCopy: 'コピー',
+    selectHighlight: 'ハイライト',
+    selectRemoveHighlight: '削除',
+    selectQuery: '調べる',
+    selectShare: '共有',
     chapterProgressTemplate: '第{i}/{n}章',
     chapterTotalTemplate: '全{n}章',
   );
@@ -568,6 +705,11 @@ class ReaderLabels {
     loadingNext: '다음 장 불러오는 중…',
     more: '더보기',
     back: '뒤로',
+    selectCopy: '복사',
+    selectHighlight: '하이라이트',
+    selectRemoveHighlight: '삭제',
+    selectQuery: '찾기',
+    selectShare: '공유',
     chapterProgressTemplate: '{i}/{n}장',
     chapterTotalTemplate: '전체 {n}장',
   );

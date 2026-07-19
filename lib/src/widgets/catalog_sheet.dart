@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../bookmark/reader_bookmark_store.dart';
+import '../comment/reader_comment_store.dart';
 import '../progress/reader_progress_store.dart';
 import '../reader_labels.dart';
 import '../reader_theme.dart';
+import '../underline/reader_underline_store.dart';
 
 /// 书籍信息抽屉：顶部书籍信息区（封面 + 书名 + 作者），下方「详情 / 目录 / 书签」
 /// 三个标签页，可点击或左右手势滑动切换（[TabBarView]）。详情页展示书籍信息与简介，
@@ -24,6 +26,11 @@ class CatalogSheet extends StatefulWidget {
     required this.currentIndex,
     required this.theme,
     this.bookmarks = const <Bookmark>[],
+    this.underlines = const <Underline>[],
+    this.comments = const <Comment>[],
+    this.onDeleteBookmark,
+    this.onDeleteUnderline,
+    this.onDeleteComment,
     this.scrollController,
   });
 
@@ -35,8 +42,19 @@ class CatalogSheet extends StatefulWidget {
   final int currentIndex;
   final ReaderTheme theme;
 
-  /// 书签列表（展示于「书签」标签页）
+  /// 书签列表（展示于「笔记」标签页）
   final List<Bookmark> bookmarks;
+
+  /// 划线列表（展示于「笔记」标签页）
+  final List<Underline> underlines;
+
+  /// 评论列表（展示于「笔记」标签页）
+  final List<Comment> comments;
+
+  /// 删除某条书签 / 划线 / 评论（持久化交给外层）。
+  final void Function(Bookmark)? onDeleteBookmark;
+  final void Function(Underline)? onDeleteUnderline;
+  final void Function(Comment)? onDeleteComment;
 
   /// 外部滚动控制器（如 [DraggableScrollableSheet] 提供的）；为空时内部自建。
   /// 绑定到「目录」列表，使列表滚到顶部后继续下拉可关闭整个面板。
@@ -44,6 +62,47 @@ class CatalogSheet extends StatefulWidget {
 
   @override
   State<CatalogSheet> createState() => _CatalogSheetState();
+}
+
+/// 笔记筛选：全部 / 仅书签 / 仅划线 / 仅评论。
+enum _NoteFilter { all, bookmark, underline, comment }
+
+/// 笔记条目类型。
+enum _NoteKind { bookmark, underline, comment }
+
+/// 笔记面板的统一条目（书签 / 划线 / 评论归一）。
+class _Note {
+  const _Note({
+    required this.kind,
+    required this.chapterIndex,
+    required this.chapterTitle,
+    required this.offset,
+    required this.createdAt,
+    required this.text,
+    this.quote = '',
+    this.bookmark,
+    this.underline,
+    this.comment,
+  });
+
+  final _NoteKind kind;
+  final int chapterIndex;
+  final String chapterTitle;
+  final int offset; // 跳转目标（章内偏移）
+  final int createdAt;
+
+  /// 主体文字：划线为划线文字、评论为评论正文、书签为空。
+  final String text;
+
+  /// 评论引用的原文（仅评论有）。
+  final String quote;
+  final Bookmark? bookmark;
+  final Underline? underline;
+  final Comment? comment;
+
+  bool get isUnderline => kind == _NoteKind.underline;
+
+  bool get isComment => kind == _NoteKind.comment;
 }
 
 class _CatalogSheetState extends State<CatalogSheet>
@@ -77,6 +136,16 @@ class _CatalogSheetState extends State<CatalogSheet>
 
   /// 是否倒序展示（true 时列表从末章到首章）。
   bool _descending = false;
+
+  /// 笔记：本地可变副本（删除即时反映），筛选状态。
+  late final List<Bookmark> _bookmarks = List<Bookmark>.of(widget.bookmarks);
+  late final List<Underline> _underlines =
+      List<Underline>.of(widget.underlines);
+  late final List<Comment> _comments = List<Comment>.of(widget.comments);
+  _NoteFilter _filter = _NoteFilter.all;
+
+  int get _noteCount =>
+      _bookmarks.length + _underlines.length + _comments.length;
 
   int get _count => widget.chapterTitles.length;
 
@@ -180,7 +249,7 @@ class _CatalogSheetState extends State<CatalogSheet>
               children: <Widget>[
                 _buildDetail(labels),
                 _buildCatalog(labels),
-                _buildBookmarks(labels),
+                _buildNotes(labels),
               ],
             ),
           ),
@@ -355,7 +424,10 @@ class _CatalogSheetState extends State<CatalogSheet>
         tabs: <Widget>[
           Tab(text: labels.detail),
           Tab(text: labels.catalog),
-          Tab(text: labels.bookmarkTab),
+          Tab(
+              text: _noteCount > 0
+                  ? '${labels.notesTab} $_noteCount'
+                  : labels.notesTab),
         ],
       ),
     );
@@ -493,10 +565,131 @@ class _CatalogSheetState extends State<CatalogSheet>
     );
   }
 
-  // ————————————————————— 书签 —————————————————————
+  // ————————————————————— 笔记（书签 + 划线）—————————————————————
 
-  Widget _buildBookmarks(ReaderLabels labels) {
-    if (widget.bookmarks.isEmpty) {
+  /// 归一并按筛选取出笔记；按 (章序, 章内偏移) 升序，便于分组与按阅读顺序展示。
+  List<_Note> _notes() {
+    final List<_Note> list = <_Note>[];
+    if (_filter == _NoteFilter.all || _filter == _NoteFilter.bookmark) {
+      for (final Bookmark b in _bookmarks) {
+        list.add(_Note(
+          kind: _NoteKind.bookmark,
+          chapterIndex: b.chapterIndex,
+          chapterTitle: b.chapterTitle,
+          offset: b.charOffset,
+          createdAt: b.createdAt,
+          text: '',
+          bookmark: b,
+        ));
+      }
+    }
+    if (_filter == _NoteFilter.all || _filter == _NoteFilter.underline) {
+      for (final Underline u in _underlines) {
+        list.add(_Note(
+          kind: _NoteKind.underline,
+          chapterIndex: u.chapterIndex,
+          chapterTitle: u.chapterTitle,
+          offset: u.start,
+          createdAt: u.createdAt,
+          text: u.text,
+          underline: u,
+        ));
+      }
+    }
+    if (_filter == _NoteFilter.all || _filter == _NoteFilter.comment) {
+      for (final Comment cm in _comments) {
+        list.add(_Note(
+          kind: _NoteKind.comment,
+          chapterIndex: cm.chapterIndex,
+          chapterTitle: cm.chapterTitle,
+          offset: cm.start,
+          createdAt: cm.createdAt,
+          text: cm.text,
+          quote: cm.quote,
+          comment: cm,
+        ));
+      }
+    }
+    list.sort((_Note a, _Note b) {
+      final int c = a.chapterIndex.compareTo(b.chapterIndex);
+      return c != 0 ? c : a.offset.compareTo(b.offset);
+    });
+    return list;
+  }
+
+  void _jumpTo(_Note n) => Navigator.of(context).pop(
+        ReadingPosition(chapterIndex: n.chapterIndex, charOffset: n.offset),
+      );
+
+  void _deleteNote(_Note n) {
+    setState(() {
+      if (n.isComment && n.comment != null) {
+        _comments.removeWhere((Comment e) => e.key == n.comment!.key);
+        widget.onDeleteComment?.call(n.comment!);
+      } else if (n.isUnderline && n.underline != null) {
+        _underlines.removeWhere((Underline e) => e.key == n.underline!.key);
+        widget.onDeleteUnderline?.call(n.underline!);
+      } else if (n.bookmark != null) {
+        _bookmarks.removeWhere((Bookmark e) => e.key == n.bookmark!.key);
+        widget.onDeleteBookmark?.call(n.bookmark!);
+      }
+    });
+  }
+
+  Widget _buildNotes(ReaderLabels labels) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        _filterRow(labels),
+        Expanded(child: _notesList(labels)),
+      ],
+    );
+  }
+
+  Widget _filterRow(ReaderLabels labels) {
+    Widget chip(String label, _NoteFilter f) {
+      final bool active = _filter == f;
+      return Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => setState(() => _filter = f),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+            decoration: BoxDecoration(
+              color: active ? _accent.withValues(alpha: 0.16) : _cardColor,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              label,
+              style: _sans(
+                size: 13,
+                weight: active ? FontWeight.w700 : FontWeight.w500,
+                color: active ? _accent : _sub,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(22, 12, 12, 8),
+      child: Row(
+        children: <Widget>[
+          chip(labels.noteFilterAll, _NoteFilter.all),
+          chip(labels.bookmarkTab, _NoteFilter.bookmark),
+          chip(labels.selectHighlight, _NoteFilter.underline),
+          chip(labels.noteFilterComment, _NoteFilter.comment),
+        ],
+      ),
+    );
+  }
+
+  Widget _notesList(ReaderLabels labels) {
+    final List<_Note> notes = _notes();
+    if (notes.isEmpty) {
       return ListView(
         controller: _markCtrl,
         children: <Widget>[
@@ -504,15 +697,15 @@ class _CatalogSheetState extends State<CatalogSheet>
             padding: const EdgeInsets.symmetric(vertical: 70, horizontal: 30),
             child: Column(
               children: <Widget>[
-                Icon(Icons.bookmark_border,
+                Icon(Icons.edit_note_outlined,
                     size: 46, color: _sub.withValues(alpha: 0.6)),
                 const SizedBox(height: 16),
-                Text(labels.noBookmarks,
+                Text(labels.noNotes,
                     style:
                         _sans(size: 15, weight: FontWeight.w600, color: _sub)),
                 const SizedBox(height: 6),
                 Text(
-                  labels.noBookmarksHint,
+                  labels.noNotesHint,
                   textAlign: TextAlign.center,
                   style: _sans(
                     size: 12.5,
@@ -526,62 +719,163 @@ class _CatalogSheetState extends State<CatalogSheet>
         ],
       );
     }
-    final List<Bookmark> items = List<Bookmark>.of(widget.bookmarks)
-      ..sort((Bookmark a, Bookmark b) => b.createdAt.compareTo(a.createdAt));
-    return ListView.builder(
+
+    // 展开为「章头 + 若干卡片」的扁平列表。
+    final List<Widget> children = <Widget>[];
+    int? lastChapter;
+    for (final _Note n in notes) {
+      if (n.chapterIndex != lastChapter) {
+        lastChapter = n.chapterIndex;
+        children.add(Padding(
+          padding: EdgeInsets.fromLTRB(22, children.isEmpty ? 4 : 20, 22, 10),
+          child: Text(
+            n.chapterTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: _serif(size: 16),
+          ),
+        ));
+      }
+      children.add(_noteCard(labels, n));
+    }
+    return ListView(
       controller: _markCtrl,
-      itemCount: items.length,
-      itemBuilder: (BuildContext context, int i) {
-        final Bookmark b = items[i];
-        return InkWell(
-          onTap: () => Navigator.of(context).pop(
-            ReadingPosition(
-                chapterIndex: b.chapterIndex, charOffset: b.charOffset),
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
-            decoration: BoxDecoration(
-              border:
-                  Border(top: BorderSide(color: _text.withValues(alpha: 0.06))),
-            ),
-            child: Row(
-              children: <Widget>[
-                Icon(Icons.bookmark, size: 18, color: _accent),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        '第 ${b.chapterIndex + 1} 章 · ${b.chapterTitle}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _sans(
-                            size: 14.5,
-                            weight: FontWeight.w600,
-                            color: _text.withValues(alpha: 0.9)),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(_formatTime(b.createdAt),
-                          style: _sans(size: 12, color: _sub)),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, size: 18, color: _sub),
-              ],
-            ),
-          ),
-        );
-      },
+      padding: const EdgeInsets.only(bottom: 24),
+      children: children,
     );
   }
 
-  /// 时间戳（毫秒）格式化为 “yyyy-MM-dd HH:mm”。
-  static String _formatTime(int ms) {
-    if (ms <= 0) return '';
-    final DateTime t = DateTime.fromMillisecondsSinceEpoch(ms);
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${t.year}-${two(t.month)}-${two(t.day)} '
-        '${two(t.hour)}:${two(t.minute)}';
+  Widget _noteCard(ReaderLabels labels, _Note n) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+      child: Material(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _jumpTo(n),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 6, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      _noteIcon(n),
+                      size: 15,
+                      color: _sub,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(labels.relativeTime(n.createdAt),
+                        style: _sans(size: 12, color: _sub)),
+                    const Spacer(),
+                    _noteMenu(labels, n),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _noteBody(labels, n),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _noteIcon(_Note n) {
+    switch (n.kind) {
+      case _NoteKind.comment:
+        return Icons.mode_comment_outlined;
+      case _NoteKind.underline:
+        return Icons.format_underlined;
+      case _NoteKind.bookmark:
+        return Icons.bookmark_border;
+    }
+  }
+
+  /// 卡片主体：书签只显示「书签」；划线显示波浪线文字；评论显示引用原文 + 评论正文。
+  Widget _noteBody(ReaderLabels labels, _Note n) {
+    if (n.isComment) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          if (n.quote.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                border: Border(
+                  left: BorderSide(
+                      color: _accent.withValues(alpha: 0.6), width: 3),
+                ),
+              ),
+              child: Text(
+                n.quote,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: _sans(size: 13, height: 1.4, color: _sub),
+              ),
+            ),
+          if (n.quote.isNotEmpty) const SizedBox(height: 8),
+          Text(
+            n.text,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: _sans(
+                size: 15, height: 1.5, color: _text.withValues(alpha: 0.9)),
+          ),
+        ],
+      );
+    }
+    return Text(
+      n.isUnderline ? n.text : labels.bookmarkTab,
+      maxLines: 3,
+      overflow: TextOverflow.ellipsis,
+      style: _sans(size: 15, height: 1.5).copyWith(
+        decoration: n.isUnderline ? TextDecoration.underline : null,
+        decorationStyle: TextDecorationStyle.wavy,
+        decorationColor: _accent.withValues(alpha: 0.6),
+        decorationThickness: 1.5,
+        color: n.isUnderline ? _text.withValues(alpha: 0.9) : _sub,
+      ),
+    );
+  }
+
+  Widget _noteMenu(ReaderLabels labels, _Note n) {
+    return PopupMenuButton<int>(
+      icon: Icon(Icons.more_vert, size: 18, color: _sub),
+      padding: EdgeInsets.zero,
+      splashRadius: 18,
+      color: widget.theme.panelColor,
+      onSelected: (int v) => v == 0 ? _jumpTo(n) : _deleteNote(n),
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+        PopupMenuItem<int>(
+          value: 0,
+          child: Row(
+            children: <Widget>[
+              Icon(Icons.my_library_books_outlined, size: 17, color: _sub),
+              const SizedBox(width: 10),
+              Text(labels.noteJump, style: _sans(size: 14, color: _text)),
+            ],
+          ),
+        ),
+        PopupMenuItem<int>(
+          value: 1,
+          child: Row(
+            children: <Widget>[
+              const Icon(Icons.delete_outline,
+                  size: 17, color: Color(0xFFD9534F)),
+              const SizedBox(width: 10),
+              Text(labels.noteDelete,
+                  style: _sans(size: 14, color: const Color(0xFFD9534F))),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
