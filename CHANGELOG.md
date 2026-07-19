@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0
+
+- Text selection with draggable handles, plus highlights (`ReaderUnderlineStore`)
+  and comments (`ReaderCommentStore`), all collected in a **Notes** panel.
+- Bubble toolbar actions (copy / comment / look-up / share) are now callbacks via
+  `onTextAction`; only highlight stays internal.
+  - ⚠️ Breaking: `ReaderTextActionCallback` now passes `ReaderSelection` instead of
+    `String`, and `ReaderTextAction` adds `comment`.
+- While the menu or selection bubble is open, a swipe only closes it .
+
 ## 1.2.0
 
 - Built-in 12-language labels via `ReaderLabels.forLanguageCode(code)` (English
