@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+- Paragraph comments: a tappable comment-count badge at each paragraph's end via
+  `onSegmentCommentTap`; the host renders the comment list. `commentsRefresh`
+  lets the host refresh badges / notes after adding a comment.
+- Fix: the reader no longer re-paginates (the background page no longer jumps)
+  when a comment input keyboard opens over it.
+
 ## 1.3.0
 
 - Text selection with draggable handles, plus highlights (`ReaderUnderlineStore`)
@@ -8,7 +16,8 @@
   `onTextAction`; only highlight stays internal.
   - ⚠️ Breaking: `ReaderTextActionCallback` now passes `ReaderSelection` instead of
     `String`, and `ReaderTextAction` adds `comment`.
-- While the menu or selection bubble is open, a swipe only closes it .
+- While the menu or selection bubble is open, a swipe only closes it (no
+  accidental page turn).
 
 ## 1.2.0
 

@@ -57,6 +57,11 @@ class ReaderLabels {
     this.commentHint = 'Write your thoughts…',
     this.commentSend = 'Send',
     this.noteFilterComment = 'Comments',
+    this.segmentCommentsTitleTemplate = '{n} comments',
+    this.segmentTagLabel = 'Note',
+    this.commentAuthorSelf = 'Me',
+    this.commentQuoteTemplate = 'Original: {q}',
+    this.commentLike = 'Like',
     this.chapterProgressTemplate = 'Ch. {i}/{n}',
     this.chapterTotalTemplate = '{n} chapters',
     this.notesTab = 'Notes',
@@ -132,6 +137,22 @@ class ReaderLabels {
 
   /// 笔记面板筛选「评论」。
   final String noteFilterComment;
+
+  /// 段评列表：标题模板（{n}=评论数）/ 条目「段评」标签 / 作者「我」/ 引用原文模板
+  /// （{q}=原文）/ 点赞文案。业务方弹出段评列表时可直接取用，避免重复维护多语言。
+  final String segmentCommentsTitleTemplate;
+  final String segmentTagLabel;
+  final String commentAuthorSelf;
+  final String commentQuoteTemplate;
+  final String commentLike;
+
+  /// 段评列表标题：如「12 条段评」。
+  String segmentCommentsTitle(int count) =>
+      segmentCommentsTitleTemplate.replaceFirst('{n}', '$count');
+
+  /// 引用原文：如「原文：……」。
+  String commentQuote(String quote) =>
+      commentQuoteTemplate.replaceFirst('{q}', quote);
 
   /// “第 x/N 章” 模板：{i}=当前章号（从 1 起），{n}=总章数。
   final String chapterProgressTemplate;
@@ -232,6 +253,11 @@ class ReaderLabels {
     commentHint: '写下你的想法…',
     commentSend: '发送',
     noteFilterComment: '评论',
+    segmentCommentsTitleTemplate: '{n} 条段评',
+    segmentTagLabel: '段评',
+    commentAuthorSelf: '我',
+    commentQuoteTemplate: '原文：{q}',
+    commentLike: '赞',
     chapterProgressTemplate: '第 {i}/{n} 章',
     chapterTotalTemplate: '共 {n} 章',
     notesTab: '笔记',

@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'comment/reader_comment_store.dart';
 import 'underline/reader_underline_store.dart';
 
 /// 阅读页长按选中文字后，操作工具条上的动作类型。
@@ -97,4 +98,57 @@ class ReaderUnderlineScope extends InheritedWidget {
       !identical(underlines, old.underlines) ||
       onAdd != old.onAdd ||
       onRemove != old.onRemove;
+}
+
+/// 点击某段落尾部「段评」数字角标时回调的载荷：定位到某章的段落区间 [start,end)，
+/// 以及该段当前评论数 [count]。业务方据此筛选自己的评论数据并弹出评论列表。
+@immutable
+class ReaderSegmentTap {
+  const ReaderSegmentTap({
+    required this.chapterIndex,
+    required this.start,
+    required this.end,
+    required this.count,
+  });
+
+  final int chapterIndex;
+
+  /// 段落在本章「块长度空间」的起止（与 [Comment.start] 同坐标）。
+  final int start;
+  final int end;
+
+  /// 该段落当前评论数（角标显示的数字）。
+  final int count;
+
+  /// 该段落是否包含某条评论（按评论锚点 start 落在 [start,end) 判定）。
+  bool contains(Comment c) =>
+      c.chapterIndex == chapterIndex && c.start >= start && c.start < end;
+}
+
+typedef ReaderSegmentTapCallback = void Function(ReaderSegmentTap segment);
+
+/// 向阅读子树提供「段评」数据与点击回调。
+///
+/// [ReaderProse] 据 [comments] 统计每个段落的评论数，在段尾渲染数字角标；点击角标时
+/// 只通过 [onTap] 把段落信息抛给业务方（插件不弹列表），由业务方自行弹出评论列表。
+class ReaderSegmentScope extends InheritedWidget {
+  const ReaderSegmentScope({
+    super.key,
+    required this.comments,
+    required this.onTap,
+    required super.child,
+  });
+
+  /// 全书评论（[ReaderProse] 自行按当前章 + 段落区间过滤计数）。
+  final List<Comment> comments;
+
+  /// 点击段尾角标的回调；为空时不显示角标。
+  final ReaderSegmentTapCallback? onTap;
+
+  static ReaderSegmentScope? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ReaderSegmentScope>();
+
+  @override
+  bool updateShouldNotify(ReaderSegmentScope old) =>
+      !identical(comments, old.comments) || onTap != old.onTap;
 }

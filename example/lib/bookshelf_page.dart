@@ -20,6 +20,8 @@ import 'widgets/book_card.dart';
 import 'widgets/book_cover.dart';
 import 'widgets/book_detail_sheet.dart';
 import 'widgets/comment_input_sheet.dart';
+import 'widgets/paragraph_comments_sheet.dart';
+import 'widgets/share_card_sheet.dart';
 import 'widgets/language_sheet.dart';
 import 'widgets/warm_widgets.dart';
 
@@ -62,6 +64,9 @@ class _BookshelfPageState extends State<BookshelfPage> {
   final ReaderUnderlineStore _underlineStore = SharedPrefsUnderlineStore();
   final ReaderCommentStore _commentStore = SharedPrefsCommentStore();
 
+  /// 评论刷新信号：外部新增评论后自增，通知阅读器重新拉取评论、刷新段尾角标。
+  final ValueNotifier<int> _commentsRev = ValueNotifier<int>(0);
+
   static const String _kImportIntroShownKey = 'import_intro_shown';
 
   List<BookRow> _books = const <BookRow>[];
@@ -84,6 +89,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
 
   @override
   void dispose() {
+    _commentsRev.dispose();
     if (_ownsDb) _db.close();
     super.dispose();
   }
@@ -185,10 +191,14 @@ class _BookshelfPageState extends State<BookshelfPage> {
           bookmarkStore: _bookmarkStore,
           underlineStore: _underlineStore,
           commentStore: _commentStore,
+          commentsRefresh: _commentsRev,
           startChapter: startChapter,
           // 气泡菜单「复制 / 评论 / 查询 / 分享」全部回调到 App 侧自行处理。
           onTextAction: (ReaderTextAction action, ReaderSelection sel) =>
               _onReaderTextAction(book, labels, action, sel),
+          // 段尾「段评」角标点击：插件只抛段落信息，这里弹出该段评论列表。
+          onSegmentCommentTap: (ReaderSegmentTap seg) =>
+              _onSegmentTap(book, labels, seg),
         ),
       ),
     );
@@ -214,7 +224,15 @@ class _BookshelfPageState extends State<BookshelfPage> {
       case ReaderTextAction.query:
         toast('查询：${sel.text}');
       case ReaderTextAction.share:
-        toast('分享：${sel.text}');
+        if (!mounted) return;
+        await ShareCardSheet.show(
+          context,
+          bookTitle: book.title,
+          author: book.author,
+          coverColor: Color(book.coverColor),
+          chapterTitle: sel.chapterTitle,
+          quote: sel.text,
+        );
       case ReaderTextAction.comment:
         if (!mounted) return;
         final String? body = await CommentInputSheet.show(
@@ -223,24 +241,47 @@ class _BookshelfPageState extends State<BookshelfPage> {
           quote: sel.text,
         );
         if (body == null || body.trim().isEmpty) return;
-        if (sel.start < 0 || sel.end < 0) return;
+        // 兜底：区间未解析时钳到 0，保证评论仍会保存、出现在笔记里（不静默丢弃）。
         final Comment comment = Comment(
           chapterIndex: sel.chapterIndex,
-          start: sel.start,
-          end: sel.end,
+          start: sel.start < 0 ? 0 : sel.start,
+          end: sel.end < 0 ? 0 : sel.end,
           quote: sel.text,
           text: body.trim(),
           chapterTitle: sel.chapterTitle,
           createdAt: DateTime.now().millisecondsSinceEpoch,
         );
-        final List<Comment> list = await _commentStore.load(book.id)
-          ..add(comment);
+        // 必须先拷成可变列表：store 在无评论时可能返回 const [] （不可变），
+        // 直接 ..add 会抛 Cannot add to an unmodifiable list，导致首条评论存不进。
+        final List<Comment> list = List<Comment>.of(
+          await _commentStore.load(book.id),
+        )..add(comment);
         await _commentStore.save(book.id, list);
+        // 通知阅读器刷新：段尾角标、笔记数据立即反映这条新评论。
+        _commentsRev.value++;
         toast('已评论');
       case ReaderTextAction.highlight:
         // 划线由插件内部处理，正常不会回调到这里。
         break;
     }
+  }
+
+  /// 段尾角标点击：从 store 取该书评论，筛出落在该段区间内的，弹出段评列表。
+  Future<void> _onSegmentTap(
+    BookRow book,
+    ReaderLabels labels,
+    ReaderSegmentTap seg,
+  ) async {
+    final List<Comment> all = await _commentStore.load(book.id);
+    final List<Comment> inSegment = all
+        .where((Comment c) => seg.contains(c))
+        .toList();
+    if (!mounted || inSegment.isEmpty) return;
+    await ParagraphCommentsSheet.show(
+      context,
+      comments: inSegment,
+      labels: labels,
+    );
   }
 
   // ————————————————————— 删除 —————————————————————

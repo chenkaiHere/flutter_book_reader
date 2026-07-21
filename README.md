@@ -11,6 +11,10 @@
 
 🔗 **[Try the live demo →](https://ck-readbook-demo.ckdgdgdg.workers.dev/)** (runs in your browser)
 
+> ⭐️ **If this package helps you, please give it a like / star to support it.**
+> Ran into a problem, or something doesn't fit your needs? Let's talk it over in the
+> [issues](../../issues) — feedback and ideas are very welcome.
+
 <p align="center">
   <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif" width="270" alt="flutter_book_reader demo — reading & page-curl">
   &nbsp;&nbsp;
@@ -27,6 +31,12 @@
   <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_3.jpeg" width="270" alt="flutter_book_reader — text selection, highlight & comment">
   &nbsp;&nbsp;
   <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_4.jpeg" width="270" alt="flutter_book_reader — notes panel (bookmarks, highlights, comments)">
+</p>
+
+<p align="center">
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_5.jpeg" width="270" alt="flutter_book_reader — paragraph comments">
+  &nbsp;&nbsp;
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_6.jpeg" width="270" alt="flutter_book_reader — share quote card">
 </p>
 
 Point `BookReader` at your own data and you instantly get real pagination,
@@ -78,6 +88,9 @@ anywhere else — without touching the reader's internals.
   panel (filter by all / bookmarks / highlights / comments; tap to jump, or delete),
   each with its own pluggable store (`ReaderBookmarkStore`, `ReaderUnderlineStore`,
   `ReaderCommentStore`).
+- **Paragraph comments** — a tappable comment-count badge at each paragraph's end;
+  the tap is delivered via `onSegmentCommentTap` so your app renders the comment
+  list, and `commentsRefresh` refreshes badges/notes after a comment is added.
 - **Theming & typography** — six built-in paper themes, per-theme accent color,
   and runtime controls for font size / line height / brightness.
 - **Localization built in** — `ReaderLabels` ships **12 languages** (en, zh, es,
@@ -89,7 +102,7 @@ anywhere else — without touching the reader's internals.
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.3.0
+  flutter_book_reader: ^1.4.0
 ```
 
 ```dart
@@ -229,6 +242,11 @@ BookReader(
 Bookmarks, highlights, and comments all show up together in the in-reader
 **Notes** panel (filter by all / bookmarks / highlights / comments; tap to jump,
 or delete).
+
+For **paragraph comments**, the reader shows a count badge at each paragraph's
+end and calls `onSegmentCommentTap(ReaderSegmentTap segment)` when tapped — your
+app presents the list. After you add a comment, poke `commentsRefresh` (any
+`Listenable`, e.g. a `ValueNotifier`) and the reader reloads counts from the store.
 
 ## Architecture
 

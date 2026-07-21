@@ -259,6 +259,81 @@ void main() {
     );
   });
 
+  testWidgets('评论：会话中途由外部写入 commentStore 后，打开目录能在笔记页看到',
+      (WidgetTester tester) async {
+    // 空 store 打开阅读器：模拟真实用法（评论由外部处理，插件内存里一开始没有）。
+    final InMemoryReaderCommentStore store = InMemoryReaderCommentStore();
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        commentStore: store,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 模拟外部（App 侧回调）在会话中途把评论写入同一个 store。
+    await store.save('fake-book', <Comment>[
+      Comment(
+        chapterIndex: 0,
+        start: 2,
+        end: 8,
+        quote: '这是第 1 章的正文段落',
+        text: '一条测试评论内容',
+        chapterTitle: '第 1 章',
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      ),
+    ]);
+
+    // 打开目录 → 笔记：应触发从 store 重新拉取，展示刚写入的评论。
+    await openMenu(tester);
+    await tester.tap(find.text('目录'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('笔记'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CatalogSheet), findsOneWidget);
+    expect(find.text('一条测试评论内容'), findsWidgets,
+        reason: '中途写入的评论应出现在笔记页');
+  });
+
+  testWidgets('段评：有评论的段落尾部显示数字角标，点击回调段落信息',
+      (WidgetTester tester) async {
+    final InMemoryReaderCommentStore store = InMemoryReaderCommentStore();
+    await store.save('fake-book', <Comment>[
+      Comment(
+        chapterIndex: 0,
+        start: 2,
+        end: 8,
+        quote: '正文',
+        text: '段评一',
+        chapterTitle: '第 1 章',
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      ),
+    ]);
+    ReaderSegmentTap? tapped;
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        commentStore: store,
+        onSegmentCommentTap: (ReaderSegmentTap seg) => tapped = seg,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 段尾角标（评论图标）应出现。
+    final Finder badge = find.byIcon(Icons.mode_comment_outlined);
+    expect(badge, findsWidgets, reason: '有评论的段落尾部应有角标');
+
+    await tester.tap(badge.first);
+    await tester.pumpAndSettle();
+    expect(tapped, isNotNull, reason: '点击角标应回调');
+    expect(tapped!.count, 1);
+    expect(tapped!.chapterIndex, 0);
+  });
+
   testWidgets('书签：再次点击移除', (WidgetTester tester) async {
     await tester.pumpWidget(bookmarkHost());
     await tester.pumpAndSettle();

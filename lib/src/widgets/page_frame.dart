@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../comment/reader_comment_store.dart';
 import '../paginator.dart';
 import '../reader_config.dart';
 import '../reader_labels.dart';
@@ -424,6 +425,58 @@ class _ReaderProseState extends State<ReaderProse> {
         ),
         TextSpan(text: body),
       ],
+    );
+  }
+
+  /// 段尾「段评」角标：一个灰色小药丸（评论图标 + 数字），点击把段落信息抛给业务方。
+  InlineSpan _badgeSpan(ReaderSegmentScope scope, (int, int, int) badge) {
+    final (int start, int end, int count) = badge;
+    return WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 6),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => scope.onTap!(
+            ReaderSegmentTap(
+              chapterIndex: widget.chapterIndex,
+              start: start,
+              end: end,
+              count: count,
+            ),
+          ),
+          child: _badgePill(count),
+        ),
+      ),
+    );
+  }
+
+  Widget _badgePill(int count) {
+    final Color c = _config.theme.subTextColor;
+    final String label = count > 99 ? '99+' : '$count';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(Icons.mode_comment_outlined,
+              size: 11, color: c.withValues(alpha: 0.8)),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              height: 1.0,
+              color: c.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -869,13 +922,41 @@ class _ReaderProseState extends State<ReaderProse> {
         _measureIndent(_config.indent, _config.textStyle, scaler);
     final bool selectable = ReaderSelectionScope.of(context)?.enabled ?? false;
 
+    // 段评：有回调且有评论时，在每个段落尾部（该段最后一个块）显示评论数角标。
+    final ReaderSegmentScope? segScope = ReaderSegmentScope.of(context);
+    final bool showBadges = segScope != null &&
+        segScope.onTap != null &&
+        segScope.comments.isNotEmpty;
+
     final List<Widget> children = <Widget>[];
+    int runStart = widget.pageStartOffset; // 当前段落在本页的章内起始偏移
     for (int i = 0; i < widget.page.length; i++) {
       final ReaderBlock block = widget.page[i];
+      if (i == 0 || block.isParagraphStart) {
+        runStart = _blockChapterStart(i);
+      }
       if (i > 0 && block.isParagraphStart) {
         children.add(SizedBox(height: _config.paragraphSpacing));
       }
-      children.add(_paragraph(i, block, indentWidth, selectable));
+      // 段尾：本块是最后一块，或下一块是新段落起点。
+      (int, int, int)? badge;
+      if (showBadges) {
+        final bool tail =
+            i == widget.page.length - 1 || widget.page[i + 1].isParagraphStart;
+        if (tail) {
+          final int paraEnd = _blockChapterStart(i) + block.length;
+          final int count = segScope.comments
+              .where((Comment c) =>
+                  c.chapterIndex == widget.chapterIndex &&
+                  c.start >= runStart &&
+                  c.start < paraEnd)
+              .length;
+          if (count > 0) badge = (runStart, paraEnd, count);
+        }
+      }
+      children.add(
+        _paragraph(i, block, indentWidth, selectable, badge, segScope),
+      );
     }
     final Column column = Column(
       mainAxisSize: MainAxisSize.min,
@@ -898,19 +979,23 @@ class _ReaderProseState extends State<ReaderProse> {
     ReaderBlock block,
     double indentWidth,
     bool selectable,
+    (int, int, int)? badge,
+    ReaderSegmentScope? segScope,
   ) {
-    final Widget text = block.isParagraphStart
-        ? Text.rich(
-            _spanFor(block, indentWidth),
-            textAlign: _config.textAlign,
-            strutStyle: _config.strut,
-          )
-        : Text(
-            block.text,
-            style: _config.textStyle,
-            textAlign: _config.textAlign,
-            strutStyle: _config.strut,
-          );
+    // 基础文字 span（段首含缩进占位）；若该段尾需要角标，追加到末尾。
+    // 角标不进入 _plainForSpan / 选区 / 划线的坐标系（它们只取正文），故不影响几何。
+    InlineSpan span = _spanFor(block, indentWidth);
+    if (badge != null && segScope != null) {
+      span = TextSpan(
+        style: _config.textStyle,
+        children: <InlineSpan>[span, _badgeSpan(segScope, badge)],
+      );
+    }
+    final Widget text = Text.rich(
+      span,
+      textAlign: _config.textAlign,
+      strutStyle: _config.strut,
+    );
 
     final GlobalKey key = _keys.putIfAbsent(i, () => GlobalKey());
     final TextSelection? localSel = _localSel(i);

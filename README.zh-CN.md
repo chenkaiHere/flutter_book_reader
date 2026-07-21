@@ -10,6 +10,9 @@
 
 🔗 **[打开在线体验 →](https://ck-readbook-demo.ckdgdgdg.workers.dev/)**（浏览器即可试用）
 
+> ⭐️ **如果这个插件帮到了你，欢迎点个赞 / Star 支持一下。**
+> 如果遇到问题，或有不满足你需求的地方，欢迎在 [issues](../../issues) 里一起讨论 —— 非常欢迎反馈与建议。
+
 <p align="center">
   <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif" width="270" alt="flutter_book_reader 演示 —— 阅读与仿真翻页">
   &nbsp;&nbsp;
@@ -26,6 +29,12 @@
   <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_3.jpeg" width="270" alt="flutter_book_reader 演示 —— 选中文字、划线与评论">
   &nbsp;&nbsp;
   <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_4.jpeg" width="270" alt="flutter_book_reader 演示 —— 笔记面板（书签 / 划线 / 评论）">
+</p>
+
+<p align="center">
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_5.jpeg" width="270" alt="flutter_book_reader 演示 —— 段评">
+  &nbsp;&nbsp;
+  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_6.jpeg" width="270" alt="flutter_book_reader 演示 —— 摘录卡片分享">
 </p>
 
 把 `BookReader` 接上你自己的数据，立刻就能得到真实分页、跟随手指的仿真翻页、章节导航、
@@ -60,6 +69,8 @@
   行为完全交给业务方。**书签、划线、评论**统一汇入一个**笔记**面板（可按 全部 / 书签 /
   划线 / 评论 筛选，点击跳转或删除），各自有可替换的存储（`ReaderBookmarkStore`、
   `ReaderUnderlineStore`、`ReaderCommentStore`）。
+- **段评** —— 每个段落尾部显示可点击的评论数角标；点击通过 `onSegmentCommentTap`
+  抛给业务方（由业务方弹出评论列表），`commentsRefresh` 用于在新增评论后刷新角标 / 笔记。
 - **主题与排版**：六套内置纸张主题、每套可定制强调色，字号 / 行距 / 亮度可运行时调节。
 - **内置多语言** —— `ReaderLabels` 内置 **12 种语言**（en、zh、es、fr、ar、bn、pt、
   ru、hi、ur、ja、ko），通过 `ReaderLabels.forLanguageCode(code)` 选择（非内置语言
@@ -69,7 +80,7 @@
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.3.0
+  flutter_book_reader: ^1.4.0
 ```
 
 ```dart
@@ -203,6 +214,10 @@ BookReader(
 
 书签、划线、评论都会一起出现在阅读器内的**笔记**面板（可按 全部 / 书签 / 划线 / 评论
 筛选，点击跳转或删除）。
+
+**段评**：阅读器在每个段落尾部显示评论数角标，点击时回调
+`onSegmentCommentTap(ReaderSegmentTap segment)`——由你的 App 弹出列表；新增评论后触发
+`commentsRefresh`（任意 `Listenable`，如 `ValueNotifier`），阅读器会从 store 重新拉取刷新角标。
 
 ## 架构
 

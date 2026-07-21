@@ -42,6 +42,8 @@ class BookReader extends StatefulWidget {
     this.onPositionChanged,
     this.onClose,
     this.onTextAction,
+    this.onSegmentCommentTap,
+    this.commentsRefresh,
     this.enableTextSelection = true,
   });
 
@@ -83,6 +85,14 @@ class BookReader extends StatefulWidget {
   /// [ReaderSelection] 回调给业务方自行处理。「划线」由插件内部渲染/持久化，不走此回调。
   final ReaderTextActionCallback? onTextAction;
 
+  /// 点击段落尾部「段评」数字角标的回调。插件只在段尾显示数字，点击后把段落信息
+  /// [ReaderSegmentTap] 抛给业务方，由业务方自行弹出评论列表。为空时不显示角标。
+  final ReaderSegmentTapCallback? onSegmentCommentTap;
+
+  /// 评论刷新信号：业务方在外部新增/删除评论后触发它（如 `ValueNotifier<int>..value++`），
+  /// 阅读器据此从 [commentStore] 重新拉取评论并刷新段尾角标 / 笔记。
+  final Listenable? commentsRefresh;
+
   /// 是否启用「长按选中正文」功能（默认开启）。
   final bool enableTextSelection;
 
@@ -117,7 +127,33 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     // 全屏沉浸：进入阅读页即隐藏系统状态栏与导航栏，并在唤起菜单时保持隐藏——
     // 避免状态栏出现时把正文往下顶，正文始终铺满整屏。
     _enterImmersive();
+    widget.commentsRefresh?.addListener(_reloadComments);
     _init();
+  }
+
+  @override
+  void didUpdateWidget(BookReader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.commentsRefresh, widget.commentsRefresh)) {
+      oldWidget.commentsRefresh?.removeListener(_reloadComments);
+      widget.commentsRefresh?.addListener(_reloadComments);
+    }
+  }
+
+  /// 业务方在外部改动评论后触发 [BookReader.commentsRefresh]，据此重新拉取评论，
+  /// 刷新段尾角标与笔记列表数据。
+  Future<void> _reloadComments() async {
+    final ReadingController? c = _controller;
+    if (c == null) return;
+    try {
+      final List<Comment> latest =
+          await widget.commentStore.load(c.manifest.id);
+      if (mounted) {
+        setState(() => _comments = List<Comment>.unmodifiable(latest));
+      }
+    } catch (_) {
+      // 读取失败保持现有内存副本
+    }
   }
 
   void _enterImmersive() {
@@ -194,6 +230,7 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.commentsRefresh?.removeListener(_reloadComments);
     _saveTimer?.cancel();
     _flushSave();
     // 离开阅读页：恢复系统栏显示，并把状态栏 / 底部导航栏重置为“白底黑字”默认样式，
@@ -319,15 +356,7 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     _menuVisible.value = false;
     // 评论由业务方在选中回调里自行写入 commentStore（插件不再内部新增），因此打开
     // 目录/笔记前从存储重新拉取，确保刚写入的评论也能出现在笔记列表。
-    try {
-      final List<Comment> latest =
-          await widget.commentStore.load(c.manifest.id);
-      if (mounted) {
-        setState(() => _comments = List<Comment>.unmodifiable(latest));
-      }
-    } catch (_) {
-      // 读取失败保持现有内存副本
-    }
+    await _reloadComments();
     if (!mounted) return;
     final ReadingPosition? picked = await showModalBottomSheet<ReadingPosition>(
       context: context,
@@ -406,9 +435,13 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
         underlines: _underlines,
         onAdd: _addUnderline,
         onRemove: _removeUnderlines,
-        child: ReaderLabelsScope(
-          labels: widget.labels,
-          child: _buildScaffold(),
+        child: ReaderSegmentScope(
+          comments: _comments,
+          onTap: widget.onSegmentCommentTap,
+          child: ReaderLabelsScope(
+            labels: widget.labels,
+            child: _buildScaffold(),
+          ),
         ),
       ),
     );
@@ -449,6 +482,9 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
           value: _overlayStyle(t),
           child: Scaffold(
             backgroundColor: t.paperColor,
+            // 不为键盘缩放正文：评论等输入弹层的键盘属于上层模态，若在此缩放会挤矮
+            // 正文区触发重新分页，导致背景页“翻页”，键盘收起后又弹回。
+            resizeToAvoidBottomInset: false,
             body: Stack(
               children: <Widget>[
                 // 正文始终可交互。菜单唤起时由 ReaderMenu 的全屏 opaque 遮罩拦截手势：
