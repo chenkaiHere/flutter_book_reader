@@ -1,5 +1,6 @@
 {
   "@@locale": "en",
+  "listeningNow": "Listening",
 
   "bookshelfTitle": "Bookshelf",
   "shelfSummary": "{total} books · {reading} reading",

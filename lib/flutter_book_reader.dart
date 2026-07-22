@@ -12,6 +12,7 @@
 /// ```
 library;
 
+export 'src/book_reader_controller.dart';
 export 'src/book_reader_widget.dart';
 export 'src/bookmark/reader_bookmark_store.dart';
 export 'src/comment/reader_comment_store.dart';
@@ -21,5 +22,12 @@ export 'src/reader_config.dart' show ReaderConfig, FlipType;
 export 'src/reader_labels.dart' show ReaderLabels;
 export 'src/reader_theme.dart';
 export 'src/source/book_source.dart';
-export 'src/text_actions.dart';
+// 只导出业务方需要的公开类型；InheritedWidget 作用域是插件内部管道，不对外。
+export 'src/text_actions.dart'
+    show
+        ReaderTextAction,
+        ReaderSelection,
+        ReaderTextActionCallback,
+        ReaderSegmentTap,
+        ReaderSegmentTapCallback;
 export 'src/underline/reader_underline_store.dart';

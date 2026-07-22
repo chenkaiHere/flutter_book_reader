@@ -1,5 +1,6 @@
 {
   "@@locale": "fr",
+  "listeningNow": "Écoute en cours",
   "bookshelfTitle": "Bibliothèque",
   "shelfSummary": "{total} livres · {reading} en cours",
   "searchHint": "Rechercher titre / auteur",

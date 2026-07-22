@@ -297,6 +297,88 @@ void main() {
         reason: '中途写入的评论应出现在笔记页');
   });
 
+  testWidgets('听书：BookReaderController 可读当前页文本并翻页',
+      (WidgetTester tester) async {
+    final BookReaderController controller = BookReaderController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        controller: controller,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(controller.isReady, isTrue, reason: '就绪后应可用');
+    expect(controller.chapterCount, 5);
+    expect(controller.currentPageText.trim(), isNotEmpty, reason: '应能读到当前页文本');
+    expect(controller.isAtBookEnd, isFalse);
+
+    final String before = controller.currentPageText;
+    controller.nextPage();
+    await tester.pumpAndSettle();
+    // 翻页后：页序或文本应发生变化。
+    expect(
+      controller.pageIndex != 0 || controller.currentPageText != before,
+      isTrue,
+      reason: 'nextPage 应推进阅读位置',
+    );
+  });
+
+  testWidgets('书签：BookReaderController 可编程式加 / 删并读取状态',
+      (WidgetTester tester) async {
+    final BookReaderController controller = BookReaderController();
+    addTearDown(controller.dispose);
+    int notifies = 0;
+    controller.addListener(() => notifies++);
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        controller: controller,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(controller.isCurrentPageBookmarked, isFalse, reason: '初始未加书签');
+    final int before = notifies;
+    controller.toggleBookmark();
+    await tester.pumpAndSettle();
+    expect(controller.isCurrentPageBookmarked, isTrue, reason: '加书签后为 true');
+    expect(notifies, greaterThan(before), reason: '状态变化应通知监听者');
+
+    controller.toggleBookmark();
+    await tester.pumpAndSettle();
+    expect(controller.isCurrentPageBookmarked, isFalse, reason: '再次调用应移除');
+  });
+
+  testWidgets('听书跟读：markReading 定位高亮 / 翻页且不抛异常',
+      (WidgetTester tester) async {
+    final BookReaderController controller = BookReaderController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        controller: controller,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 第 1 章正文里存在的句子 → 应能定位（高亮 + 必要时翻页），不抛异常。
+    controller.markReading(0, '这是第 1 章的正文段落');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    controller.clearReading();
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('段评：有评论的段落尾部显示数字角标，点击回调段落信息',
       (WidgetTester tester) async {
     final InMemoryReaderCommentStore store = InMemoryReaderCommentStore();
@@ -323,8 +405,8 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // 段尾角标（评论图标）应出现。
-    final Finder badge = find.byIcon(Icons.mode_comment_outlined);
+    // 段尾角标（对话气泡内显示评论数「1」）应出现。
+    final Finder badge = find.text('1');
     expect(badge, findsWidgets, reason: '有评论的段落尾部应有角标');
 
     await tester.tap(badge.first);

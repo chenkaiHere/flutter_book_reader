@@ -331,6 +331,26 @@ class _ReaderProseState extends State<ReaderProse> {
     return t.clamp(0, b.length);
   }
 
+  /// 块 i 内跟读高亮（听书当前句）对应的占位符空间区间；无则 null。
+  TextSelection? _readingSelFor(int i) {
+    final ReaderReadingScope? scope = ReaderReadingScope.of(context);
+    if (scope == null ||
+        scope.chapterIndex != widget.chapterIndex ||
+        scope.start < 0 ||
+        scope.end <= scope.start) {
+      return null;
+    }
+    final int bc = _blockChapterStart(i);
+    final int be = bc + widget.page[i].length;
+    final int s = scope.start.clamp(bc, be);
+    final int e = scope.end.clamp(bc, be);
+    if (e <= s) return null;
+    final int ps = _chapterToPlain(i, s);
+    final int pe = _chapterToPlain(i, e);
+    if (pe <= ps) return null;
+    return TextSelection(baseOffset: ps, extentOffset: pe);
+  }
+
   /// 当前选区对应的本章 [start, end)；无选中返回 null。
   (int, int)? _selChapterRange() {
     if (!_hasSel) return null;
@@ -454,25 +474,31 @@ class _ReaderProseState extends State<ReaderProse> {
   Widget _badgePill(int count) {
     final Color c = _config.theme.subTextColor;
     final String label = count > 99 ? '99+' : '$count';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: c.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    // 描边对话气泡（含左下小尾巴）+ 居中评论数，观感更轻更精致。
+    return SizedBox(
+      width: 34,
+      height: 22,
+      child: Stack(
         children: <Widget>[
-          Icon(Icons.mode_comment_outlined,
-              size: 11, color: c.withValues(alpha: 0.8)),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              height: 1.0,
-              color: c.withValues(alpha: 0.9),
-              fontWeight: FontWeight.w600,
+          Positioned.fill(
+            child: CustomPaint(painter: _CommentBubblePainter(c)),
+          ),
+          // 数字落在气泡主体（上部，尾巴在下方）。
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: 17,
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  height: 1.0,
+                  color: c,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],
@@ -1010,12 +1036,25 @@ class _ReaderProseState extends State<ReaderProse> {
 
     final GlobalKey key = _keys.putIfAbsent(i, () => GlobalKey());
     final TextSelection? localSel = _localSel(i);
+    final TextSelection? readingSel = _readingSelFor(i);
     final List<TextSelection> underlines = _underlineRangesFor(i);
     final Widget keyed = KeyedSubtree(key: key, child: text);
-    final bool layered = localSel != null || underlines.isNotEmpty;
+    final bool layered =
+        localSel != null || readingSel != null || underlines.isNotEmpty;
     final Widget content = layered
         ? Stack(
             children: <Widget>[
+              // 跟读高亮（听书当前句），置于最底层。
+              if (readingSel != null)
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _HighlightPainter(
+                      paragraphKey: key,
+                      selection: readingSel,
+                      color: _config.theme.accentColor.withValues(alpha: 0.22),
+                    ),
+                  ),
+                ),
               if (localSel != null)
                 Positioned.fill(
                   child: CustomPaint(
@@ -1144,4 +1183,43 @@ class _UnderlinePainter extends CustomPainter {
       old.ranges != ranges ||
       old.color != color ||
       old.paragraphKey != paragraphKey;
+}
+
+/// 段尾「段评」角标的描边对话气泡（34×22，左下带小尾巴），仅描边不填充。
+class _CommentBubblePainter extends CustomPainter {
+  _CommentBubblePainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round
+      ..color = color;
+    final Path path = Path()
+      ..moveTo(9, 1.5)
+      ..lineTo(26, 1.5)
+      ..arcToPoint(const Offset(32.5, 8),
+          radius: const Radius.circular(6.5), clockwise: true)
+      ..lineTo(32.5, 9.5)
+      ..arcToPoint(const Offset(26, 16),
+          radius: const Radius.circular(6.5), clockwise: true)
+      ..lineTo(13, 16)
+      ..lineTo(8, 21)
+      ..lineTo(10, 16)
+      ..lineTo(9, 16)
+      ..arcToPoint(const Offset(2.5, 9.5),
+          radius: const Radius.circular(6.5), clockwise: true)
+      ..lineTo(2.5, 8)
+      ..arcToPoint(const Offset(9, 1.5),
+          radius: const Radius.circular(6.5), clockwise: true)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CommentBubblePainter old) => old.color != color;
 }

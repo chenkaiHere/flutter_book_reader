@@ -1,5 +1,6 @@
 {
   "@@locale": "hi",
+  "listeningNow": "सुन रहे हैं",
   "bookshelfTitle": "बुकशेल्फ़",
   "shelfSummary": "{total} किताबें · {reading} पढ़ रहे हैं",
   "searchHint": "शीर्षक / लेखक खोजें",

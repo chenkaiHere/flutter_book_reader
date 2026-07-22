@@ -9,6 +9,9 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
+  String get listeningNow => 'Ouvindo';
+
+  @override
   String get bookshelfTitle => 'Estante';
 
   @override

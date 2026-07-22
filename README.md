@@ -22,12 +22,14 @@
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="185" alt="themes & settings"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_1.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_1.jpeg" width="185" alt="bookshelf"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_2.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_2.jpeg" width="185" alt="reader"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_3.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_3.jpeg" width="185" alt="text selection, highlight & comment"></a></td>
   </tr>
   <tr>
-    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_3.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_3.jpeg" width="185" alt="text selection, highlight & comment"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_4.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_4.jpeg" width="185" alt="notes panel"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_5.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_5.jpeg" width="185" alt="paragraph comments"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_6.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_6.jpeg" width="185" alt="share quote card"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_7.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_7.jpeg" width="185" alt="text-to-speech"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_8.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_8.jpeg" width="185" alt="listen playback bar"></a></td>
   </tr>
 </table>
 
@@ -239,6 +241,34 @@ For **paragraph comments**, the reader shows a count badge at each paragraph's
 end and calls `onSegmentCommentTap(ReaderSegmentTap segment)` when tapped — your
 app presents the list. After you add a comment, poke `commentsRefresh` (any
 `Listenable`, e.g. a `ValueNotifier`) and the reader reloads counts from the store.
+
+### 6. Imperative control via `BookReaderController`
+
+Pass a `BookReaderController` to drive the reader from the outside and read its
+state. It's a `ChangeNotifier`, so listen to it to keep your own UI (playback
+bar, bookmark icon…) in sync. This is what powers features like text-to-speech.
+
+```dart
+final controller = BookReaderController();
+
+BookReader(source: MyBookSource(), controller: controller);
+
+// Once controller.isReady:
+controller.nextPage();                 // also previousPage()
+controller.goToChapter(3);
+controller.goToPosition(somePosition); // e.g. jump to a bookmark / highlight
+final text = controller.currentPageText;   // feed a TTS engine
+controller.markReading(ci, sentence);       // highlight + auto page-turn as it reads
+controller.clearReading();
+
+// Bookmarks — no need to reach for the top-bar button:
+controller.toggleBookmark();                 // add / remove on the current page
+final marked = controller.isCurrentPageBookmarked;
+```
+
+Also exposes `isReady`, `chapterIndex` / `chapterCount`, `pageIndex` /
+`pageCount`, `currentChapterTitle`, `position`, `isAtBookEnd`, and menu state
+(`isMenuVisible`, `isMenuPanelExpanded`, `closeMenu()`).
 
 ## Architecture
 

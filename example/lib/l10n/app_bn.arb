@@ -1,5 +1,6 @@
 {
   "@@locale": "bn",
+  "listeningNow": "শোনা হচ্ছে",
   "bookshelfTitle": "বইয়ের তাক",
   "shelfSummary": "{total}টি বই · {reading}টি পড়ছেন",
   "searchHint": "শিরোনাম / লেখক খুঁজুন",

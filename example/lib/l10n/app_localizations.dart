@@ -118,6 +118,12 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @listeningNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening'**
+  String get listeningNow;
+
   /// No description provided for @bookshelfTitle.
   ///
   /// In en, this message translates to:

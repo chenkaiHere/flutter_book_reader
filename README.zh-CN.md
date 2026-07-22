@@ -20,12 +20,14 @@
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="185" alt="主题与设置"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_1.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_1.jpeg" width="185" alt="书架"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_2.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_2.jpeg" width="185" alt="阅读器"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_3.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_3.jpeg" width="185" alt="选中文字、划线与评论"></a></td>
   </tr>
   <tr>
-    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_3.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_3.jpeg" width="185" alt="选中文字、划线与评论"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_4.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_4.jpeg" width="185" alt="笔记面板（书签 / 划线 / 评论）"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_5.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_5.jpeg" width="185" alt="段评"></a></td>
     <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_6.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_6.jpeg" width="185" alt="摘录卡片分享"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_7.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_7.jpeg" width="185" alt="听书"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_8.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_8.jpeg" width="185" alt="听书播放条"></a></td>
   </tr>
 </table>
 
@@ -210,6 +212,33 @@ BookReader(
 **段评**：阅读器在每个段落尾部显示评论数角标，点击时回调
 `onSegmentCommentTap(ReaderSegmentTap segment)`——由你的 App 弹出列表；新增评论后触发
 `commentsRefresh`（任意 `Listenable`，如 `ValueNotifier`），阅读器会从 store 重新拉取刷新角标。
+
+### 6. 用 `BookReaderController` 命令式控制
+
+传入一个 `BookReaderController` 即可从外部驱动阅读器并读取其状态。它是 `ChangeNotifier`，
+监听它就能让你自己的 UI（播放条、书签图标……）保持同步。听书（TTS）等功能正是基于此实现。
+
+```dart
+final controller = BookReaderController();
+
+BookReader(source: MyBookSource(), controller: controller);
+
+// controller.isReady 为 true 后：
+controller.nextPage();                 // 及 previousPage()
+controller.goToChapter(3);
+controller.goToPosition(somePosition); // 如跳到某条书签 / 划线
+final text = controller.currentPageText;    // 交给 TTS 引擎朗读
+controller.markReading(ci, sentence);       // 跟读高亮 + 自动翻页
+controller.clearReading();
+
+// 书签——无需依赖顶栏按钮：
+controller.toggleBookmark();                 // 加 / 删当前页书签
+final marked = controller.isCurrentPageBookmarked;
+```
+
+另外还提供 `isReady`、`chapterIndex` / `chapterCount`、`pageIndex` / `pageCount`、
+`currentChapterTitle`、`position`、`isAtBookEnd`，以及菜单状态（`isMenuVisible`、
+`isMenuPanelExpanded`、`closeMenu()`）。
 
 ## 架构
 

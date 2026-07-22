@@ -9,6 +9,9 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get listeningNow => 'Écoute en cours';
+
+  @override
   String get bookshelfTitle => 'Bibliothèque';
 
   @override

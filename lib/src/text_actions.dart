@@ -152,3 +152,26 @@ class ReaderSegmentScope extends InheritedWidget {
   bool updateShouldNotify(ReaderSegmentScope old) =>
       !identical(comments, old.comments) || onTap != old.onTap;
 }
+
+/// 向阅读子树提供「当前朗读位置」的高亮区间（听书跟读用）。[chapterIndex] 为该区间所属
+/// 章；[start,end) 为章内「块长度空间」偏移；区间无效（start<0 / end<=start）时不高亮。
+class ReaderReadingScope extends InheritedWidget {
+  const ReaderReadingScope({
+    super.key,
+    required this.chapterIndex,
+    required this.start,
+    required this.end,
+    required super.child,
+  });
+
+  final int chapterIndex;
+  final int start;
+  final int end;
+
+  static ReaderReadingScope? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ReaderReadingScope>();
+
+  @override
+  bool updateShouldNotify(ReaderReadingScope old) =>
+      chapterIndex != old.chapterIndex || start != old.start || end != old.end;
+}
