@@ -15,29 +15,21 @@
 > Ran into a problem, or something doesn't fit your needs? Let's talk it over in the
 > [issues](../../issues) — feedback and ideas are very welcome.
 
-<p align="center">
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif" width="270" alt="flutter_book_reader demo — reading & page-curl">
-  &nbsp;&nbsp;
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="270" alt="flutter_book_reader demo — themes & settings">
-</p>
-
-<p align="center">
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_1.jpeg" width="270" alt="flutter_book_reader — bookshelf">
-  &nbsp;&nbsp;
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_2.jpeg" width="270" alt="flutter_book_reader — reader">
-</p>
-
-<p align="center">
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_3.jpeg" width="270" alt="flutter_book_reader — text selection, highlight & comment">
-  &nbsp;&nbsp;
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_4.jpeg" width="270" alt="flutter_book_reader — notes panel (bookmarks, highlights, comments)">
-</p>
-
-<p align="center">
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_5.jpeg" width="270" alt="flutter_book_reader — paragraph comments">
-  &nbsp;&nbsp;
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_6.jpeg" width="270" alt="flutter_book_reader — share quote card">
-</p>
+<!-- Click any image to open it full size. -->
+<table align="center">
+  <tr>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif" width="185" alt="reading & page-curl"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="185" alt="themes & settings"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_1.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_1.jpeg" width="185" alt="bookshelf"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_2.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_2.jpeg" width="185" alt="reader"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_3.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_3.jpeg" width="185" alt="text selection, highlight & comment"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_4.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_4.jpeg" width="185" alt="notes panel"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_5.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_5.jpeg" width="185" alt="paragraph comments"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_6.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/en_6.jpeg" width="185" alt="share quote card"></a></td>
+  </tr>
+</table>
 
 Point `BookReader` at your own data and you instantly get real pagination,
 finger-following page-curl animations, chapter navigation, themes, and

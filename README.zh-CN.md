@@ -13,29 +13,21 @@
 > ⭐️ **如果这个插件帮到了你，欢迎点个赞 / Star 支持一下。**
 > 如果遇到问题，或有不满足你需求的地方，欢迎在 [issues](../../issues) 里一起讨论 —— 非常欢迎反馈与建议。
 
-<p align="center">
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif" width="270" alt="flutter_book_reader 演示 —— 阅读与仿真翻页">
-  &nbsp;&nbsp;
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="270" alt="flutter_book_reader 演示 —— 主题与设置">
-</p>
-
-<p align="center">
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_1.jpeg" width="270" alt="flutter_book_reader 演示 —— 书架">
-  &nbsp;&nbsp;
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_2.jpeg" width="270" alt="flutter_book_reader 演示 —— 阅读器">
-</p>
-
-<p align="center">
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_3.jpeg" width="270" alt="flutter_book_reader 演示 —— 选中文字、划线与评论">
-  &nbsp;&nbsp;
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_4.jpeg" width="270" alt="flutter_book_reader 演示 —— 笔记面板（书签 / 划线 / 评论）">
-</p>
-
-<p align="center">
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_5.jpeg" width="270" alt="flutter_book_reader 演示 —— 段评">
-  &nbsp;&nbsp;
-  <img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_6.jpeg" width="270" alt="flutter_book_reader 演示 —— 摘录卡片分享">
-</p>
+<!-- 点击任意图片可查看大图。 -->
+<table align="center">
+  <tr>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/1.gif" width="185" alt="阅读与仿真翻页"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/2.gif" width="185" alt="主题与设置"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_1.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_1.jpeg" width="185" alt="书架"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_2.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_2.jpeg" width="185" alt="阅读器"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_3.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_3.jpeg" width="185" alt="选中文字、划线与评论"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_4.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_4.jpeg" width="185" alt="笔记面板（书签 / 划线 / 评论）"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_5.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_5.jpeg" width="185" alt="段评"></a></td>
+    <td align="center"><a href="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_6.jpeg"><img src="https://ck-readbook-demo.ckdgdgdg.workers.dev/example/zh_6.jpeg" width="185" alt="摘录卡片分享"></a></td>
+  </tr>
+</table>
 
 把 `BookReader` 接上你自己的数据，立刻就能得到真实分页、跟随手指的仿真翻页、章节导航、
 主题与阅读进度持久化。一切都由小而可替换的抽象驱动 —— 正文可以来自接口、数据库、本地文件，

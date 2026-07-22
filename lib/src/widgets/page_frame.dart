@@ -681,12 +681,23 @@ class _ReaderProseState extends State<ReaderProse> {
             left: 12,
             right: 12,
             top: barTop,
-            // 同样吞掉气泡条上的拖动：手指在按钮上带位移时不会漏到下层翻页。
-            child: Center(
-              child: GestureDetector(
-                onHorizontalDragStart: (_) {},
-                onVerticalDragStart: (_) {},
-                child: _selectionBar(),
+            child: GestureDetector(
+              onVerticalDragStart: (_) {},
+              child: LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints:
+                          BoxConstraints(minWidth: constraints.maxWidth),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[_selectionBar()],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
