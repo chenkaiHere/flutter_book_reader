@@ -9,6 +9,9 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get listeningNow => '朗読中';
+
+  @override
   String get bookshelfTitle => '本棚';
 
   @override

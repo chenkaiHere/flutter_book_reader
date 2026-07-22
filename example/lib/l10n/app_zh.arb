@@ -1,5 +1,6 @@
 {
   "@@locale": "zh",
+  "listeningNow": "听书中",
 
   "bookshelfTitle": "书架",
   "shelfSummary": "共 {total} 本 · 在读 {reading} 本",

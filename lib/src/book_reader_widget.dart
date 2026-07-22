@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'book_reader_controller.dart';
 import 'bookmark/reader_bookmark_store.dart';
 import 'comment/reader_comment_store.dart';
 import 'controller/reading_controller.dart';
@@ -44,6 +45,7 @@ class BookReader extends StatefulWidget {
     this.onTextAction,
     this.onSegmentCommentTap,
     this.commentsRefresh,
+    this.controller,
     this.enableTextSelection = true,
   });
 
@@ -93,6 +95,9 @@ class BookReader extends StatefulWidget {
   /// 阅读器据此从 [commentStore] 重新拉取评论并刷新段尾角标 / 笔记。
   final Listenable? commentsRefresh;
 
+  /// 对外阅读控制器：命令式驱动翻页 / 切章、读取当前页文本（听书等场景）。
+  final BookReaderController? controller;
+
   /// 是否启用「长按选中正文」功能（默认开启）。
   final bool enableTextSelection;
 
@@ -107,6 +112,17 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
   Timer? _saveTimer;
 
   final ValueNotifier<bool> _menuVisible = ValueNotifier<bool>(false);
+
+  /// 跟读高亮：当前朗读句所在章 + 章内 [start,end) 区间；-1 表示无。
+  int _readCh = -1;
+  int _readStart = -1;
+  int _readEnd = -1;
+
+  /// 跟读定位游标（同章内顺序搜索，避免重复句定位到开头）与章内正文缓存。
+  int _readCursorCh = -1;
+  int _readCursor = 0;
+  int _readTextCh = -1;
+  String _readText = '';
 
   /// 当前书籍的书签（会话内的权威副本，变更后写回 [BookReader.bookmarkStore]）。
   List<Bookmark> _bookmarks = <Bookmark>[];
@@ -128,7 +144,75 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     // 避免状态栏出现时把正文往下顶，正文始终铺满整屏。
     _enterImmersive();
     widget.commentsRefresh?.addListener(_reloadComments);
+    _menuVisible.addListener(_syncMenuToController);
     _init();
+  }
+
+  void _syncMenuToController() =>
+      widget.controller?.setMenuVisible(_menuVisible.value);
+
+  /// 跟读：在第 [ci] 章正文里顺序定位 [sentence]，高亮并翻到其所在页。
+  void _markReading(int ci, String sentence) {
+    final ReadingController? c = _controller;
+    final String s = sentence.trim();
+    if (c == null || s.isEmpty) return;
+    final List<ReaderPage>? pages = c.pagesFor(ci);
+    if (pages == null || pages.isEmpty) return;
+
+    // 本章「块长度空间」全文（缓存，避免每句重建大字符串）。
+    if (ci != _readTextCh) {
+      final StringBuffer buf = StringBuffer();
+      for (final ReaderPage page in pages) {
+        for (final ReaderBlock b in page) {
+          buf.write(b.text);
+        }
+      }
+      _readText = buf.toString();
+      _readTextCh = ci;
+    }
+    final String text = _readText;
+    final int from =
+        ci == _readCursorCh ? _readCursor.clamp(0, text.length) : 0;
+    int idx = text.indexOf(s, from);
+    if (idx < 0) idx = text.indexOf(s); // 回退从头找（如新的一章 / 循环）
+    if (idx < 0) return;
+    final int start = idx;
+    final int end = idx + s.length;
+    _readCursorCh = ci;
+    _readCursor = end;
+
+    // 定位到 start 所在页；跨章则加载该章。
+    int target = 0;
+    for (int p = 0; p < pages.length; p++) {
+      final int ps = c.startOffsetOfPageIn(pages, p);
+      final int pe =
+          p + 1 < pages.length ? c.startOffsetOfPageIn(pages, p + 1) : 1 << 30;
+      if (start >= ps && start < pe) {
+        target = p;
+        break;
+      }
+    }
+    if (ci != c.chapterIndex) {
+      c.loadChapter(ci, charOffset: start);
+    } else if (target != c.pageIndex) {
+      c.goToPage(target);
+    }
+    setState(() {
+      _readCh = ci;
+      _readStart = start;
+      _readEnd = end;
+    });
+  }
+
+  void _clearReadingMark() {
+    _readCursorCh = -1;
+    _readCursor = 0;
+    if (_readCh == -1 && _readStart == -1) return;
+    setState(() {
+      _readCh = -1;
+      _readStart = -1;
+      _readEnd = -1;
+    });
   }
 
   @override
@@ -137,6 +221,17 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     if (!identical(oldWidget.commentsRefresh, widget.commentsRefresh)) {
       oldWidget.commentsRefresh?.removeListener(_reloadComments);
       widget.commentsRefresh?.addListener(_reloadComments);
+    }
+    if (!identical(oldWidget.controller, widget.controller)) {
+      oldWidget.controller?.attach(null);
+      oldWidget.controller?.bindMenuHider(null);
+      oldWidget.controller?.bindReadingMarker(null, null);
+      oldWidget.controller?.bindBookmark(null, null);
+      widget.controller?.attach(_controller);
+      widget.controller?.bindMenuHider(() => _menuVisible.value = false);
+      widget.controller?.bindReadingMarker(_markReading, _clearReadingMark);
+      widget.controller?.bindBookmark(_toggleBookmark, () => _isBookmarked);
+      widget.controller?.setMenuVisible(_menuVisible.value);
     }
   }
 
@@ -186,6 +281,11 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       );
       _lastChapter = controller.chapterIndex;
       controller.addListener(_onControllerChanged);
+      widget.controller?.attach(controller);
+      widget.controller?.bindMenuHider(() => _menuVisible.value = false);
+      widget.controller?.bindReadingMarker(_markReading, _clearReadingMark);
+      widget.controller?.bindBookmark(_toggleBookmark, () => _isBookmarked);
+      widget.controller?.setMenuVisible(_menuVisible.value);
       setState(() {
         _controller = controller;
         _bookmarks = bookmarks;
@@ -206,6 +306,7 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       widget.onChapterChanged?.call(c.chapterIndex);
     }
     widget.onPositionChanged?.call(c.position);
+    widget.controller?.notifyPositionChanged();
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), _flushSave);
   }
@@ -231,6 +332,11 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.commentsRefresh?.removeListener(_reloadComments);
+    _menuVisible.removeListener(_syncMenuToController);
+    widget.controller?.bindMenuHider(null);
+    widget.controller?.bindReadingMarker(null, null);
+    widget.controller?.bindBookmark(null, null);
+    widget.controller?.attach(null);
     _saveTimer?.cancel();
     _flushSave();
     // 离开阅读页：恢复系统栏显示，并把状态栏 / 底部导航栏重置为“白底黑字”默认样式，
@@ -309,6 +415,8 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     }
     setState(() => _bookmarks = next);
     widget.bookmarkStore.save(c.manifest.id, next);
+    // 书签状态变了，通知控制器让宿主自定义 UI 同步。
+    widget.controller?.notifyPositionChanged();
   }
 
   /// 新增一条划线（去重同区间），补全标题/时间后写回存储。
@@ -438,9 +546,14 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
         child: ReaderSegmentScope(
           comments: _comments,
           onTap: widget.onSegmentCommentTap,
-          child: ReaderLabelsScope(
-            labels: widget.labels,
-            child: _buildScaffold(),
+          child: ReaderReadingScope(
+            chapterIndex: _readCh,
+            start: _readStart,
+            end: _readEnd,
+            child: ReaderLabelsScope(
+              labels: widget.labels,
+              child: _buildScaffold(),
+            ),
           ),
         ),
       ),
@@ -615,6 +728,8 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       onNextChapter: () => c.loadChapter(c.chapterIndex + 1),
       onSeekChapter: c.loadChapter,
       onRequestClose: () => _menuVisible.value = false,
+      onSettingsPanelChanged: (bool open) =>
+          widget.controller?.setMenuPanelExpanded(open),
     );
   }
 }

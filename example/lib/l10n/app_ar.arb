@@ -1,5 +1,6 @@
 {
   "@@locale": "ar",
+  "listeningNow": "جارٍ الاستماع",
   "bookshelfTitle": "رف الكتب",
   "shelfSummary": "{total} كتب · {reading} قيد القراءة",
   "searchHint": "ابحث بالعنوان / المؤلف",

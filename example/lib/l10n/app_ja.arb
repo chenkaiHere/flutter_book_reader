@@ -1,5 +1,6 @@
 {
   "@@locale": "ja",
+  "listeningNow": "朗読中",
   "bookshelfTitle": "本棚",
   "shelfSummary": "{total}冊 · {reading}冊 読書中",
   "searchHint": "タイトル / 著者で検索",

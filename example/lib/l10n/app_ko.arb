@@ -1,5 +1,6 @@
 {
   "@@locale": "ko",
+  "listeningNow": "듣는 중",
   "bookshelfTitle": "책장",
   "shelfSummary": "{total}권 · {reading}권 읽는 중",
   "searchHint": "제목 / 작가 검색",

@@ -1,12 +1,14 @@
 # Changelog
 
-## 1.4.0
+## 1.5.0
 
-- Paragraph comments: a tappable comment-count badge at each paragraph's end via
-  `onSegmentCommentTap`; the host renders the comment list. `commentsRefresh`
-  lets the host refresh badges / notes after adding a comment.
-- Fix: the reader no longer re-paginates (the background page no longer jumps)
-  when a comment input keyboard opens over it.
+- New public `BookReaderController` for imperative control (paging, chapter jumps,
+  `currentPageText`, read-along highlight, programmatic bookmarks) — enough to
+  build text-to-speech, as shown in the example.
+- Paragraph comments via `onSegmentCommentTap` + `commentsRefresh`.
+- API cleanup: trimmed the public surface (internal scopes hidden, wiring methods
+  `@internal`); dropped the unused `meta` dependency.
+- Fix: no re-pagination when a bottom sheet / keyboard opens over the reader.
 
 ## 1.3.0
 

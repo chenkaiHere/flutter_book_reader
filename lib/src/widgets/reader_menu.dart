@@ -27,6 +27,7 @@ class ReaderMenu extends StatefulWidget {
     required this.onNextChapter,
     required this.onSeekChapter,
     required this.onRequestClose,
+    this.onSettingsPanelChanged,
   });
 
   final bool visible;
@@ -54,6 +55,9 @@ class ReaderMenu extends StatefulWidget {
   /// 点击顶/底栏之外的空白区域时请求关闭整个菜单
   final VoidCallback onRequestClose;
 
+  /// 设置面板展开 / 收起时回调（true 表示设置面板已展开）。
+  final ValueChanged<bool>? onSettingsPanelChanged;
+
   @override
   State<ReaderMenu> createState() => _ReaderMenuState();
 }
@@ -73,6 +77,13 @@ class _ReaderMenuState extends State<ReaderMenu> {
 
   _Panel _panel = _Panel.none;
   late ReaderLabels _labels;
+
+  /// 统一切换底部面板并通知外部（设置面板展开 / 收起）。
+  void _setPanel(_Panel p) {
+    if (_panel == p) return;
+    setState(() => _panel = p);
+    widget.onSettingsPanelChanged?.call(p == _Panel.settings);
+  }
 
   /// 记住切到夜间前的日间主题，切回时还原。
   ReaderTheme? _lastLight;
@@ -114,8 +125,9 @@ class _ReaderMenuState extends State<ReaderMenu> {
   @override
   void didUpdateWidget(covariant ReaderMenu oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.visible && !widget.visible) {
+    if (oldWidget.visible && !widget.visible && _panel != _Panel.none) {
       _panel = _Panel.none;
+      widget.onSettingsPanelChanged?.call(false);
     }
   }
 
@@ -350,7 +362,7 @@ class _ReaderMenuState extends State<ReaderMenu> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
           _navBtn(Icons.format_list_bulleted, _labels.catalog, _sub, () {
-            setState(() => _panel = _Panel.none);
+            _setPanel(_Panel.none);
             widget.onOpenCatalog();
           }),
           _navBtn(
@@ -365,9 +377,8 @@ class _ReaderMenuState extends State<ReaderMenu> {
                 : Icons.settings_outlined,
             _labels.settingsMenu,
             _panel == _Panel.settings ? _accent : _sub,
-            () => setState(
-              () => _panel =
-                  _panel == _Panel.settings ? _Panel.none : _Panel.settings,
+            () => _setPanel(
+              _panel == _Panel.settings ? _Panel.none : _Panel.settings,
             ),
             active: _panel == _Panel.settings,
           ),

@@ -9,6 +9,9 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
+  String get listeningNow => '듣는 중';
+
+  @override
   String get bookshelfTitle => '책장';
 
   @override

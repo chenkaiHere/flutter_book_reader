@@ -6,6 +6,7 @@ import 'bookshelf_page.dart';
 import 'l10n/app_locales.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/warm_theme.dart';
+import 'widgets/listen_host.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +56,9 @@ class ReadBookApp extends StatelessWidget {
               ThemeData.light().textTheme,
             ).apply(bodyColor: Warm.ink, displayColor: Warm.ink),
           ),
+          // 全局听书宿主：在 Navigator 之上叠加 mini 气泡，跨路由常驻。
+          builder: (BuildContext context, Widget? child) =>
+              ListenHost(child: child ?? const SizedBox.shrink()),
           home: const BookshelfPage(),
         );
       },

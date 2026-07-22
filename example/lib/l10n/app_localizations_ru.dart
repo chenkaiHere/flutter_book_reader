@@ -9,6 +9,9 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get listeningNow => 'Прослушивание';
+
+  @override
   String get bookshelfTitle => 'Книжная полка';
 
   @override

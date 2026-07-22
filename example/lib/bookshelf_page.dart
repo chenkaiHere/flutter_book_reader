@@ -15,11 +15,13 @@ import 'data/shared_prefs_progress_store.dart';
 import 'data/shared_prefs_underline_store.dart';
 import 'import/txt_parser.dart';
 import 'l10n/app_localizations.dart';
+import 'listen/listen_service.dart';
 import 'theme/warm_theme.dart';
 import 'widgets/book_card.dart';
 import 'widgets/book_cover.dart';
 import 'widgets/book_detail_sheet.dart';
 import 'widgets/comment_input_sheet.dart';
+import 'widgets/listen_overlay.dart';
 import 'widgets/paragraph_comments_sheet.dart';
 import 'widgets/share_card_sheet.dart';
 import 'widgets/language_sheet.dart';
@@ -84,14 +86,32 @@ class _BookshelfPageState extends State<BookshelfPage> {
   @override
   void initState() {
     super.initState();
+    // 全局 mini 在非阅读页被点击时，请求打开对应书籍的阅读页。
+    listenService.onOpenReaderRequested = _openListeningBook;
     _load();
   }
 
   @override
   void dispose() {
+    if (listenService.onOpenReaderRequested == _openListeningBook) {
+      listenService.onOpenReaderRequested = null;
+    }
     _commentsRev.dispose();
     if (_ownsDb) _db.close();
     super.dispose();
+  }
+
+  /// mini 请求：跳转到正在听的这本书的阅读页（定位到当前朗读章）。
+  Future<void> _openListeningBook(Object id, int chapter) async {
+    BookRow? book;
+    for (final BookRow b in _books) {
+      if (b.id == id) {
+        book = b;
+        break;
+      }
+    }
+    if (book == null || !mounted) return;
+    await _openReader(book, startChapter: chapter);
   }
 
   // ————————————————————— 数据加载 —————————————————————
@@ -179,29 +199,39 @@ class _BookshelfPageState extends State<BookshelfPage> {
     await _progressStore.markLastRead(book.id);
     if (!mounted) return;
     // 把当前 App 语言传给插件：插件按语言码取内置文案，未命中回退英文。
-    final ReaderLabels labels = ReaderLabels.forLanguageCode(
-      Localizations.localeOf(context).languageCode,
-    );
+    final String localeCode = Localizations.localeOf(context).languageCode;
+    final ReaderLabels labels = ReaderLabels.forLanguageCode(localeCode);
+    // 听书用的对外控制器：驱动翻页 / 读当前页文本。随本次阅读路由生命周期。
+    final BookReaderController readerController = BookReaderController();
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => BookReader(
+        builder: (_) => ListenOverlay(
+          controller: readerController,
+          localeCode: localeCode,
+          bookId: book.id,
+          bookTitle: book.title,
           source: DbBookSource(_db, book.id),
-          labels: labels,
-          progressStore: _progressStore,
-          bookmarkStore: _bookmarkStore,
-          underlineStore: _underlineStore,
-          commentStore: _commentStore,
-          commentsRefresh: _commentsRev,
-          startChapter: startChapter,
-          // 气泡菜单「复制 / 评论 / 查询 / 分享」全部回调到 App 侧自行处理。
-          onTextAction: (ReaderTextAction action, ReaderSelection sel) =>
-              _onReaderTextAction(book, labels, action, sel),
-          // 段尾「段评」角标点击：插件只抛段落信息，这里弹出该段评论列表。
-          onSegmentCommentTap: (ReaderSegmentTap seg) =>
-              _onSegmentTap(book, labels, seg),
+          child: BookReader(
+            source: DbBookSource(_db, book.id),
+            labels: labels,
+            controller: readerController,
+            progressStore: _progressStore,
+            bookmarkStore: _bookmarkStore,
+            underlineStore: _underlineStore,
+            commentStore: _commentStore,
+            commentsRefresh: _commentsRev,
+            startChapter: startChapter,
+            // 气泡菜单「复制 / 评论 / 查询 / 分享」全部回调到 App 侧自行处理。
+            onTextAction: (ReaderTextAction action, ReaderSelection sel) =>
+                _onReaderTextAction(book, labels, action, sel),
+            // 段尾「段评」角标点击：插件只抛段落信息，这里弹出该段评论列表。
+            onSegmentCommentTap: (ReaderSegmentTap seg) =>
+                _onSegmentTap(book, labels, seg),
+          ),
         ),
       ),
     );
+    readerController.dispose();
     await _refreshProgress();
   }
 

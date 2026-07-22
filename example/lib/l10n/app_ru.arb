@@ -1,5 +1,6 @@
 {
   "@@locale": "ru",
+  "listeningNow": "Прослушивание",
   "bookshelfTitle": "Книжная полка",
   "shelfSummary": "{total} книг · {reading} читаю",
   "searchHint": "Поиск по названию / автору",
