@@ -9,6 +9,23 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => 'No disponible';
+
+  @override
+  String get ttsNoEngineMessage =>
+      'Este dispositivo no tiene un motor de texto a voz utilizable. Instálalo o actívalo en los ajustes del sistema.';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      'No están instalados los datos de voz de este idioma. Descárgalos en los ajustes del sistema.';
+
+  @override
+  String get ttsOpenSettings => 'Abrir ajustes';
+
+  @override
+  String get ttsDownloadVoice => 'Descargar voz';
+
+  @override
   String get listeningNow => 'Escuchando';
 
   @override

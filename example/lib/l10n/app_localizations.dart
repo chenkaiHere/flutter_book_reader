@@ -118,6 +118,36 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @ttsUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening unavailable'**
+  String get ttsUnavailableTitle;
+
+  /// No description provided for @ttsNoEngineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has no usable text-to-speech engine. Please install or enable one in system settings.'**
+  String get ttsNoEngineMessage;
+
+  /// No description provided for @ttsLanguageUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice data for this language isn\'t installed. Please download it in system settings.'**
+  String get ttsLanguageUnavailableMessage;
+
+  /// No description provided for @ttsOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get ttsOpenSettings;
+
+  /// No description provided for @ttsDownloadVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Download voice'**
+  String get ttsDownloadVoice;
+
   /// No description provided for @listeningNow.
   ///
   /// In en, this message translates to:

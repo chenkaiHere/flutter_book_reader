@@ -9,6 +9,23 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => '再生できません';
+
+  @override
+  String get ttsNoEngineMessage =>
+      'この端末には利用可能な音声エンジンがありません。システム設定でインストールまたは有効化してください。';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      'この言語の音声データがインストールされていません。システム設定でダウンロードしてください。';
+
+  @override
+  String get ttsOpenSettings => '設定を開く';
+
+  @override
+  String get ttsDownloadVoice => '音声をダウンロード';
+
+  @override
   String get listeningNow => '朗読中';
 
   @override

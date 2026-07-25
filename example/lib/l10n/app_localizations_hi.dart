@@ -9,6 +9,23 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => 'उपलब्ध नहीं';
+
+  @override
+  String get ttsNoEngineMessage =>
+      'इस डिवाइस में कोई उपयोग योग्य टेक्स्ट-टू-स्पीच इंजन नहीं है। कृपया सिस्टम सेटिंग में इसे इंस्टॉल या सक्षम करें।';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      'इस भाषा का वॉइस डेटा इंस्टॉल नहीं है। कृपया सिस्टम सेटिंग में इसे डाउनलोड करें।';
+
+  @override
+  String get ttsOpenSettings => 'सेटिंग खोलें';
+
+  @override
+  String get ttsDownloadVoice => 'वॉइस डाउनलोड करें';
+
+  @override
   String get listeningNow => 'सुन रहे हैं';
 
   @override

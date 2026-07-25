@@ -81,6 +81,10 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader> {
   Widget build(BuildContext context) {
     final ReaderLabels labels = ReaderLabels.of(context);
     final int count = controller.flowChapters.length;
+    // 全书开头（第 0 章在流首）时，顶部插入扉页，随内容一起滚动。
+    final bool showTitle =
+        controller.hasTitlePage && controller.flowChapters.first == 0;
+    final int lead = showTitle ? 1 : 0;
     // 连续滚动模式：顶部当前章节信息、底部章节进度为固定信息栏（中间列表滚动）。
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -111,10 +115,14 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader> {
                   left: pagePadding.left,
                   right: pagePadding.right,
                 ),
-                itemCount: count + 1,
-                itemBuilder: (BuildContext context, int i) => i < count
-                    ? _section(controller.flowChapters[i], labels)
-                    : _footer(labels),
+                itemCount: count + 1 + lead,
+                itemBuilder: (BuildContext context, int i) {
+                  if (showTitle && i == 0) return _titleSection(context);
+                  final int j = i - lead;
+                  return j < count
+                      ? _section(controller.flowChapters[j], labels)
+                      : _footer(labels);
+                },
               ),
             ),
           ),
@@ -135,6 +143,14 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader> {
           ),
         ],
       ),
+    );
+  }
+
+  /// 竖滚模式下的扉页：约占一屏高，随内容向上滚出。
+  Widget _titleSection(BuildContext context) {
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.82,
+      child: controller.titlePageBuilder!(context, theme),
     );
   }
 

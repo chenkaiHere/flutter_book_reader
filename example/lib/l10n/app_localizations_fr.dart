@@ -9,6 +9,23 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => 'Indisponible';
+
+  @override
+  String get ttsNoEngineMessage =>
+      'Cet appareil n\'a pas de moteur de synthèse vocale utilisable. Installez-le ou activez-le dans les paramètres système.';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      'Les données vocales de cette langue ne sont pas installées. Téléchargez-les dans les paramètres système.';
+
+  @override
+  String get ttsOpenSettings => 'Ouvrir les paramètres';
+
+  @override
+  String get ttsDownloadVoice => 'Télécharger la voix';
+
+  @override
   String get listeningNow => 'Écoute en cours';
 
   @override

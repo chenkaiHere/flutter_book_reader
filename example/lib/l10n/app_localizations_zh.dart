@@ -9,6 +9,21 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => '无法听书';
+
+  @override
+  String get ttsNoEngineMessage => '本设备没有可用的语音引擎，请到系统设置安装或启用。';
+
+  @override
+  String get ttsLanguageUnavailableMessage => '当前语言的语音数据未安装，请到系统设置下载。';
+
+  @override
+  String get ttsOpenSettings => '打开设置';
+
+  @override
+  String get ttsDownloadVoice => '下载语音';
+
+  @override
   String get listeningNow => '听书中';
 
   @override

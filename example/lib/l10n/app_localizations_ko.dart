@@ -9,6 +9,23 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => '재생할 수 없음';
+
+  @override
+  String get ttsNoEngineMessage =>
+      '이 기기에는 사용할 수 있는 음성 엔진이 없습니다. 시스템 설정에서 설치하거나 사용 설정하세요.';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      '이 언어의 음성 데이터가 설치되어 있지 않습니다. 시스템 설정에서 다운로드하세요.';
+
+  @override
+  String get ttsOpenSettings => '설정 열기';
+
+  @override
+  String get ttsDownloadVoice => '음성 다운로드';
+
+  @override
   String get listeningNow => '듣는 중';
 
   @override

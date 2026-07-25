@@ -1,5 +1,10 @@
 {
   "@@locale": "hi",
+  "ttsUnavailableTitle": "उपलब्ध नहीं",
+  "ttsNoEngineMessage": "इस डिवाइस में कोई उपयोग योग्य टेक्स्ट-टू-स्पीच इंजन नहीं है। कृपया सिस्टम सेटिंग में इसे इंस्टॉल या सक्षम करें।",
+  "ttsLanguageUnavailableMessage": "इस भाषा का वॉइस डेटा इंस्टॉल नहीं है। कृपया सिस्टम सेटिंग में इसे डाउनलोड करें।",
+  "ttsOpenSettings": "सेटिंग खोलें",
+  "ttsDownloadVoice": "वॉइस डाउनलोड करें",
   "listeningNow": "सुन रहे हैं",
   "bookshelfTitle": "बुकशेल्फ़",
   "shelfSummary": "{total} किताबें · {reading} पढ़ रहे हैं",

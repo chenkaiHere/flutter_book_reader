@@ -6,8 +6,10 @@ import 'package:flutter_book_reader/flutter_book_reader.dart';
 
 import '../l10n/app_localizations.dart';
 import '../listen/listen_service.dart';
+import '../listen/tts_backend.dart';
 import '../theme/warm_theme.dart';
 import 'listen_widgets.dart';
+import 'tts_unavailable_dialog.dart';
 
 /// 阅读页内的听书控件：右下角入口按钮 + 底部完整播放条。二者都只是驱动全局
 /// [listenService]；mini 气泡由全局 [ListenHost] 负责，故退出阅读页也不消失。
@@ -107,7 +109,15 @@ class _ListenOverlayState extends State<ListenOverlay> {
     widget.controller.markReading(ci, frag);
   }
 
-  void _startListening() {
+  Future<void> _startListening() async {
+    // 朗读前预检：缺引擎 / 缺语言时弹友好提示，引导去系统 TTS 设置，而非静默失败。
+    final TtsAvailability avail =
+        await listenService.checkAvailability(widget.localeCode);
+    if (!mounted) return;
+    if (avail != TtsAvailability.ok) {
+      await showTtsUnavailableDialog(context, avail);
+      return;
+    }
     listenService.start(
       bookId: widget.bookId,
       bookTitle: widget.bookTitle,

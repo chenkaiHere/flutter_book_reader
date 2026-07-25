@@ -1,5 +1,10 @@
 {
   "@@locale": "pt",
+  "ttsUnavailableTitle": "Indisponível",
+  "ttsNoEngineMessage": "Este dispositivo não tem um mecanismo de conversão de texto em voz utilizável. Instale ou ative um nas configurações do sistema.",
+  "ttsLanguageUnavailableMessage": "Os dados de voz deste idioma não estão instalados. Baixe-os nas configurações do sistema.",
+  "ttsOpenSettings": "Abrir configurações",
+  "ttsDownloadVoice": "Baixar voz",
   "listeningNow": "Ouvindo",
   "bookshelfTitle": "Estante",
   "shelfSummary": "{total} livros · {reading} lendo",

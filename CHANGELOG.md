@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.1
+
+- Optional **title page** before chapter 1 via `BookReader(titlePageBuilder: ...)`
+  (`ReaderTitlePageBuilder` = `Widget Function(BuildContext, ReaderTheme)`). It's
+  a real page in the flip flow (swipe back and forth, menu works) shown when the
+  book opens at its start. The style is entirely host-defined — the reader only
+  positions it; pass `null` (default) for no title page.
+
 ## 1.5.0
 
 - New public `BookReaderController` for imperative control (paging, chapter jumps,

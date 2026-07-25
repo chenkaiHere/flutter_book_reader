@@ -73,9 +73,18 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
     super.dispose();
   }
 
+  bool get _hasTitle =>
+      controller.hasTitlePage && controller.chapterIndex == 0;
+
   bool get _canForward =>
-      controller.pageIndex < controller.pages.length - 1 || controller.hasNext;
-  bool get _canBackward => controller.pageIndex > 0 || controller.hasPrev;
+      controller.onTitlePage ||
+      controller.pageIndex < controller.pages.length - 1 ||
+      controller.hasNext;
+  bool get _canBackward =>
+      !controller.onTitlePage &&
+      (controller.pageIndex > 0 ||
+          controller.hasPrev ||
+          (_hasTitle && controller.pageIndex == 0));
 
   void _onPanDown(DragDownDetails d) {
     _anim.stop();
@@ -212,13 +221,25 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
     );
   }
 
-  Widget _currentWidget() => _pageWidget(
-        controller.chapterIndex,
-        controller.pages,
-        controller.pageIndex,
+  Widget _titleWidget() => ColoredBox(
+        color: theme.paperColor,
+        child: controller.titlePageBuilder!(context, theme),
       );
 
+  Widget _currentWidget() {
+    if (controller.onTitlePage) return _titleWidget();
+    return _pageWidget(
+      controller.chapterIndex,
+      controller.pages,
+      controller.pageIndex,
+    );
+  }
+
   Widget _forwardWidget() {
+    if (controller.onTitlePage) {
+      // 扉页的下一页 = 正文第一页。
+      return _pageWidget(controller.chapterIndex, controller.pages, 0);
+    }
     if (controller.pageIndex < controller.pages.length - 1) {
       return _pageWidget(
         controller.chapterIndex,
@@ -237,6 +258,8 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
         controller.pageIndex - 1,
       );
     }
+    // 第一章第一页的上一页 = 扉页。
+    if (_hasTitle) return _titleWidget();
     return _adjacentChapterWidget(controller.chapterIndex - 1, atEnd: true);
   }
 

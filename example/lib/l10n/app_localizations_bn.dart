@@ -9,6 +9,23 @@ class AppLocalizationsBn extends AppLocalizations {
   AppLocalizationsBn([String locale = 'bn']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => 'উপলব্ধ নয়';
+
+  @override
+  String get ttsNoEngineMessage =>
+      'এই ডিভাইসে ব্যবহারযোগ্য কোনো টেক্সট-টু-স্পিচ ইঞ্জিন নেই। সিস্টেম সেটিংসে এটি ইনস্টল বা সক্ষম করুন।';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      'এই ভাষার ভয়েস ডেটা ইনস্টল করা নেই। সিস্টেম সেটিংসে এটি ডাউনলোড করুন।';
+
+  @override
+  String get ttsOpenSettings => 'সেটিংস খুলুন';
+
+  @override
+  String get ttsDownloadVoice => 'ভয়েস ডাউনলোড করুন';
+
+  @override
   String get listeningNow => 'শোনা হচ্ছে';
 
   @override

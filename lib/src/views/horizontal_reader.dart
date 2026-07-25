@@ -28,13 +28,23 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
   late PageController _pageController;
   late int _builtChapter;
 
+  /// 第 0 章且配置了扉页时，正文各页之前多出的扉页页数（1）。
+  bool get _hasTitle =>
+      controller.hasTitlePage && controller.chapterIndex == 0;
+  int get _titleLead => _hasTitle ? 1 : 0;
+
+  /// 本章正文首页在 PageView 里的视图下标（含上一章边界页 + 扉页）。
+  int get _front => controller.leading + _titleLead;
+
+  /// 目标视图下标：在扉页则 0，否则正文页对应下标。
+  int get _targetIndex =>
+      controller.onTitlePage ? 0 : _front + controller.pageIndex;
+
   @override
   void initState() {
     super.initState();
     _builtChapter = controller.chapterIndex;
-    _pageController = PageController(
-      initialPage: controller.leading + controller.pageIndex,
-    );
+    _pageController = PageController(initialPage: _targetIndex);
   }
 
   @override
@@ -47,7 +57,7 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
   @override
   void didUpdateWidget(covariant HorizontalReader oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final int target = controller.leading + controller.pageIndex;
+    final int target = _targetIndex;
     if (controller.chapterIndex != _builtChapter) {
       _builtChapter = controller.chapterIndex;
       _pageController.dispose();
@@ -83,15 +93,18 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
     }
 
     final int trailing = controller.hasNext ? 1 : 0;
-    final int itemCount =
-        controller.leading + controller.pages.length + trailing;
+    final int itemCount = _front + controller.pages.length + trailing;
 
     return PageView.builder(
       key: ValueKey<int>(controller.chapterIndex),
       controller: _pageController,
       itemCount: itemCount,
       onPageChanged: (int v) {
-        final int real = v - controller.leading;
+        if (_hasTitle && v == 0) {
+          controller.showTitlePage();
+          return;
+        }
+        final int real = v - _front;
         if (real < 0) {
           _deferCross(controller.chapterIndex - 1, atEnd: true);
         } else if (real >= controller.pages.length) {
@@ -101,20 +114,26 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
         }
       },
       itemBuilder: (BuildContext context, int v) {
-        final int real = v - controller.leading;
         final Widget page;
-        if (real < 0) {
-          page = _boundaryFrame(controller.chapterIndex - 1, atEnd: true);
-        } else if (real >= controller.pages.length) {
-          page = _boundaryFrame(controller.chapterIndex + 1, atEnd: false);
+        if (_hasTitle && v == 0) {
+          page = _titlePage();
         } else {
-          page = _frame(controller.chapterIndex, controller.pages, real);
+          final int real = v - _front;
+          if (real < 0) {
+            page = _boundaryFrame(controller.chapterIndex - 1, atEnd: true);
+          } else if (real >= controller.pages.length) {
+            page = _boundaryFrame(controller.chapterIndex + 1, atEnd: false);
+          } else {
+            page = _frame(controller.chapterIndex, controller.pages, real);
+          }
         }
         // 每页带不透明纸张底色：覆盖翻页时新页才能真正盖住下层，而非透视穿透。
         return _styled(v, ColoredBox(color: theme.paperColor, child: page));
       },
     );
   }
+
+  Widget _titlePage() => controller.titlePageBuilder!(context, theme);
 
   /// 覆盖样式给每页叠加变换：当前及更早的页固定在原位（被盖住），
   /// 后一页从右侧自然滑入并投下左缘阴影。平滑样式则原样返回。
@@ -130,7 +149,7 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
             final double current =
                 _pageController.hasClients && _pageController.page != null
                     ? _pageController.page!
-                    : (controller.leading + controller.pageIndex).toDouble();
+                    : _targetIndex.toDouble();
             final double delta = viewIndex - current;
             if (delta <= 0) {
               return Transform.translate(

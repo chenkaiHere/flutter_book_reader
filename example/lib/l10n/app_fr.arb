@@ -1,5 +1,10 @@
 {
   "@@locale": "fr",
+  "ttsUnavailableTitle": "Indisponible",
+  "ttsNoEngineMessage": "Cet appareil n'a pas de moteur de synthèse vocale utilisable. Installez-le ou activez-le dans les paramètres système.",
+  "ttsLanguageUnavailableMessage": "Les données vocales de cette langue ne sont pas installées. Téléchargez-les dans les paramètres système.",
+  "ttsOpenSettings": "Ouvrir les paramètres",
+  "ttsDownloadVoice": "Télécharger la voix",
   "listeningNow": "Écoute en cours",
   "bookshelfTitle": "Bibliothèque",
   "shelfSummary": "{total} livres · {reading} en cours",

@@ -1,5 +1,10 @@
 {
   "@@locale": "ar",
+  "ttsUnavailableTitle": "غير متاح",
+  "ttsNoEngineMessage": "لا يحتوي هذا الجهاز على محرك تحويل نص إلى كلام قابل للاستخدام. يرجى تثبيته أو تفعيله من إعدادات النظام.",
+  "ttsLanguageUnavailableMessage": "بيانات الصوت لهذه اللغة غير مثبتة. يرجى تنزيلها من إعدادات النظام.",
+  "ttsOpenSettings": "فتح الإعدادات",
+  "ttsDownloadVoice": "تنزيل الصوت",
   "listeningNow": "جارٍ الاستماع",
   "bookshelfTitle": "رف الكتب",
   "shelfSummary": "{total} كتب · {reading} قيد القراءة",

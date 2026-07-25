@@ -9,6 +9,23 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => 'Недоступно';
+
+  @override
+  String get ttsNoEngineMessage =>
+      'На этом устройстве нет доступного движка синтеза речи. Установите или включите его в настройках системы.';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      'Голосовые данные для этого языка не установлены. Загрузите их в настройках системы.';
+
+  @override
+  String get ttsOpenSettings => 'Открыть настройки';
+
+  @override
+  String get ttsDownloadVoice => 'Загрузить голос';
+
+  @override
   String get listeningNow => 'Прослушивание';
 
   @override
