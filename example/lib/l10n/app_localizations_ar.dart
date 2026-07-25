@@ -9,6 +9,23 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => 'غير متاح';
+
+  @override
+  String get ttsNoEngineMessage =>
+      'لا يحتوي هذا الجهاز على محرك تحويل نص إلى كلام قابل للاستخدام. يرجى تثبيته أو تفعيله من إعدادات النظام.';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      'بيانات الصوت لهذه اللغة غير مثبتة. يرجى تنزيلها من إعدادات النظام.';
+
+  @override
+  String get ttsOpenSettings => 'فتح الإعدادات';
+
+  @override
+  String get ttsDownloadVoice => 'تنزيل الصوت';
+
+  @override
   String get listeningNow => 'جارٍ الاستماع';
 
   @override

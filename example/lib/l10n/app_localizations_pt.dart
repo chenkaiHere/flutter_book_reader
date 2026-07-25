@@ -9,6 +9,23 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => 'Indisponível';
+
+  @override
+  String get ttsNoEngineMessage =>
+      'Este dispositivo não tem um mecanismo de conversão de texto em voz utilizável. Instale ou ative um nas configurações do sistema.';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      'Os dados de voz deste idioma não estão instalados. Baixe-os nas configurações do sistema.';
+
+  @override
+  String get ttsOpenSettings => 'Abrir configurações';
+
+  @override
+  String get ttsDownloadVoice => 'Baixar voz';
+
+  @override
   String get listeningNow => 'Ouvindo';
 
   @override

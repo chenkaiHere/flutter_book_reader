@@ -1,5 +1,10 @@
 {
   "@@locale": "bn",
+  "ttsUnavailableTitle": "উপলব্ধ নয়",
+  "ttsNoEngineMessage": "এই ডিভাইসে ব্যবহারযোগ্য কোনো টেক্সট-টু-স্পিচ ইঞ্জিন নেই। সিস্টেম সেটিংসে এটি ইনস্টল বা সক্ষম করুন।",
+  "ttsLanguageUnavailableMessage": "এই ভাষার ভয়েস ডেটা ইনস্টল করা নেই। সিস্টেম সেটিংসে এটি ডাউনলোড করুন।",
+  "ttsOpenSettings": "সেটিংস খুলুন",
+  "ttsDownloadVoice": "ভয়েস ডাউনলোড করুন",
   "listeningNow": "শোনা হচ্ছে",
   "bookshelfTitle": "বইয়ের তাক",
   "shelfSummary": "{total}টি বই · {reading}টি পড়ছেন",

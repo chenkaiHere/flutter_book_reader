@@ -1,5 +1,10 @@
 {
   "@@locale": "ko",
+  "ttsUnavailableTitle": "재생할 수 없음",
+  "ttsNoEngineMessage": "이 기기에는 사용할 수 있는 음성 엔진이 없습니다. 시스템 설정에서 설치하거나 사용 설정하세요.",
+  "ttsLanguageUnavailableMessage": "이 언어의 음성 데이터가 설치되어 있지 않습니다. 시스템 설정에서 다운로드하세요.",
+  "ttsOpenSettings": "설정 열기",
+  "ttsDownloadVoice": "음성 다운로드",
   "listeningNow": "듣는 중",
   "bookshelfTitle": "책장",
   "shelfSummary": "{total}권 · {reading}권 읽는 중",

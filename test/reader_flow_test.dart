@@ -588,4 +588,37 @@ void main() {
     await tester.pumpWidget(frame(1));
     expect(headerTitle(), 'CH-ONE', reason: '非章首显示章节标题');
   });
+
+  testWidgets('扉页：传入数据则第一章前出现扉页，可翻入正文', (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        titlePageBuilder: (BuildContext context, ReaderTheme theme) =>
+            ColoredBox(
+          color: theme.paperColor,
+          child: const Center(child: Text('独家宣传标语XYZ')),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 开局定位在全书开头 → 先展示扉页。
+    expect(find.text('独家宣传标语XYZ'), findsOneWidget, reason: '第一章前应先显示扉页');
+
+    // 点右侧翻页：从扉页进入正文第一页。
+    final Size size = tester.getSize(find.byType(BookReader));
+    await tester.tapAt(Offset(size.width * 0.85, size.height * 0.5));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1/'), findsWidgets, reason: '翻过扉页应进入正文第一页');
+  });
+
+  testWidgets('扉页：不传则不加扉页', (WidgetTester tester) async {
+    await tester.pumpWidget(host(FakeBookSource()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('独家宣传标语XYZ'), findsNothing);
+    // 直接进入正文：第 1 章内容可见。
+    expect(find.text('第 1 章'), findsWidgets);
+  });
 }

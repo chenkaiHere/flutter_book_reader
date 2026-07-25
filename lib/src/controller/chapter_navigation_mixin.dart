@@ -18,6 +18,7 @@ mixin ChapterNavigationMixin
       if (p != null && p.isNotEmpty) start = p.length - 1;
     }
     chapterIndex = clamped;
+    onTitlePage = false; // 切章即离开扉页
     // charOffset > 0（如书签跳转）时先置首页，布局时 updateViewport 据 charOffset 校正到目标页
     this.charOffset = charOffset;
     pendingAtEnd = atEnd;
@@ -31,13 +32,27 @@ mixin ChapterNavigationMixin
 
   /// 定位到本章某页（点按/滑动跨页）。
   void goToPage(int index) {
+    onTitlePage = false;
     pageIndex = index.clamp(0, pages.isEmpty ? 0 : pages.length - 1);
     charOffset = startOffsetOfPage(pageIndex);
     notifyListeners();
   }
 
+  /// 停到扉页（第一章正文之前那一页）。
+  void showTitlePage() {
+    if (chapterIndex == 0 && hasTitlePage && !onTitlePage) {
+      onTitlePage = true;
+      pageIndex = 0;
+      charOffset = 0;
+      notifyListeners();
+    }
+  }
+
   void nextPage() {
-    if (pageIndex < pages.length - 1) {
+    if (onTitlePage) {
+      onTitlePage = false; // 扉页 → 正文第一页
+      notifyListeners();
+    } else if (pageIndex < pages.length - 1) {
       goToPage(pageIndex + 1);
     } else if (hasNext) {
       loadChapter(chapterIndex + 1);
@@ -45,10 +60,15 @@ mixin ChapterNavigationMixin
   }
 
   void prevPage() {
+    if (onTitlePage) {
+      return; // 已在扉页，前面没有了
+    }
     if (pageIndex > 0) {
       goToPage(pageIndex - 1);
     } else if (hasPrev) {
       loadChapter(chapterIndex - 1, atEnd: true);
+    } else if (chapterIndex == 0 && hasTitlePage) {
+      showTitlePage(); // 第一章第一页 → 扉页
     }
   }
 

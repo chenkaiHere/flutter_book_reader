@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../paginator.dart';
 import '../reader_config.dart';
 import '../source/book_source.dart';
+import '../title_page.dart';
 
 /// 阅读控制器基类：集中承载可变状态与依赖，供各能力混入读写。
 ///
@@ -20,6 +21,15 @@ abstract class ReaderControllerBase extends ChangeNotifier {
   // —— 共享可变状态 ——
   int chapterIndex = 0;
   int pageIndex = 0;
+
+  /// 扉页构建器（宣传页样式由业务方定义，第一章正文之前）。为 null 则无扉页。
+  ReaderTitlePageBuilder? titlePageBuilder;
+
+  /// 当前是否停在扉页（仅在第 0 章、且有扉页时有意义）。
+  bool onTitlePage = false;
+
+  /// 是否配置了扉页。
+  bool get hasTitlePage => titlePageBuilder != null;
 
   /// 当前页在整章正文中的起始字符偏移（换字号后据此恢复位置）
   int charOffset = 0;

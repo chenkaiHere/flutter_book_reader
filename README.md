@@ -96,7 +96,7 @@ anywhere else — without touching the reader's internals.
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.4.0
+  flutter_book_reader: ^1.5.1
 ```
 
 ```dart
@@ -269,6 +269,27 @@ final marked = controller.isCurrentPageBookmarked;
 Also exposes `isReady`, `chapterIndex` / `chapterCount`, `pageIndex` /
 `pageCount`, `currentChapterTitle`, `position`, `isAtBookEnd`, and menu state
 (`isMenuVisible`, `isMenuPanelExpanded`, `closeMenu()`).
+
+### 7. Promotional title page
+
+Add a **title page** before chapter 1 with `titlePageBuilder`. It's a real page in
+the flip flow — swipe back and forth, and the menu still works — shown when the
+book opens at its start. **You define the style**; the reader only positions it.
+Pass `null` (default) for no title page. The callback hands you the current
+`ReaderTheme` so your page can match the reader's day/night colors:
+
+```dart
+BookReader(
+  source: MyBookSource(),
+  titlePageBuilder: (BuildContext context, ReaderTheme theme) => MyTitlePage(
+    theme: theme,      // match paper / text / accent colors
+    // ...your own promo widget: cover, blurb, tags, reviews, etc.
+  ),
+)
+```
+
+`ReaderTitlePageBuilder` is `Widget Function(BuildContext, ReaderTheme)`. See the
+example app's `ReaderTitlePage` for a ready-made promo layout.
 
 ## Architecture
 

@@ -9,6 +9,23 @@ class AppLocalizationsUr extends AppLocalizations {
   AppLocalizationsUr([String locale = 'ur']) : super(locale);
 
   @override
+  String get ttsUnavailableTitle => 'دستیاب نہیں';
+
+  @override
+  String get ttsNoEngineMessage =>
+      'اس آلے میں کوئی قابلِ استعمال ٹیکسٹ ٹو اسپیچ انجن نہیں ہے۔ براہِ کرم اسے سسٹم سیٹنگز میں انسٹال یا فعال کریں۔';
+
+  @override
+  String get ttsLanguageUnavailableMessage =>
+      'اس زبان کا صوتی ڈیٹا انسٹال نہیں ہے۔ براہِ کرم اسے سسٹم سیٹنگز میں ڈاؤن لوڈ کریں۔';
+
+  @override
+  String get ttsOpenSettings => 'سیٹنگز کھولیں';
+
+  @override
+  String get ttsDownloadVoice => 'آواز ڈاؤن لوڈ کریں';
+
+  @override
   String get listeningNow => 'سن رہے ہیں';
 
   @override

@@ -22,6 +22,7 @@ export 'src/reader_config.dart' show ReaderConfig, FlipType;
 export 'src/reader_labels.dart' show ReaderLabels;
 export 'src/reader_theme.dart';
 export 'src/source/book_source.dart';
+export 'src/title_page.dart';
 // 只导出业务方需要的公开类型；InheritedWidget 作用域是插件内部管道，不对外。
 export 'src/text_actions.dart'
     show

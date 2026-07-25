@@ -1,5 +1,10 @@
 {
   "@@locale": "en",
+  "ttsUnavailableTitle": "Listening unavailable",
+  "ttsNoEngineMessage": "This device has no usable text-to-speech engine. Please install or enable one in system settings.",
+  "ttsLanguageUnavailableMessage": "Voice data for this language isn't installed. Please download it in system settings.",
+  "ttsOpenSettings": "Open settings",
+  "ttsDownloadVoice": "Download voice",
   "listeningNow": "Listening",
 
   "bookshelfTitle": "Bookshelf",

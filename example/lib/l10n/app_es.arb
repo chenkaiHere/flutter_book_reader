@@ -1,5 +1,10 @@
 {
   "@@locale": "es",
+  "ttsUnavailableTitle": "No disponible",
+  "ttsNoEngineMessage": "Este dispositivo no tiene un motor de texto a voz utilizable. Instálalo o actívalo en los ajustes del sistema.",
+  "ttsLanguageUnavailableMessage": "No están instalados los datos de voz de este idioma. Descárgalos en los ajustes del sistema.",
+  "ttsOpenSettings": "Abrir ajustes",
+  "ttsDownloadVoice": "Descargar voz",
   "listeningNow": "Escuchando",
   "bookshelfTitle": "Estantería",
   "shelfSummary": "{total} libros · {reading} leyendo",

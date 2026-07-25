@@ -23,6 +23,7 @@ import 'widgets/book_detail_sheet.dart';
 import 'widgets/comment_input_sheet.dart';
 import 'widgets/listen_overlay.dart';
 import 'widgets/paragraph_comments_sheet.dart';
+import 'widgets/reader_title_page.dart';
 import 'widgets/share_card_sheet.dart';
 import 'widgets/language_sheet.dart';
 import 'widgets/warm_widgets.dart';
@@ -221,6 +222,16 @@ class _BookshelfPageState extends State<BookshelfPage> {
             commentStore: _commentStore,
             commentsRefresh: _commentsRev,
             startChapter: startChapter,
+            // 扉页（第一章之前的宣传页）
+            titlePageBuilder: (BuildContext context, ReaderTheme theme) =>
+                ReaderTitlePage(
+              theme: theme,
+              title: book.title,
+              coverColor: Color(book.coverColor),
+              author: book.author.isEmpty ? '佚名' : book.author,
+              description: book.intro.isEmpty ? null : book.intro,
+              tags: const <String>['历史', '名著'],
+            ),
             // 气泡菜单「复制 / 评论 / 查询 / 分享」全部回调到 App 侧自行处理。
             onTextAction: (ReaderTextAction action, ReaderSelection sel) =>
                 _onReaderTextAction(book, labels, action, sel),

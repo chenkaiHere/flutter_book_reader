@@ -74,7 +74,7 @@
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.4.0
+  flutter_book_reader: ^1.5.1
 ```
 
 ```dart
@@ -239,6 +239,26 @@ final marked = controller.isCurrentPageBookmarked;
 另外还提供 `isReady`、`chapterIndex` / `chapterCount`、`pageIndex` / `pageCount`、
 `currentChapterTitle`、`position`、`isAtBookEnd`，以及菜单状态（`isMenuVisible`、
 `isMenuPanelExpanded`、`closeMenu()`）。
+
+### 7. 宣传扉页
+
+用 `titlePageBuilder` 在第一章正文之前加一个**扉页**。它是翻页流里的**真实一页**——
+可来回翻、菜单照常唤起——在从全书开头打开时展示。**样式完全由你定义**，阅读器只负责把
+它接入翻页流；传 `null`（默认）则不加扉页。回调会带上当前 `ReaderTheme`，方便扉页贴合
+阅读器的日/夜配色：
+
+```dart
+BookReader(
+  source: MyBookSource(),
+  titlePageBuilder: (BuildContext context, ReaderTheme theme) => MyTitlePage(
+    theme: theme,      // 据此匹配纸张 / 字色 / 强调色
+    // ……你自己的宣传页：封面、简介、标签、书评等
+  ),
+)
+```
+
+`ReaderTitlePageBuilder` 即 `Widget Function(BuildContext, ReaderTheme)`。示例 App 里的
+`ReaderTitlePage` 提供了一个开箱即用的宣传页版式可参考。
 
 ## 架构
 

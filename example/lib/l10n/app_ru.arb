@@ -1,5 +1,10 @@
 {
   "@@locale": "ru",
+  "ttsUnavailableTitle": "Недоступно",
+  "ttsNoEngineMessage": "На этом устройстве нет доступного движка синтеза речи. Установите или включите его в настройках системы.",
+  "ttsLanguageUnavailableMessage": "Голосовые данные для этого языка не установлены. Загрузите их в настройках системы.",
+  "ttsOpenSettings": "Открыть настройки",
+  "ttsDownloadVoice": "Загрузить голос",
   "listeningNow": "Прослушивание",
   "bookshelfTitle": "Книжная полка",
   "shelfSummary": "{total} книг · {reading} читаю",

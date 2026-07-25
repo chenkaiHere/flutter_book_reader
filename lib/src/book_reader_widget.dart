@@ -14,6 +14,7 @@ import 'reader_labels.dart';
 import 'reader_theme.dart';
 import 'source/book_source.dart';
 import 'text_actions.dart';
+import 'title_page.dart';
 import 'underline/reader_underline_store.dart';
 import 'views/horizontal_reader.dart';
 import 'views/simulation_reader.dart';
@@ -46,6 +47,7 @@ class BookReader extends StatefulWidget {
     this.onSegmentCommentTap,
     this.commentsRefresh,
     this.controller,
+    this.titlePageBuilder,
     this.enableTextSelection = true,
   });
 
@@ -97,6 +99,11 @@ class BookReader extends StatefulWidget {
 
   /// 对外阅读控制器：命令式驱动翻页 / 切章、读取当前页文本（听书等场景）。
   final BookReaderController? controller;
+
+  /// 扉页构建器（第一章正文之前的宣传页）。为 null（默认）则不显示扉页。
+  /// **样式完全由业务方定义**：回调返回整页 Widget，并带上当前 [ReaderTheme]
+  /// 便于贴合日/夜主题，见 [ReaderTitlePageBuilder]。
+  final ReaderTitlePageBuilder? titlePageBuilder;
 
   /// 是否启用「长按选中正文」功能（默认开启）。
   final bool enableTextSelection;
@@ -233,6 +240,13 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       widget.controller?.bindBookmark(_toggleBookmark, () => _isBookmarked);
       widget.controller?.setMenuVisible(_menuVisible.value);
     }
+    if (!identical(oldWidget.titlePageBuilder, widget.titlePageBuilder)) {
+      final ReadingController? c = _controller;
+      if (c != null) {
+        c.titlePageBuilder = widget.titlePageBuilder;
+        if (widget.titlePageBuilder == null) c.onTitlePage = false;
+      }
+    }
   }
 
   /// 业务方在外部改动评论后触发 [BookReader.commentsRefresh]，据此重新拉取评论，
@@ -279,6 +293,10 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
         startChapter: start,
         startCharOffset: offset,
       );
+      controller.titlePageBuilder = widget.titlePageBuilder;
+      // 从全书开头（第 0 章、偏移 0）打开时先展示扉页；从书中续读则直接进正文。
+      controller.onTitlePage =
+          widget.titlePageBuilder != null && start == 0 && offset == 0;
       _lastChapter = controller.chapterIndex;
       controller.addListener(_onControllerChanged);
       widget.controller?.attach(controller);
@@ -687,6 +705,9 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
   }
 
   Widget _buildStaticPage(ReaderTheme t, ReadingController c) {
+    if (c.onTitlePage && c.titlePageBuilder != null) {
+      return c.titlePageBuilder!(context, t);
+    }
     if (c.pages.isEmpty) {
       final int idx = c.chapterIndex;
       return ReaderStatusPage(

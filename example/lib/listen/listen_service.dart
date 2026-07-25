@@ -2,40 +2,43 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_book_reader/flutter_book_reader.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+
+import 'azure_tts_backend.dart';
+import 'system_tts_backend.dart';
+import 'tts_backend.dart';
+import 'tts_config.dart';
 
 /// 全局听书服务单例：TTS 播放独立于阅读页存在，退出阅读页也继续，mini 气泡随之常驻。
 final ListenService listenService = ListenService();
 
 class _Speed {
-  const _Speed(this.label, this.rate);
+  const _Speed(this.label, this.multiplier);
   final String label;
-  final double rate;
+  final double multiplier; // 语速倍率（1.0 = 常速），由 backend 映射到各自参数
 }
 
-/// 全局听书引擎：直接按「章」从 [BookSource] 读取正文交给 TTS，逐句朗读、读完自动进入
-/// 下一章，与阅读器分页解耦——因此可脱离阅读页在全局持续播放。
+/// 全局听书引擎：直接按「章」从 [BookSource] 读取正文交给 [TtsBackend]，逐句朗读、读完
+/// 自动进入下一章，与阅读器分页解耦——因此可脱离阅读页在全局持续播放。
+///
+/// 朗读来源经 [TtsBackend] 抽象：配置了 Azure 密钥且非 Web → 云端音色（[AzureTtsBackend]），
+/// 否则用系统 TTS（[SystemTtsBackend]）兜底。
 class ListenService extends ChangeNotifier {
-  final FlutterTts _tts = FlutterTts();
-  bool _handlersSet = false;
+  // 填了 Azure 密钥且非 Web 就用云端音色，否则回退系统 TTS。
+  late final TtsBackend _backend = (TtsConfig.azureEnabled && !kIsWeb)
+      ? AzureTtsBackend()
+      : SystemTtsBackend();
 
-  // rate 量纲各平台不同：Web 上 1.0=常速；移动端约 0.5=常速。
-  static const List<_Speed> _webSpeeds = <_Speed>[
+  static const List<_Speed> _speeds = <_Speed>[
     _Speed('0.8×', 0.8),
     _Speed('1.0×', 1.0),
     _Speed('1.25×', 1.25),
     _Speed('1.5×', 1.5),
     _Speed('2.0×', 2.0),
   ];
-  static const List<_Speed> _mobileSpeeds = <_Speed>[
-    _Speed('0.8×', 0.42),
-    _Speed('1.0×', 0.50),
-    _Speed('1.25×', 0.62),
-    _Speed('1.5×', 0.75),
-    _Speed('2.0×', 1.0),
-  ];
-  List<_Speed> get _speeds => kIsWeb ? _webSpeeds : _mobileSpeeds;
   int _speedIdx = 1;
+
+  /// 是否正在使用云端音色（供 UI 展示，可选）。
+  bool get usingCloudVoice => _backend is AzureTtsBackend;
 
   bool _active = false;
   bool _playing = false;
@@ -55,7 +58,6 @@ class ListenService extends ChangeNotifier {
   String _currentFragment = ''; // 正在朗读的分句（供阅读页跟读高亮）
   String? _startProbe; // 起始定位探针：首章分句后跳到含此句的分句开始
   bool _restart = false;
-  Completer<void>? _utterance;
   int _session = 0; // 会话号：换书 / 停止时自增，令旧朗读循环退出
 
   /// 由 App（书架）注册：请求打开某本书的阅读页。mini 在非阅读页被点击时触发。
@@ -74,18 +76,6 @@ class ListenService extends ChangeNotifier {
       (_chapterIndex >= 0 && _chapterIndex < _chapterTitles.length)
       ? _chapterTitles[_chapterIndex]
       : '';
-
-  void _ensureHandlers() {
-    if (_handlersSet) return;
-    _handlersSet = true;
-    _tts.setCompletionHandler(_finishUtterance);
-    _tts.setCancelHandler(_finishUtterance);
-    _tts.setErrorHandler((dynamic _) => _finishUtterance());
-  }
-
-  void _finishUtterance() {
-    if (_utterance != null && !_utterance!.isCompleted) _utterance!.complete();
-  }
 
   void setInReader(bool v) {
     if (_inReader == v) return;
@@ -108,8 +98,10 @@ class ListenService extends ChangeNotifier {
     onOpenReaderRequested?.call(id, _chapterIndex);
   }
 
-  String _lang() {
-    switch (_localeCode) {
+  String _lang() => bcp47ForLocale(_localeCode);
+
+  static String bcp47ForLocale(String code) {
+    switch (code) {
       case 'zh':
         return 'zh-CN';
       case 'en':
@@ -119,9 +111,13 @@ class ListenService extends ChangeNotifier {
       case 'ko':
         return 'ko-KR';
       default:
-        return _localeCode;
+        return code;
     }
   }
+
+  /// 朗读前的可用性预检；UI 据此在缺引擎 / 缺语言时弹出友好引导。
+  Future<TtsAvailability> checkAvailability(String localeCode) =>
+      _backend.checkAvailability(bcp47ForLocale(localeCode));
 
   /// 开始 / 恢复听书。同一本书已在听 → 只展开为完整条；否则换书重开。
   Future<void> start({
@@ -132,12 +128,11 @@ class ListenService extends ChangeNotifier {
     required String localeCode,
     String? startText,
   }) async {
-    _ensureHandlers();
     if (_active && _bookId == bookId) {
       setExpanded(true);
       return;
     }
-    await _tts.stop();
+    await _backend.stop();
     final int session = ++_session;
     _bookId = bookId;
     _bookTitle = bookTitle;
@@ -162,18 +157,10 @@ class ListenService extends ChangeNotifier {
       _chapterCount = 0;
     }
     if (session != _session) return;
-    try {
-      await _tts.setLanguage(_lang());
-    } catch (_) {}
-    await _tts.setSpeechRate(_speeds[_speedIdx].rate);
+    await _backend.setLanguage(_lang());
+    await _backend.setSpeed(_speeds[_speedIdx].multiplier);
     notifyListeners();
     await _loop(session);
-  }
-
-  Future<void> _speak(String text) async {
-    _utterance = Completer<void>();
-    await _tts.speak(text);
-    await _utterance!.future;
   }
 
   /// 取一段文字里第一句（去掉行首缩进 / 空白，截到首个断句标点），用作起始定位探针。
@@ -241,8 +228,14 @@ class ListenService extends ChangeNotifier {
         // 广播当前朗读句：阅读页据此跟读高亮 + 自动翻页。
         _currentFragment = _frags[_fragIdx];
         notifyListeners();
-        await _speak(_frags[_fragIdx]);
+        final bool ok = await _backend.speak(_frags[_fragIdx]);
         if (!_active || !_playing || session != _session) return;
+        if (!ok) {
+          // 引擎/服务不可用（设备未装 TTS、或云端鉴权/网络失败）：停止播放，避免空转卡死。
+          _playing = false;
+          notifyListeners();
+          return;
+        }
         if (_restart) {
           _restart = false; // 调速：同一句用新语速重读
           continue;
@@ -267,7 +260,7 @@ class ListenService extends ChangeNotifier {
     if (_playing) {
       _playing = false;
       notifyListeners();
-      await _tts.stop();
+      await _backend.stop();
     } else {
       _playing = true;
       notifyListeners();
@@ -278,10 +271,10 @@ class ListenService extends ChangeNotifier {
   Future<void> cycleSpeed() async {
     _speedIdx = (_speedIdx + 1) % _speeds.length;
     notifyListeners();
-    await _tts.setSpeechRate(_speeds[_speedIdx].rate);
+    await _backend.setSpeed(_speeds[_speedIdx].multiplier);
     if (_playing) {
       _restart = true;
-      await _tts.stop();
+      await _backend.stop();
     }
   }
 
@@ -291,6 +284,12 @@ class ListenService extends ChangeNotifier {
     _playing = false;
     _expanded = false;
     notifyListeners();
-    await _tts.stop();
+    await _backend.stop();
+  }
+
+  @override
+  void dispose() {
+    _backend.dispose();
+    super.dispose();
   }
 }

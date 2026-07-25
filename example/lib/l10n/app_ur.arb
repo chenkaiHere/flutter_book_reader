@@ -1,5 +1,10 @@
 {
   "@@locale": "ur",
+  "ttsUnavailableTitle": "دستیاب نہیں",
+  "ttsNoEngineMessage": "اس آلے میں کوئی قابلِ استعمال ٹیکسٹ ٹو اسپیچ انجن نہیں ہے۔ براہِ کرم اسے سسٹم سیٹنگز میں انسٹال یا فعال کریں۔",
+  "ttsLanguageUnavailableMessage": "اس زبان کا صوتی ڈیٹا انسٹال نہیں ہے۔ براہِ کرم اسے سسٹم سیٹنگز میں ڈاؤن لوڈ کریں۔",
+  "ttsOpenSettings": "سیٹنگز کھولیں",
+  "ttsDownloadVoice": "آواز ڈاؤن لوڈ کریں",
   "listeningNow": "سن رہے ہیں",
   "bookshelfTitle": "کتابوں کی الماری",
   "shelfSummary": "{total} کتابیں · {reading} زیرِ مطالعہ",
