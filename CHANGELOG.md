@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.3
+
+- Fix: opening the menu no longer shifts the page (system bars now overlay via
+  edge-to-edge instead of resizing the reader), and tapping while the menu is
+  open only closes it — never turns a page.
+- Fix: a paragraph's comment badge now sits at the paragraph's true end — even
+  when the paragraph spans pages — instead of at the bottom of the page.
+
 ## 1.5.2
 
 - System status / navigation bars now show with the menu and hide when it closes;

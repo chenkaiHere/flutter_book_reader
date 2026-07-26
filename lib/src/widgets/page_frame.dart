@@ -109,6 +109,7 @@ class ReaderPageContent extends StatelessWidget {
     required this.pageCount,
     required this.progress,
     this.pageStartOffset = 0,
+    this.leadingParagraphStart,
     this.padding = kReaderPagePadding,
   });
 
@@ -126,6 +127,9 @@ class ReaderPageContent extends StatelessWidget {
 
   /// 本页首字符在本章「块长度空间」中的起始偏移（划线锚定用）。
   final int pageStartOffset;
+
+  /// 页首延续段落的真实起始偏移（段评角标跨页统计用），见 [ReaderProse.leadingParagraphStart]。
+  final int? leadingParagraphStart;
   final EdgeInsets padding;
 
   @override
@@ -152,6 +156,7 @@ class ReaderPageContent extends StatelessWidget {
               chapterIndex: chapterIndex,
               chapterTitle: chapterTitle,
               pageStartOffset: pageStartOffset,
+              leadingParagraphStart: leadingParagraphStart,
             ),
           ),
           ReaderFooterBar(
@@ -181,6 +186,7 @@ class ReaderProse extends StatefulWidget {
     this.chapterIndex = 0,
     this.chapterTitle = '',
     this.pageStartOffset = 0,
+    this.leadingParagraphStart,
   });
 
   final ReaderPage page;
@@ -195,6 +201,10 @@ class ReaderProse extends StatefulWidget {
 
   /// 本页首字符在本章「块长度空间」中的起始偏移（与书签同一套坐标）。
   final int pageStartOffset;
+
+  /// 若本页以「上一页某段的延续块」开头，则为该段真实起始偏移；否则为 null（用本页起始）。
+  /// 段评角标跨页时据此统计整段评论数，避免漏掉落在前一页那部分的评论。
+  final int? leadingParagraphStart;
 
   @override
   State<ReaderProse> createState() => _ReaderProseState();
@@ -987,20 +997,24 @@ class _ReaderProseState extends State<ReaderProse> {
         segScope.comments.isNotEmpty;
 
     final List<Widget> children = <Widget>[];
-    int runStart = widget.pageStartOffset; // 当前段落在本页的章内起始偏移
+    // 段落在本章的起始偏移；页首若是上页某段的延续，用回溯得到的真实起点。
+    int runStart = widget.leadingParagraphStart ?? widget.pageStartOffset;
     for (int i = 0; i < widget.page.length; i++) {
       final ReaderBlock block = widget.page[i];
-      if (i == 0 || block.isParagraphStart) {
+      if (i == 0) {
+        runStart = block.isParagraphStart
+            ? _blockChapterStart(0)
+            : (widget.leadingParagraphStart ?? _blockChapterStart(0));
+      } else if (block.isParagraphStart) {
         runStart = _blockChapterStart(i);
       }
       if (i > 0 && block.isParagraphStart) {
         children.add(SizedBox(height: _config.paragraphSpacing));
       }
-      // 段尾：本块是最后一块，或下一块是新段落起点。
+      // 段尾：仅当本块是该段真正的结尾块（跨页拆分时只有最后一片为真）。
       (int, int, int)? badge;
       if (showBadges) {
-        final bool tail =
-            i == widget.page.length - 1 || widget.page[i + 1].isParagraphStart;
+        final bool tail = block.isParagraphEnd;
         if (tail) {
           final int paraEnd = _blockChapterStart(i) + block.length;
           final int count = segScope.comments

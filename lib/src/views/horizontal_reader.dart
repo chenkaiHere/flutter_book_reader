@@ -224,6 +224,8 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
       pageCount: pages.length,
       progress: controller.progressFor(chapterIdx, pages, pageIdx),
       pageStartOffset: controller.startOffsetOfPageIn(pages, pageIdx),
+      leadingParagraphStart:
+          controller.leadingParagraphStartIn(pages, pageIdx),
     );
   }
 }

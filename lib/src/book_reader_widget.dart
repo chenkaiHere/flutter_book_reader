@@ -286,11 +286,10 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
   /// 依据「是否配置了菜单时显示系统栏」与「菜单当前是否可见」应用系统 UI 模式。
   void _enterImmersive() {
     if (widget.showSystemBarsWithMenu && _menuVisible.value) {
-      // 菜单可见：显示系统状态栏 + 底部导航栏（作为 overlay 覆盖在正文之上）。
-      SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.manual,
-        overlays: SystemUiOverlay.values,
-      );
+      // 菜单可见：用 edgeToEdge 显示系统栏——系统栏作为**覆盖层**出现，窗口仍是全屏，
+      // 正文画在栏下方。这样系统栏显隐不会改变窗口尺寸，正文不会重新分页 / 跳页。
+      // （若用 SystemUiMode.manual，系统栏会占用布局空间挤小窗口，导致重排跳页。）
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     } else {
       // 沉浸态：隐藏系统状态栏与导航栏，正文铺满整屏。
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -649,9 +648,17 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
             resizeToAvoidBottomInset: false,
             body: Stack(
               children: <Widget>[
-                // 正文始终可交互。菜单唤起时由 ReaderMenu 的全屏 opaque 遮罩拦截手势：
-                // 点击或滑动都只关闭菜单，不翻页；菜单关闭后再滑动才会翻页。
-                Positioned.fill(child: _buildContent(t, c)),
+                // 菜单唤起时用 AbsorbPointer 吸收正文的所有指针：正文彻底收不到手势，
+                // 因此点击 / 滑动都不会翻页；关闭菜单由上层 ReaderMenu 的遮罩负责
+                // （点击或拖动都只“先关闭菜单”）。菜单关闭后正文才恢复可交互。
+                Positioned.fill(
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _menuVisible,
+                    builder: (BuildContext context, bool visible, Widget? child) =>
+                        AbsorbPointer(absorbing: visible, child: child),
+                    child: _buildContent(t, c),
+                  ),
+                ),
                 if (_config.dimLevel > 0)
                   Positioned.fill(
                     child: IgnorePointer(
@@ -674,7 +681,12 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
   }
 
   Widget _buildContent(ReaderTheme t, ReadingController c) {
+    // 正文高度不吃上/下系统栏内边距：否则菜单唤起时系统状态栏/导航栏出现会缩小正文区
+    // 触发重新分页，关闭菜单又变回 —— 令第 2 页及以后的位置在重排后落到相邻页，看起来
+    // 像“翻了一页”。系统栏出现时本就被菜单顶/底栏盖住，正文保持整屏高度即可。
     return SafeArea(
+      top: false,
+      bottom: false,
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final Size contentSize = Size(
@@ -760,6 +772,8 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
       pageIndex: i,
       pageCount: c.pages.length,
       progress: c.globalProgress,
+      pageStartOffset: c.startOffsetOfPage(i),
+      leadingParagraphStart: c.leadingParagraphStartIn(c.pages, i),
     );
   }
 

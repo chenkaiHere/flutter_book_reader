@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 
 /// 页内文本块：一个段落，或一个段落被跨页拆开后的一部分。
 class ReaderBlock {
-  const ReaderBlock({required this.text, required this.isParagraphStart});
+  const ReaderBlock({
+    required this.text,
+    required this.isParagraphStart,
+    this.isParagraphEnd = true,
+  });
 
   /// 用于测量与渲染的文本（段落起始块已含首行缩进）。
   final String text;
 
   /// 是否为某段的起始块（渲染时其上方需要加段间距）。
   final bool isParagraphStart;
+
+  /// 是否为某段的结尾块（段评角标只画在段落真正结束处；跨页拆分时仅最后一片为 true）。
+  final bool isParagraphEnd;
 
   int get length => text.length;
 }
@@ -145,10 +152,13 @@ class Paginator {
         }
 
         final int safeEnd = _avoidSurrogateSplit(text, lastEnd);
+        // 本片是否为该段最后一片（其后无更多行）：决定段评角标是否落在此处。
+        final bool paragraphEnd = lastFit + 1 >= lines.length;
         current.add(
           ReaderBlock(
             text: text.substring(startOffset, safeEnd),
             isParagraphStart: paragraphStart,
+            isParagraphEnd: paragraphEnd,
           ),
         );
         used += gap + lastHeight;

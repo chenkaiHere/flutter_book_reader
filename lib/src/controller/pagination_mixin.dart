@@ -132,6 +132,23 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
     return sum;
   }
 
+  /// 若第 [index] 页以「某段的延续块」开头（该段起始落在更早的页），回溯计算该段
+  /// 真实起始的章内偏移；否则即本页起始偏移。段评角标跨页时据此统计整段评论数。
+  int leadingParagraphStartIn(List<ReaderPage> pgs, int index) {
+    if (index < 0 || index >= pgs.length) return 0;
+    final ReaderPage page = pgs[index];
+    int start = startOffsetOfPageIn(pgs, index);
+    if (page.isEmpty || page.first.isParagraphStart) return start;
+    for (int p = index - 1; p >= 0; p--) {
+      final ReaderPage prev = pgs[p];
+      for (int j = prev.length - 1; j >= 0; j--) {
+        start -= prev[j].length;
+        if (prev[j].isParagraphStart) return start;
+      }
+    }
+    return start;
+  }
+
   int pageIndexForOffset(int offset) {
     int sum = 0;
     for (int i = 0; i < pages.length; i++) {
