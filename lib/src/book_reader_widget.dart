@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'battery.dart';
 import 'book_reader_controller.dart';
 import 'bookmark/reader_bookmark_store.dart';
 import 'comment/reader_comment_store.dart';
@@ -19,6 +21,7 @@ import 'underline/reader_underline_store.dart';
 import 'views/horizontal_reader.dart';
 import 'views/simulation_reader.dart';
 import 'views/vertical_reader.dart';
+import 'widgets/battery_indicator.dart';
 import 'widgets/catalog_sheet.dart';
 import 'widgets/loading_page.dart';
 import 'widgets/page_frame.dart';
@@ -48,6 +51,8 @@ class BookReader extends StatefulWidget {
     this.commentsRefresh,
     this.controller,
     this.titlePageBuilder,
+    this.battery,
+    this.showSystemBarsWithMenu = true,
     this.enableTextSelection = true,
   });
 
@@ -105,6 +110,16 @@ class BookReader extends StatefulWidget {
   /// 便于贴合日/夜主题，见 [ReaderTitlePageBuilder]。
   final ReaderTitlePageBuilder? titlePageBuilder;
 
+  /// 右下角电量：由业务方注入（如用 `battery_plus` 采集）。为 null（默认）或其值为 null
+  /// 时不显示电量。用 [ValueListenable] 便于电量变化只重绘页脚、不触发正文重排。
+  final ValueListenable<ReaderBatteryInfo?>? battery;
+
+  /// 唤起菜单时是否显示系统状态栏 / 底部导航栏（默认开启）。
+  ///
+  /// true：菜单出现时系统栏一并出现（与多数阅读 App 一致），收起菜单后回到全屏沉浸。
+  /// false：始终全屏沉浸，唤起菜单也不显示系统栏（正文永远铺满整屏）。
+  final bool showSystemBarsWithMenu;
+
   /// 是否启用「长按选中正文」功能（默认开启）。
   final bool enableTextSelection;
 
@@ -155,8 +170,11 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     _init();
   }
 
-  void _syncMenuToController() =>
-      widget.controller?.setMenuVisible(_menuVisible.value);
+  void _syncMenuToController() {
+    widget.controller?.setMenuVisible(_menuVisible.value);
+    // 菜单显隐时切换系统栏：菜单出现→显示状态栏/导航栏，收起→回到沉浸。
+    _enterImmersive();
+  }
 
   /// 跟读：在第 [ci] 章正文里顺序定位 [sentence]，高亮并翻到其所在页。
   void _markReading(int ci, String sentence) {
@@ -265,8 +283,18 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     }
   }
 
+  /// 依据「是否配置了菜单时显示系统栏」与「菜单当前是否可见」应用系统 UI 模式。
   void _enterImmersive() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    if (widget.showSystemBarsWithMenu && _menuVisible.value) {
+      // 菜单可见：显示系统状态栏 + 底部导航栏（作为 overlay 覆盖在正文之上）。
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.manual,
+        overlays: SystemUiOverlay.values,
+      );
+    } else {
+      // 沉浸态：隐藏系统状态栏与导航栏，正文铺满整屏。
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    }
   }
 
   Future<void> _init() async {
@@ -570,7 +598,10 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
             end: _readEnd,
             child: ReaderLabelsScope(
               labels: widget.labels,
-              child: _buildScaffold(),
+              child: ReaderBatteryScope(
+                battery: widget.battery,
+                child: _buildScaffold(),
+              ),
             ),
           ),
         ),

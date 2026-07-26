@@ -1,21 +1,22 @@
 # Changelog
 
+## 1.5.2
+
+- System status / navigation bars now show with the menu and hide when it closes;
+  toggle via `showSystemBarsWithMenu` (default `true`).
+- Optional footer **battery indicator**, host-fed via
+  `battery: ValueListenable<ReaderBatteryInfo?>`; `null` hides it.
+
 ## 1.5.1
 
-- Optional **title page** before chapter 1 via `BookReader(titlePageBuilder: ...)`
-  (`ReaderTitlePageBuilder` = `Widget Function(BuildContext, ReaderTheme)`). It's
-  a real page in the flip flow (swipe back and forth, menu works) shown when the
-  book opens at its start. The style is entirely host-defined — the reader only
-  positions it; pass `null` (default) for no title page.
+- Optional host-styled **title page** before chapter 1 via `titlePageBuilder`
+  (a real, flippable page); `null` for none.
 
 ## 1.5.0
 
 - New public `BookReaderController` for imperative control (paging, chapter jumps,
-  `currentPageText`, read-along highlight, programmatic bookmarks) — enough to
-  build text-to-speech, as shown in the example.
+  `currentPageText`, read-along highlight, programmatic bookmarks).
 - Paragraph comments via `onSegmentCommentTap` + `commentsRefresh`.
-- API cleanup: trimmed the public surface (internal scopes hidden, wiring methods
-  `@internal`); dropped the unused `meta` dependency.
 - Fix: no re-pagination when a bottom sheet / keyboard opens over the reader.
 
 ## 1.3.0

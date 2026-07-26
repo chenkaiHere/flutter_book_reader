@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data/db/app_database.dart';
 import 'data/db/book_db.dart';
+import 'data/battery_feed.dart';
 import 'data/db/db_book_source.dart';
 import 'data/shared_prefs_bookmark_store.dart';
 import 'data/shared_prefs_comment_store.dart';
@@ -204,6 +205,8 @@ class _BookshelfPageState extends State<BookshelfPage> {
     final ReaderLabels labels = ReaderLabels.forLanguageCode(localeCode);
     // 听书用的对外控制器：驱动翻页 / 读当前页文本。随本次阅读路由生命周期。
     final BookReaderController readerController = BookReaderController();
+    // 电量采集（battery_plus）：喂给阅读器右下角电量显示，随本次路由生命周期。
+    final BatteryFeed batteryFeed = BatteryFeed()..start();
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => ListenOverlay(
@@ -222,6 +225,8 @@ class _BookshelfPageState extends State<BookshelfPage> {
             commentStore: _commentStore,
             commentsRefresh: _commentsRev,
             startChapter: startChapter,
+            // 右下角电量：数据由 App 侧采集注入，不传则不显示。
+            battery: batteryFeed.notifier,
             // 扉页（第一章之前的宣传页）
             titlePageBuilder: (BuildContext context, ReaderTheme theme) =>
                 ReaderTitlePage(
@@ -243,6 +248,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
       ),
     );
     readerController.dispose();
+    batteryFeed.dispose();
     await _refreshProgress();
   }
 

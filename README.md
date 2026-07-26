@@ -62,8 +62,9 @@ anywhere else — without touching the reader's internals.
   paging (seamless, flicker-free chapter crossing), continuous **vertical**
   scroll (auto-loads the next / previous chapter), and **no-animation**.
 - **Full-screen immersive reading** — hides the status & system navigation bars
-  while reading (no content shift when the menu opens), restored on exit; plus a
-  one-tap **day / night** toggle.
+  while reading, restored on exit; plus a one-tap **day / night** toggle. By
+  default the system bars reappear with the menu and hide again when it closes
+  (set `showSystemBarsWithMenu: false` to stay immersive even with the menu open).
 - **Real pagination** via `TextPainter`, paragraph-aware: reader-owned first-line
   indent (works together with justification), paragraph spacing, and
   justification. Reading position is preserved across font-size / line-height /
@@ -85,6 +86,10 @@ anywhere else — without touching the reader's internals.
 - **Paragraph comments** — a tappable comment-count badge at each paragraph's end;
   the tap is delivered via `onSegmentCommentTap` so your app renders the comment
   list, and `commentsRefresh` refreshes badges/notes after a comment is added.
+- **Battery indicator** — an optional battery gauge in the footer, fed by the
+  host via `battery: ValueListenable<ReaderBatteryInfo?>` (`{ level, charging }`);
+  charging shows a green bolt, otherwise the level fills with the percentage
+  inside. `null` hides it — no native battery dependency in the package.
 - **Theming & typography** — six built-in paper themes, per-theme accent color,
   and runtime controls for font size / line height / brightness.
 - **Localization built in** — `ReaderLabels` ships **12 languages** (en, zh, es,
@@ -96,7 +101,7 @@ anywhere else — without touching the reader's internals.
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.1
+  flutter_book_reader: ^1.5.2
 ```
 
 ```dart

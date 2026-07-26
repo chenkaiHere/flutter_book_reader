@@ -304,23 +304,4 @@ class ReaderTitlePage extends StatelessWidget {
       child: Text(text, style: Warm.sans(size: 12.5, color: _sub)),
     );
   }
-
-  Widget _startHint() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _ink.withValues(alpha: 0.18)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(Icons.chevron_left_rounded, size: 20, color: _sub),
-          const SizedBox(width: 4),
-          Text('左滑开始阅读',
-              style: Warm.sans(size: 14, weight: FontWeight.w600, color: _ink)),
-        ],
-      ),
-    );
-  }
 }

@@ -12,6 +12,7 @@
 /// ```
 library;
 
+export 'src/battery.dart';
 export 'src/book_reader_controller.dart';
 export 'src/book_reader_widget.dart';
 export 'src/bookmark/reader_bookmark_store.dart';

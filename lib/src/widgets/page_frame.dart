@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../battery.dart';
 import '../comment/reader_comment_store.dart';
 import '../paginator.dart';
 import '../reader_config.dart';
@@ -8,6 +10,7 @@ import '../reader_labels.dart';
 import '../reader_theme.dart';
 import '../text_actions.dart';
 import '../underline/reader_underline_store.dart';
+import 'battery_indicator.dart';
 
 /// 顶部小标题栏：章首显示书名、非章首显示章节标题；横向 / 纵向模式共用。
 class ReaderHeaderBar extends StatelessWidget {
@@ -66,8 +69,26 @@ class ReaderFooterBar extends StatelessWidget {
           if (pageCount > 0) Text('${pageIndex + 1}/$pageCount', style: style),
           const SizedBox(width: 12),
           Text('${(progress * 100).toStringAsFixed(1)}%', style: style),
+          _battery(context),
         ],
       ),
+    );
+  }
+
+  /// 右下角电量：由宿主经 [ReaderBatteryScope] 注入，未注入 / 值为 null 则不显示。
+  Widget _battery(BuildContext context) {
+    final ValueListenable<ReaderBatteryInfo?>? battery =
+        ReaderBatteryScope.of(context);
+    if (battery == null) return const SizedBox.shrink();
+    return ValueListenableBuilder<ReaderBatteryInfo?>(
+      valueListenable: battery,
+      builder: (BuildContext context, ReaderBatteryInfo? info, _) {
+        if (info == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: BatteryIndicator(info: info, color: theme.subTextColor),
+        );
+      },
     );
   }
 }
