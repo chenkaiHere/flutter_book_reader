@@ -234,9 +234,49 @@ class _ReaderProseState extends State<ReaderProse> {
 
   OverlayEntry? _toolbar;
 
+  /// 各块首字符在本章的起始偏移（前缀和，随页面变化重算一次）。
+  /// 让 [_blockChapterStart] 由原来的 O(i) 变为 O(1)，消除单页 O(n²)。
+  List<int> _blockStarts = const <int>[];
+
+  /// 段评角标缓存：按块下标存 (段首偏移, 段尾偏移, 评论数)，仅在页面或评论列表
+  /// 变化时重算。避免选区拖动等高频重建里反复做 O(段落 × 评论) 统计。
+  List<(int, int, int)?>? _badgeCache;
+  Object? _badgeCacheKey;
+
+  /// 缩进占位宽度缓存：仅取决于缩进串 / 字体 / 字号 / 系统缩放，页内恒定。
+  double _cachedIndentWidth = 0;
+  String? _indentWidthKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _recomputeBlockStarts();
+  }
+
+  /// 重算各块章内起始偏移前缀和，并使依赖页面的缓存失效。
+  void _recomputeBlockStarts() {
+    final int n = widget.page.length;
+    final List<int> starts = List<int>.filled(n, widget.pageStartOffset);
+    int sum = widget.pageStartOffset;
+    for (int i = 0; i < n; i++) {
+      starts[i] = sum;
+      sum += widget.page[i].length;
+    }
+    _blockStarts = starts;
+    _badgeCache = null;
+    _badgeCacheKey = null;
+  }
+
   @override
   void didUpdateWidget(ReaderProse old) {
     super.didUpdateWidget(old);
+    // 页面 / 排版变化：重算前缀和并让页级缓存失效。
+    if (!identical(widget.page, old.page) ||
+        widget.pageStartOffset != old.pageStartOffset ||
+        widget.chapterIndex != old.chapterIndex ||
+        widget.leadingParagraphStart != old.leadingParagraphStart) {
+      _recomputeBlockStarts();
+    }
     // 页内容 / 排版变化（翻页、改字号、旋转、缩放重排）时，原选区锚定的渲染盒已失效，
     // 立即清除选中态，避免浮层读取「待布局」的 RenderParagraph 触发断言 / 错位。
     if (!identical(widget.page, old.page) ||
@@ -329,14 +369,9 @@ class _ReaderProseState extends State<ReaderProse> {
 
   int get _indentLen => _config.indent.length;
 
-  /// 块 i 首字符在本章的起始偏移（各块 text 长度含缩进，逐块累加）。
-  int _blockChapterStart(int i) {
-    int sum = widget.pageStartOffset;
-    for (int j = 0; j < i && j < widget.page.length; j++) {
-      sum += widget.page[j].length;
-    }
-    return sum;
-  }
+  /// 块 i 首字符在本章的起始偏移（前缀和查表，O(1)）。
+  int _blockChapterStart(int i) =>
+      (i >= 0 && i < _blockStarts.length) ? _blockStarts[i] : widget.pageStartOffset;
 
   /// 块 i 内「占位符空间」偏移 → 本章偏移。
   int _plainToChapter(int i, int plainOffset) {
@@ -402,16 +437,16 @@ class _ReaderProseState extends State<ReaderProse> {
   }
 
   /// 块 i 内需要绘制的划线区间（占位符空间），由本章划线与本块范围求交得到。
-  List<TextSelection> _underlineRangesFor(int i) {
-    final ReaderUnderlineScope? scope = ReaderUnderlineScope.of(context);
-    if (scope == null || scope.underlines.isEmpty) {
+  /// [chapterUnderlines] 已在调用侧按本章预筛一次，避免逐块重复过滤全量划线。
+  List<TextSelection> _underlineRangesFor(
+      int i, List<Underline> chapterUnderlines) {
+    if (chapterUnderlines.isEmpty) {
       return const <TextSelection>[];
     }
     final int bc = _blockChapterStart(i);
     final int be = bc + widget.page[i].length;
     final List<TextSelection> res = <TextSelection>[];
-    for (final Underline u in scope.underlines) {
-      if (u.chapterIndex != widget.chapterIndex) continue;
+    for (final Underline u in chapterUnderlines) {
       final int s = u.start.clamp(bc, be);
       final int e = u.end.clamp(bc, be);
       if (e <= s) continue;
@@ -459,6 +494,18 @@ class _ReaderProseState extends State<ReaderProse> {
     final double w = tp.width;
     tp.dispose();
     return w;
+  }
+
+  /// 缩进宽度（缓存）：仅取决于缩进串 / 字体 / 字号 / 系统缩放，页内恒定，
+  /// 无需每次 build 都 `TextPainter.layout` 一次。
+  double _indentWidth(TextScaler scaler) {
+    final String key = '${_config.indent}|${_config.fontFamily}'
+        '|${_config.fontSize}|${scaler.scale(1000).round()}';
+    if (_indentWidthKey == key) return _cachedIndentWidth;
+    _cachedIndentWidth =
+        _measureIndent(_config.indent, _config.textStyle, scaler);
+    _indentWidthKey = key;
+    return _cachedIndentWidth;
   }
 
   /// 与渲染完全一致的 [InlineSpan]：段首用等宽占位块承载缩进。
@@ -983,23 +1030,23 @@ class _ReaderProseState extends State<ReaderProse> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final TextScaler scaler = MediaQuery.textScalerOf(context);
-    final double indentWidth =
-        _measureIndent(_config.indent, _config.textStyle, scaler);
-    final bool selectable = ReaderSelectionScope.of(context)?.enabled ?? false;
-
-    // 段评：有回调且有评论时，在每个段落尾部（该段最后一个块）显示评论数角标。
-    final ReaderSegmentScope? segScope = ReaderSegmentScope.of(context);
-    final bool showBadges = segScope != null &&
-        segScope.onTap != null &&
-        segScope.comments.isNotEmpty;
-
-    final List<Widget> children = <Widget>[];
+  /// 计算（并缓存）本页每个块的段评角标。仅在页面或评论列表变化时重算——
+  /// 选区拖动等高频重建期间评论列表标识不变，直接命中缓存，避免反复 O(段落 × 评论)。
+  List<(int, int, int)?> _badgesFor(ReaderSegmentScope scope) {
+    if (_badgeCache != null && identical(_badgeCacheKey, scope.comments)) {
+      return _badgeCache!;
+    }
+    final int chapter = widget.chapterIndex;
+    // 本章评论预筛一次，缩小逐段统计的常数。
+    final List<Comment> chapterComments = <Comment>[
+      for (final Comment c in scope.comments)
+        if (c.chapterIndex == chapter) c,
+    ];
+    final int n = widget.page.length;
+    final List<(int, int, int)?> result = List<(int, int, int)?>.filled(n, null);
     // 段落在本章的起始偏移；页首若是上页某段的延续，用回溯得到的真实起点。
     int runStart = widget.leadingParagraphStart ?? widget.pageStartOffset;
-    for (int i = 0; i < widget.page.length; i++) {
+    for (int i = 0; i < n; i++) {
       final ReaderBlock block = widget.page[i];
       if (i == 0) {
         runStart = block.isParagraphStart
@@ -1008,26 +1055,53 @@ class _ReaderProseState extends State<ReaderProse> {
       } else if (block.isParagraphStart) {
         runStart = _blockChapterStart(i);
       }
+      // 段尾：仅当本块是该段真正的结尾块（跨页拆分时只有最后一片为真）。
+      if (!block.isParagraphEnd) continue;
+      final int paraEnd = _blockChapterStart(i) + block.length;
+      int count = 0;
+      for (final Comment c in chapterComments) {
+        if (c.start >= runStart && c.start < paraEnd) count++;
+      }
+      if (count > 0) result[i] = (runStart, paraEnd, count);
+    }
+    _badgeCache = result;
+    _badgeCacheKey = scope.comments;
+    return result;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TextScaler scaler = MediaQuery.textScalerOf(context);
+    final double indentWidth = _indentWidth(scaler);
+    final bool selectable = ReaderSelectionScope.of(context)?.enabled ?? false;
+
+    // 段评：有回调且有评论时，在每个段落尾部（该段最后一个块）显示评论数角标。
+    final ReaderSegmentScope? segScope = ReaderSegmentScope.of(context);
+    final bool showBadges = segScope != null &&
+        segScope.onTap != null &&
+        segScope.comments.isNotEmpty;
+    final List<(int, int, int)?>? badges =
+        showBadges ? _badgesFor(segScope) : null;
+
+    // 本章划线预筛一次，避免逐段重复过滤全量划线。
+    final ReaderUnderlineScope? uScope = ReaderUnderlineScope.of(context);
+    final List<Underline> chapterUnderlines =
+        (uScope == null || uScope.underlines.isEmpty)
+            ? const <Underline>[]
+            : <Underline>[
+                for (final Underline u in uScope.underlines)
+                  if (u.chapterIndex == widget.chapterIndex) u,
+              ];
+
+    final List<Widget> children = <Widget>[];
+    for (int i = 0; i < widget.page.length; i++) {
+      final ReaderBlock block = widget.page[i];
       if (i > 0 && block.isParagraphStart) {
         children.add(SizedBox(height: _config.paragraphSpacing));
       }
-      // 段尾：仅当本块是该段真正的结尾块（跨页拆分时只有最后一片为真）。
-      (int, int, int)? badge;
-      if (showBadges) {
-        final bool tail = block.isParagraphEnd;
-        if (tail) {
-          final int paraEnd = _blockChapterStart(i) + block.length;
-          final int count = segScope.comments
-              .where((Comment c) =>
-                  c.chapterIndex == widget.chapterIndex &&
-                  c.start >= runStart &&
-                  c.start < paraEnd)
-              .length;
-          if (count > 0) badge = (runStart, paraEnd, count);
-        }
-      }
       children.add(
-        _paragraph(i, block, indentWidth, selectable, badge, segScope),
+        _paragraph(i, block, indentWidth, selectable, badges?[i], segScope,
+            chapterUnderlines),
       );
     }
     final Column column = Column(
@@ -1053,6 +1127,7 @@ class _ReaderProseState extends State<ReaderProse> {
     bool selectable,
     (int, int, int)? badge,
     ReaderSegmentScope? segScope,
+    List<Underline> chapterUnderlines,
   ) {
     // 基础文字 span（段首含缩进占位）；若该段尾需要角标，追加到末尾。
     // 角标不进入 _plainForSpan / 选区 / 划线的坐标系（它们只取正文），故不影响几何。
@@ -1072,7 +1147,8 @@ class _ReaderProseState extends State<ReaderProse> {
     final GlobalKey key = _keys.putIfAbsent(i, () => GlobalKey());
     final TextSelection? localSel = _localSel(i);
     final TextSelection? readingSel = _readingSelFor(i);
-    final List<TextSelection> underlines = _underlineRangesFor(i);
+    final List<TextSelection> underlines =
+        _underlineRangesFor(i, chapterUnderlines);
     final Widget keyed = KeyedSubtree(key: key, child: text);
     final bool layered =
         localSel != null || readingSel != null || underlines.isNotEmpty;

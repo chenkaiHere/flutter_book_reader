@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.4
+
+- Performance: smoother text selection dragging and page turns — per-page layout
+  invariants (comment-badge counts, indent width, block offsets) are now cached
+  instead of recomputed each frame, most noticeable in heavily annotated books.
+
 ## 1.5.3
 
 - Fix: opening the menu no longer shifts the page (system bars now overlay via

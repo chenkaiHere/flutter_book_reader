@@ -121,15 +121,34 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
     return sum;
   }
 
+  /// 每份分页结果的「页起始偏移前缀和」缓存，按 [pgs] 列表标识缓存。
+  ///
+  /// `offs[i]` = 第 i 页首字符的章内偏移，`offs[pgs.length]` = 全章总长。分页结果一旦
+  /// 产生便不可变、且在 [pageCache] 中稳定复用，故用 [Expando] 挂在其上——列表被
+  /// 淘汰时缓存随之回收，无需手动清理。把逐页 O(页数×块) 累加摊平为 O(1) 查表。
+  final Expando<List<int>> _pageOffsets = Expando<List<int>>();
+
+  List<int> _offsetsOf(List<ReaderPage> pgs) {
+    final List<int>? cached = _pageOffsets[pgs];
+    if (cached != null) return cached;
+    final List<int> offs = List<int>.filled(pgs.length + 1, 0);
+    int sum = 0;
+    for (int i = 0; i < pgs.length; i++) {
+      offs[i] = sum;
+      sum += _pageLength(pgs[i]);
+    }
+    offs[pgs.length] = sum;
+    _pageOffsets[pgs] = offs;
+    return offs;
+  }
+
   int startOffsetOfPage(int index) => startOffsetOfPageIn(pages, index);
 
   /// 给定任意章节的 [pgs]，计算第 [index] 页首字符的章内偏移（划线/书签锚点用）。
   int startOffsetOfPageIn(List<ReaderPage> pgs, int index) {
-    int sum = 0;
-    for (int i = 0; i < index && i < pgs.length; i++) {
-      sum += _pageLength(pgs[i]);
-    }
-    return sum;
+    if (index <= 0 || pgs.isEmpty) return 0;
+    final List<int> offs = _offsetsOf(pgs);
+    return index < offs.length ? offs[index] : offs[offs.length - 1];
   }
 
   /// 若第 [index] 页以「某段的延续块」开头（该段起始落在更早的页），回溯计算该段
@@ -150,13 +169,12 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
   }
 
   int pageIndexForOffset(int offset) {
-    int sum = 0;
+    if (pages.isEmpty) return 0;
+    final List<int> offs = _offsetsOf(pages);
     for (int i = 0; i < pages.length; i++) {
-      final int next = sum + _pageLength(pages[i]);
-      if (offset < next) return i;
-      sum = next;
+      if (offset < offs[i + 1]) return i;
     }
-    return pages.isEmpty ? 0 : pages.length - 1;
+    return pages.length - 1;
   }
 
   /// 全书进度：章序 + 章内页占比。

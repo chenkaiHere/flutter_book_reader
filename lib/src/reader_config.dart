@@ -74,7 +74,7 @@ class ReaderConfig extends ChangeNotifier {
   // —— 排版：首行缩进（全角空格数）——
   int _firstLineIndent = 2;
   int get firstLineIndent => _firstLineIndent;
-  String get indent => '　' * _firstLineIndent;
+  String get indent => _indentCache ??= '　' * _firstLineIndent;
 
   // —— 排版：段间距（像素）——
   double _paragraphSpacing = 8;
@@ -101,7 +101,22 @@ class ReaderConfig extends ChangeNotifier {
   double _dimLevel = 0;
   double get dimLevel => _dimLevel;
 
-  TextStyle get textStyle => TextStyle(
+  // 样式对象缓存：这些 getter 在分页与正文渲染的热路径上被频繁访问，且仅在
+  // 相关设置变化时才需重建。缓存后避免每次访问都新建对象（省 GC）。
+  // 任一影响它们的设置改动都会经对应 setter 调用 [_invalidateStyleCache] 失效。
+  String? _indentCache;
+  TextStyle? _textStyleCache;
+  StrutStyle? _strutCache;
+  TextStyle? _headingStyleCache;
+
+  void _invalidateStyleCache() {
+    _indentCache = null;
+    _textStyleCache = null;
+    _strutCache = null;
+    _headingStyleCache = null;
+  }
+
+  TextStyle get textStyle => _textStyleCache ??= TextStyle(
         fontFamily: _fontFamily,
         fontSize: _fontSize,
         height: _lineHeight,
@@ -110,7 +125,7 @@ class ReaderConfig extends ChangeNotifier {
 
   /// 正文行高严格锁定：分页度量与实际渲染共用同一 strut，强制每行等高，
   /// 与字体固有行高 / 前导分布无关，保证“计算的高度 == 渲染的高度”，不裁切。
-  StrutStyle get strut => StrutStyle(
+  StrutStyle get strut => _strutCache ??= StrutStyle(
         fontFamily: _fontFamily,
         fontSize: _fontSize,
         height: _lineHeight,
@@ -118,7 +133,7 @@ class ReaderConfig extends ChangeNotifier {
       );
 
   /// 章首大标题样式（比正文大一号、加粗）。
-  TextStyle get headingStyle => TextStyle(
+  TextStyle get headingStyle => _headingStyleCache ??= TextStyle(
         fontFamily: _fontFamily,
         fontSize: _fontSize + 6,
         height: 1.3,
@@ -129,17 +144,20 @@ class ReaderConfig extends ChangeNotifier {
   void increaseFont() {
     if (_fontSize >= maxFontSize) return;
     _fontSize = (_fontSize + 1).clamp(minFontSize, maxFontSize);
+    _invalidateStyleCache();
     notifyListeners();
   }
 
   void decreaseFont() {
     if (_fontSize <= minFontSize) return;
     _fontSize = (_fontSize - 1).clamp(minFontSize, maxFontSize);
+    _invalidateStyleCache();
     notifyListeners();
   }
 
   void setLineHeight(double value) {
     _lineHeight = value.clamp(minLineHeight, maxLineHeight);
+    _invalidateStyleCache();
     notifyListeners();
   }
 
@@ -147,6 +165,7 @@ class ReaderConfig extends ChangeNotifier {
     final int v = chars.clamp(0, 4);
     if (v == _firstLineIndent) return;
     _firstLineIndent = v;
+    _invalidateStyleCache();
     notifyListeners();
   }
 
@@ -165,12 +184,14 @@ class ReaderConfig extends ChangeNotifier {
   void setFontFamily(String? family) {
     if (family == _fontFamily) return;
     _fontFamily = family;
+    _invalidateStyleCache();
     notifyListeners();
   }
 
   void setTheme(ReaderTheme theme) {
     if (_theme.alias == theme.alias) return;
     _theme = theme;
+    _invalidateStyleCache();
     notifyListeners();
   }
 

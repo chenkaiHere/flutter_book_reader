@@ -27,6 +27,10 @@ import 'widgets/loading_page.dart';
 import 'widgets/page_frame.dart';
 import 'widgets/reader_menu.dart';
 
+part 'book_reader/immersive_system_ui.dart';
+part 'book_reader/read_along_highlight.dart';
+part 'book_reader/notes_manager.dart';
+
 /// 可商用的阅读器组件（对外统一入口）。
 ///
 /// 只依赖抽象 [BookSource] 与 [ReaderProgressStore]，业务方替换实现即可接入
@@ -127,34 +131,20 @@ class BookReader extends StatefulWidget {
   State<BookReader> createState() => _BookReaderState();
 }
 
-class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
+class _BookReaderState extends State<BookReader>
+    with
+        WidgetsBindingObserver,
+        _ImmersiveSystemUi,
+        _ReadAlongHighlight,
+        _ReaderNotesManager {
+  @override
   ReadingController? _controller;
   Object? _error;
   int _lastChapter = -1;
   Timer? _saveTimer;
 
+  @override
   final ValueNotifier<bool> _menuVisible = ValueNotifier<bool>(false);
-
-  /// 跟读高亮：当前朗读句所在章 + 章内 [start,end) 区间；-1 表示无。
-  int _readCh = -1;
-  int _readStart = -1;
-  int _readEnd = -1;
-
-  /// 跟读定位游标（同章内顺序搜索，避免重复句定位到开头）与章内正文缓存。
-  int _readCursorCh = -1;
-  int _readCursor = 0;
-  int _readTextCh = -1;
-  String _readText = '';
-
-  /// 当前书籍的书签（会话内的权威副本，变更后写回 [BookReader.bookmarkStore]）。
-  List<Bookmark> _bookmarks = <Bookmark>[];
-
-  /// 当前书籍的划线（会话内的权威副本，变更后写回 [BookReader.underlineStore]）。
-  /// 使用不可变 [List] 引用整体替换，供 [ReaderUnderlineScope] 触发子树刷新。
-  List<Underline> _underlines = const <Underline>[];
-
-  /// 当前书籍的评论（会话内的权威副本，变更后写回 [BookReader.commentStore]）。
-  List<Comment> _comments = const <Comment>[];
 
   ReaderConfig get _config => widget.config ?? ReaderConfig.instance;
 
@@ -174,70 +164,6 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     widget.controller?.setMenuVisible(_menuVisible.value);
     // 菜单显隐时切换系统栏：菜单出现→显示状态栏/导航栏，收起→回到沉浸。
     _enterImmersive();
-  }
-
-  /// 跟读：在第 [ci] 章正文里顺序定位 [sentence]，高亮并翻到其所在页。
-  void _markReading(int ci, String sentence) {
-    final ReadingController? c = _controller;
-    final String s = sentence.trim();
-    if (c == null || s.isEmpty) return;
-    final List<ReaderPage>? pages = c.pagesFor(ci);
-    if (pages == null || pages.isEmpty) return;
-
-    // 本章「块长度空间」全文（缓存，避免每句重建大字符串）。
-    if (ci != _readTextCh) {
-      final StringBuffer buf = StringBuffer();
-      for (final ReaderPage page in pages) {
-        for (final ReaderBlock b in page) {
-          buf.write(b.text);
-        }
-      }
-      _readText = buf.toString();
-      _readTextCh = ci;
-    }
-    final String text = _readText;
-    final int from =
-        ci == _readCursorCh ? _readCursor.clamp(0, text.length) : 0;
-    int idx = text.indexOf(s, from);
-    if (idx < 0) idx = text.indexOf(s); // 回退从头找（如新的一章 / 循环）
-    if (idx < 0) return;
-    final int start = idx;
-    final int end = idx + s.length;
-    _readCursorCh = ci;
-    _readCursor = end;
-
-    // 定位到 start 所在页；跨章则加载该章。
-    int target = 0;
-    for (int p = 0; p < pages.length; p++) {
-      final int ps = c.startOffsetOfPageIn(pages, p);
-      final int pe =
-          p + 1 < pages.length ? c.startOffsetOfPageIn(pages, p + 1) : 1 << 30;
-      if (start >= ps && start < pe) {
-        target = p;
-        break;
-      }
-    }
-    if (ci != c.chapterIndex) {
-      c.loadChapter(ci, charOffset: start);
-    } else if (target != c.pageIndex) {
-      c.goToPage(target);
-    }
-    setState(() {
-      _readCh = ci;
-      _readStart = start;
-      _readEnd = end;
-    });
-  }
-
-  void _clearReadingMark() {
-    _readCursorCh = -1;
-    _readCursor = 0;
-    if (_readCh == -1 && _readStart == -1) return;
-    setState(() {
-      _readCh = -1;
-      _readStart = -1;
-      _readEnd = -1;
-    });
   }
 
   @override
@@ -264,35 +190,6 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
         c.titlePageBuilder = widget.titlePageBuilder;
         if (widget.titlePageBuilder == null) c.onTitlePage = false;
       }
-    }
-  }
-
-  /// 业务方在外部改动评论后触发 [BookReader.commentsRefresh]，据此重新拉取评论，
-  /// 刷新段尾角标与笔记列表数据。
-  Future<void> _reloadComments() async {
-    final ReadingController? c = _controller;
-    if (c == null) return;
-    try {
-      final List<Comment> latest =
-          await widget.commentStore.load(c.manifest.id);
-      if (mounted) {
-        setState(() => _comments = List<Comment>.unmodifiable(latest));
-      }
-    } catch (_) {
-      // 读取失败保持现有内存副本
-    }
-  }
-
-  /// 依据「是否配置了菜单时显示系统栏」与「菜单当前是否可见」应用系统 UI 模式。
-  void _enterImmersive() {
-    if (widget.showSystemBarsWithMenu && _menuVisible.value) {
-      // 菜单可见：用 edgeToEdge 显示系统栏——系统栏作为**覆盖层**出现，窗口仍是全屏，
-      // 正文画在栏下方。这样系统栏显隐不会改变窗口尺寸，正文不会重新分页 / 跳页。
-      // （若用 SystemUiMode.manual，系统栏会占用布局空间挤小窗口，导致重排跳页。）
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    } else {
-      // 沉浸态：隐藏系统状态栏与导航栏，正文铺满整屏。
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     }
   }
 
@@ -384,18 +281,7 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     widget.controller?.attach(null);
     _saveTimer?.cancel();
     _flushSave();
-    // 离开阅读页：恢复系统栏显示，并把状态栏 / 底部导航栏重置为“白底黑字”默认样式，
-    // 否则阅读页设置的纸张色会残留到退出后的页面。
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-    );
+    _restoreSystemUiOnExit();
     _controller?.removeListener(_onControllerChanged);
     _controller?.dispose();
     _menuVisible.dispose();
@@ -419,89 +305,6 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
     } else {
       _toggleMenu();
     }
-  }
-
-  // —— 书签 ——
-
-  /// 当前页（起始偏移落在本页区间内）已有的书签；没有则为 null。
-  Bookmark? _bookmarkOnCurrentPage() {
-    final ReadingController? c = _controller;
-    if (c == null || c.pages.isEmpty) return null;
-    final int start = c.startOffsetOfPage(c.pageIndex);
-    final int end = c.pageIndex + 1 < c.pages.length
-        ? c.startOffsetOfPage(c.pageIndex + 1)
-        : 1 << 30;
-    for (final Bookmark b in _bookmarks) {
-      if (b.chapterIndex == c.chapterIndex &&
-          b.charOffset >= start &&
-          b.charOffset < end) {
-        return b;
-      }
-    }
-    return null;
-  }
-
-  bool get _isBookmarked => _bookmarkOnCurrentPage() != null;
-
-  /// 加入 / 移除当前页书签（已存在则移除，否则新增），并写回存储。
-  void _toggleBookmark() {
-    final ReadingController c = _controller!;
-    final Bookmark? existing = _bookmarkOnCurrentPage();
-    final List<Bookmark> next = List<Bookmark>.of(_bookmarks);
-    if (existing != null) {
-      next.removeWhere((Bookmark b) => b.key == existing.key);
-    } else {
-      next.add(Bookmark(
-        chapterIndex: c.chapterIndex,
-        charOffset: c.startOffsetOfPage(c.pageIndex),
-        chapterTitle: c.currentChapterTitle,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-      ));
-    }
-    setState(() => _bookmarks = next);
-    widget.bookmarkStore.save(c.manifest.id, next);
-    // 书签状态变了，通知控制器让宿主自定义 UI 同步。
-    widget.controller?.notifyPositionChanged();
-  }
-
-  /// 新增一条划线（去重同区间），补全标题/时间后写回存储。
-  void _addUnderline(int chapterIndex, int start, int end, String text) {
-    final ReadingController c = _controller!;
-    final Underline u = Underline(
-      chapterIndex: chapterIndex,
-      start: start,
-      end: end,
-      text: text,
-      chapterTitle: c.chapterTitleAt(chapterIndex),
-      createdAt: DateTime.now().millisecondsSinceEpoch,
-    );
-    final List<Underline> next = List<Underline>.of(_underlines)
-      ..removeWhere((Underline e) => e.key == u.key)
-      ..add(u);
-    setState(() => _underlines = List<Underline>.unmodifiable(next));
-    widget.underlineStore.save(c.manifest.id, next);
-  }
-
-  /// 删除若干条划线，并写回存储。
-  void _removeUnderlines(List<Underline> targets) {
-    if (targets.isEmpty) return;
-    final ReadingController c = _controller!;
-    final Set<String> keys = targets.map((Underline u) => u.key).toSet();
-    final List<Underline> next = List<Underline>.of(_underlines)
-      ..removeWhere((Underline e) => keys.contains(e.key));
-    setState(() => _underlines = List<Underline>.unmodifiable(next));
-    widget.underlineStore.save(c.manifest.id, next);
-  }
-
-  /// 删除若干条评论，并写回存储。
-  void _removeComments(List<Comment> targets) {
-    if (targets.isEmpty) return;
-    final ReadingController c = _controller!;
-    final Set<String> keys = targets.map((Comment e) => e.key).toSet();
-    final List<Comment> next = List<Comment>.of(_comments)
-      ..removeWhere((Comment e) => keys.contains(e.key));
-    setState(() => _comments = List<Comment>.unmodifiable(next));
-    widget.commentStore.save(c.manifest.id, next);
   }
 
   Future<void> _openCatalog() async {
@@ -540,12 +343,7 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
                   bookmarks: _bookmarks,
                   underlines: _underlines,
                   comments: _comments,
-                  onDeleteBookmark: (Bookmark b) {
-                    final List<Bookmark> next = List<Bookmark>.of(_bookmarks)
-                      ..removeWhere((Bookmark e) => e.key == b.key);
-                    setState(() => _bookmarks = next);
-                    widget.bookmarkStore.save(c.manifest.id, next);
-                  },
+                  onDeleteBookmark: _deleteBookmark,
                   onDeleteUnderline: (Underline u) =>
                       _removeUnderlines(<Underline>[u]),
                   onDeleteComment: (Comment cm) =>
@@ -565,18 +363,6 @@ class _BookReaderState extends State<BookReader> with WidgetsBindingObserver {
         c.loadChapter(picked.chapterIndex, charOffset: picked.charOffset);
       }
     }
-  }
-
-  /// 状态栏 + 底部系统导航栏都用纸张色（沉浸），图标明暗随主题。
-  SystemUiOverlayStyle _overlayStyle(ReaderTheme t) {
-    final Brightness icons = t.isDark ? Brightness.light : Brightness.dark;
-    return SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: icons,
-      statusBarBrightness: t.isDark ? Brightness.dark : Brightness.light,
-      systemNavigationBarColor: t.paperColor,
-      systemNavigationBarIconBrightness: icons,
-    );
   }
 
   @override
