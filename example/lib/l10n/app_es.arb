@@ -59,5 +59,9 @@
   "emptyShelf": "No hay libros: toca arriba a la derecha para importar un TXT",
   "noMatches": "No hay libros coincidentes",
   "loadFailed": "Error al cargar los libros: {error}",
-  "languageSheetTitle": "Idioma"
+  "languageSheetTitle": "Idioma",
+
+  "lockAutoSubscribe": "Suscripción automática al próximo capítulo",
+  "lockWordCount": "{count} palabras",
+  "lockSubscribeAction": "Desbloquear este capítulo: Gratis"
 }

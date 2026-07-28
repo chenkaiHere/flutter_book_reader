@@ -215,4 +215,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get languageSheetTitle => 'Idioma';
+
+  @override
+  String get lockAutoSubscribe => 'Assinar automaticamente o próximo capítulo';
+
+  @override
+  String lockWordCount(int count) {
+    return '$count palavras';
+  }
+
+  @override
+  String get lockSubscribeAction => 'Desbloquear este capítulo: Grátis';
 }

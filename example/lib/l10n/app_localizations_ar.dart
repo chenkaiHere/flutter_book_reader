@@ -211,4 +211,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get languageSheetTitle => 'اللغة';
+
+  @override
+  String get lockAutoSubscribe => 'الاشتراك التلقائي في الفصل التالي';
+
+  @override
+  String lockWordCount(int count) {
+    return '$count كلمة';
+  }
+
+  @override
+  String get lockSubscribeAction => 'فتح هذا الفصل: مجانًا';
 }

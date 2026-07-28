@@ -120,7 +120,7 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader> {
                   if (showTitle && i == 0) return _titleSection(context);
                   final int j = i - lead;
                   return j < count
-                      ? _section(controller.flowChapters[j], labels)
+                      ? _section(context, controller.flowChapters[j], labels)
                       : _footer(labels);
                 },
               ),
@@ -154,7 +154,7 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader> {
     );
   }
 
-  Widget _section(int idx, ReaderLabels labels) {
+  Widget _section(BuildContext context, int idx, ReaderLabels labels) {
     final bool isFirst = idx == controller.flowChapters.first;
     final String? body = controller.bodyOf(idx);
     return Column(
@@ -175,13 +175,22 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader> {
           ),
         ),
         const SizedBox(height: 16),
-        _sectionBody(idx, body, labels),
+        _sectionBody(context, idx, body, labels),
         const SizedBox(height: 24),
       ],
     );
   }
 
-  Widget _sectionBody(int idx, String? body, ReaderLabels labels) {
+  Widget _sectionBody(
+      BuildContext context, int idx, String? body, ReaderLabels labels) {
+    // 未解锁付费章：只显示解锁块，不渲染正文（连续滚动无“页”概念，避免付费正文漏出）。
+    if (controller.chapterLocked(idx) && controller.chapterLockBuilder != null) {
+      return controller.chapterLockBuilder!(
+        context,
+        theme,
+        controller.lockInfoFor(idx),
+      );
+    }
     if (body != null) {
       return ReaderProse(
         page: controller.chapterBlocks(body),

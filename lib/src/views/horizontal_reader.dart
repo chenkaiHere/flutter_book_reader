@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../paginator.dart';
 import '../reader_config.dart';
 import '../widgets/loading_page.dart';
+import '../widgets/locked_page.dart';
 import '../widgets/page_frame.dart';
 import 'reader_mode_view.dart';
 
@@ -93,7 +94,9 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
     }
 
     final int trailing = controller.hasNext ? 1 : 0;
-    final int itemCount = _front + controller.pages.length + trailing;
+    // 未解锁付费章只放行首页，故本章可见页数用 visiblePageCount 而非全部页数。
+    final int visible = controller.visiblePageCount;
+    final int itemCount = _front + visible + trailing;
 
     return PageView.builder(
       key: ValueKey<int>(controller.chapterIndex),
@@ -107,7 +110,7 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
         final int real = v - _front;
         if (real < 0) {
           _deferCross(controller.chapterIndex - 1, atEnd: true);
-        } else if (real >= controller.pages.length) {
+        } else if (real >= visible) {
           _deferCross(controller.chapterIndex + 1);
         } else {
           controller.goToPage(real);
@@ -121,7 +124,7 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
           final int real = v - _front;
           if (real < 0) {
             page = _boundaryFrame(controller.chapterIndex - 1, atEnd: true);
-          } else if (real >= controller.pages.length) {
+          } else if (real >= visible) {
             page = _boundaryFrame(controller.chapterIndex + 1, atEnd: false);
           } else {
             page = _frame(controller.chapterIndex, controller.pages, real);
@@ -203,7 +206,10 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
         onRetry: () => controller.retry(chapterIdx),
       );
     }
-    final int pageIdx = atEnd ? (pages.isEmpty ? 0 : pages.length - 1) : 0;
+    // 付费章只展示首页：边界预览也固定首页，避免露出被隐藏的付费正文。
+    final int pageIdx = (!controller.chapterLocked(chapterIdx) && atEnd)
+        ? (pages.isEmpty ? 0 : pages.length - 1)
+        : 0;
     return _frame(chapterIdx, pages, pageIdx);
   }
 
@@ -211,7 +217,7 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
     final ReaderPage pageContent = (pageIdx >= 0 && pageIdx < pages.length)
         ? pages[pageIdx]
         : const <ReaderBlock>[];
-    return ReaderPageContent(
+    final Widget content = ReaderPageContent(
       theme: theme,
       config: config,
       bookTitle: controller.manifest.title,
@@ -226,6 +232,25 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
       pageStartOffset: controller.startOffsetOfPageIn(pages, pageIdx),
       leadingParagraphStart:
           controller.leadingParagraphStartIn(pages, pageIdx),
+    );
+    return _maybeLock(chapterIdx, pageIdx, content);
+  }
+
+  /// 付费章首页（pageIdx==0）叠加解锁块；其余原样返回。
+  Widget _maybeLock(int chapterIdx, int pageIdx, Widget content) {
+    if (pageIdx != 0 ||
+        !controller.chapterLocked(chapterIdx) ||
+        controller.chapterLockBuilder == null) {
+      return content;
+    }
+    return ReaderLockedPage(
+      theme: theme,
+      lockBlock: controller.chapterLockBuilder!(
+        context,
+        theme,
+        controller.lockInfoFor(chapterIdx),
+      ),
+      child: content,
     );
   }
 }

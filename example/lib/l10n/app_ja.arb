@@ -59,5 +59,9 @@
   "emptyShelf": "本がありません — 右上をタップしてTXTをインポート",
   "noMatches": "一致する本がありません",
   "loadFailed": "本の読み込みに失敗：{error}",
-  "languageSheetTitle": "言語"
+  "languageSheetTitle": "言語",
+
+  "lockAutoSubscribe": "次の章を自動購読",
+  "lockWordCount": "{count}文字",
+  "lockSubscribeAction": "この章を解除：無料"
 }

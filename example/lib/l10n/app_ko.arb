@@ -59,5 +59,9 @@
   "emptyShelf": "책이 없습니다 — 오른쪽 상단을 탭해 TXT 가져오기",
   "noMatches": "일치하는 책 없음",
   "loadFailed": "책을 불러오지 못했습니다: {error}",
-  "languageSheetTitle": "언어"
+  "languageSheetTitle": "언어",
+
+  "lockAutoSubscribe": "다음 화 자동 구독",
+  "lockWordCount": "{count}자",
+  "lockSubscribeAction": "이 화 잠금 해제: 무료"
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../chapter_lock.dart';
 import '../paginator.dart';
 import '../reader_config.dart';
 import '../source/book_source.dart';
@@ -30,6 +31,18 @@ abstract class ReaderControllerBase extends ChangeNotifier {
 
   /// 是否配置了扉页。
   bool get hasTitlePage => titlePageBuilder != null;
+
+  /// 付费章判定：返回 true 的章为「未解锁付费章」，只展示第一页并叠加解锁块。
+  ReaderChapterLockPredicate? isChapterLocked;
+
+  /// 付费章首页底部解锁块构建器（样式与点击由业务方定义）。
+  ReaderChapterLockBuilder? chapterLockBuilder;
+
+  /// 第 [index] 章是否为未解锁付费章（未配置判定则恒为 false）。
+  bool chapterLocked(int index) => isChapterLocked?.call(index) ?? false;
+
+  /// 当前章是否为未解锁付费章。
+  bool get currentChapterLocked => chapterLocked(chapterIndex);
 
   /// 当前页在整章正文中的起始字符偏移（换字号后据此恢复位置）
   int charOffset = 0;

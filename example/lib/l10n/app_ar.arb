@@ -59,5 +59,9 @@
   "emptyShelf": "لا كتب — اضغط أعلى اليمين لاستيراد ملف TXT",
   "noMatches": "لا كتب مطابقة",
   "loadFailed": "فشل تحميل الكتب: {error}",
-  "languageSheetTitle": "اللغة"
+  "languageSheetTitle": "اللغة",
+
+  "lockAutoSubscribe": "الاشتراك التلقائي في الفصل التالي",
+  "lockWordCount": "{count} كلمة",
+  "lockSubscribeAction": "فتح هذا الفصل: مجانًا"
 }

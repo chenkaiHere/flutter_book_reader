@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'battery.dart';
 import 'book_reader_controller.dart';
 import 'bookmark/reader_bookmark_store.dart';
+import 'chapter_lock.dart';
 import 'comment/reader_comment_store.dart';
 import 'controller/reading_controller.dart';
 import 'paginator.dart';
@@ -24,6 +25,7 @@ import 'views/vertical_reader.dart';
 import 'widgets/battery_indicator.dart';
 import 'widgets/catalog_sheet.dart';
 import 'widgets/loading_page.dart';
+import 'widgets/locked_page.dart';
 import 'widgets/page_frame.dart';
 import 'widgets/reader_menu.dart';
 
@@ -58,6 +60,9 @@ class BookReader extends StatefulWidget {
     this.battery,
     this.showSystemBarsWithMenu = true,
     this.enableTextSelection = true,
+    this.isChapterLocked,
+    this.chapterLockBuilder,
+    this.lockRefresh,
   });
 
   /// 书籍数据源
@@ -127,6 +132,18 @@ class BookReader extends StatefulWidget {
   /// 是否启用「长按选中正文」功能（默认开启）。
   final bool enableTextSelection;
 
+  /// 付费章判定：返回 true 的章为「未解锁付费章」，只展示第一页并在底部叠加
+  /// [chapterLockBuilder] 的解锁块，未解锁时向后翻页直接跳到下一章。为 null 则全书不加锁。
+  final ReaderChapterLockPredicate? isChapterLocked;
+
+  /// 付费章首页底部「解锁块」构建器（如“订阅本章”按钮），样式与点击完全由业务方定义。
+  /// 与 [isChapterLocked] 配合使用；未配置则即使判定为锁定也不显示解锁块。
+  final ReaderChapterLockBuilder? chapterLockBuilder;
+
+  /// 解锁刷新信号：业务方解锁成功、更新自己的锁定状态后触发它（如 `ValueNotifier<int>..value++`），
+  /// 阅读器据此重新执行 [isChapterLocked] 判定并展开已解锁章节的整章内容。
+  final Listenable? lockRefresh;
+
   @override
   State<BookReader> createState() => _BookReaderState();
 }
@@ -156,9 +173,13 @@ class _BookReaderState extends State<BookReader>
     // 避免状态栏出现时把正文往下顶，正文始终铺满整屏。
     _enterImmersive();
     widget.commentsRefresh?.addListener(_reloadComments);
+    widget.lockRefresh?.addListener(_onLockRefresh);
     _menuVisible.addListener(_syncMenuToController);
     _init();
   }
+
+  /// 业务方解锁成功：重新判定锁定状态并让视图重建展开整章。
+  void _onLockRefresh() => _controller?.refreshLocks();
 
   void _syncMenuToController() {
     widget.controller?.setMenuVisible(_menuVisible.value);
@@ -172,6 +193,19 @@ class _BookReaderState extends State<BookReader>
     if (!identical(oldWidget.commentsRefresh, widget.commentsRefresh)) {
       oldWidget.commentsRefresh?.removeListener(_reloadComments);
       widget.commentsRefresh?.addListener(_reloadComments);
+    }
+    if (!identical(oldWidget.lockRefresh, widget.lockRefresh)) {
+      oldWidget.lockRefresh?.removeListener(_onLockRefresh);
+      widget.lockRefresh?.addListener(_onLockRefresh);
+    }
+    if (!identical(oldWidget.isChapterLocked, widget.isChapterLocked) ||
+        !identical(oldWidget.chapterLockBuilder, widget.chapterLockBuilder)) {
+      final ReadingController? c = _controller;
+      if (c != null) {
+        c.isChapterLocked = widget.isChapterLocked;
+        c.chapterLockBuilder = widget.chapterLockBuilder;
+        c.refreshLocks();
+      }
     }
     if (!identical(oldWidget.controller, widget.controller)) {
       oldWidget.controller?.attach(null);
@@ -218,6 +252,8 @@ class _BookReaderState extends State<BookReader>
         startCharOffset: offset,
       );
       controller.titlePageBuilder = widget.titlePageBuilder;
+      controller.isChapterLocked = widget.isChapterLocked;
+      controller.chapterLockBuilder = widget.chapterLockBuilder;
       // 从全书开头（第 0 章、偏移 0）打开时先展示扉页；从书中续读则直接进正文。
       controller.onTitlePage =
           widget.titlePageBuilder != null && start == 0 && offset == 0;
@@ -274,6 +310,7 @@ class _BookReaderState extends State<BookReader>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.commentsRefresh?.removeListener(_reloadComments);
+    widget.lockRefresh?.removeListener(_onLockRefresh);
     _menuVisible.removeListener(_syncMenuToController);
     widget.controller?.bindMenuHider(null);
     widget.controller?.bindReadingMarker(null, null);
@@ -350,6 +387,7 @@ class _BookReaderState extends State<BookReader>
                       _removeComments(<Comment>[cm]),
                   theme: _config.theme,
                   scrollController: scrollController,
+                  isChapterLocked: c.chapterLocked,
                 ),
               ),
             );
@@ -546,7 +584,7 @@ class _BookReaderState extends State<BookReader>
       );
     }
     final int i = c.pageIndex;
-    return ReaderPageContent(
+    final Widget content = ReaderPageContent(
       theme: t,
       config: _config,
       bookTitle: c.manifest.title,
@@ -561,6 +599,15 @@ class _BookReaderState extends State<BookReader>
       pageStartOffset: c.startOffsetOfPage(i),
       leadingParagraphStart: c.leadingParagraphStartIn(c.pages, i),
     );
+    // 付费章首页叠加解锁块（无动画模式只显示当前页，锁定时页码恒为 0）。
+    if (i == 0 && c.currentChapterLocked && c.chapterLockBuilder != null) {
+      return ReaderLockedPage(
+        theme: t,
+        lockBlock: c.chapterLockBuilder!(context, t, c.lockInfoFor(c.chapterIndex)),
+        child: content,
+      );
+    }
+    return content;
   }
 
   Widget _buildMenu(ReadingController c, bool visible) {

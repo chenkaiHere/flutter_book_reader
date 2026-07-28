@@ -209,4 +209,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get languageSheetTitle => '言語';
+
+  @override
+  String get lockAutoSubscribe => '次の章を自動購読';
+
+  @override
+  String lockWordCount(int count) {
+    return '$count文字';
+  }
+
+  @override
+  String get lockSubscribeAction => 'この章を解除：無料';
 }

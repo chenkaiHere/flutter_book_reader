@@ -207,4 +207,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get languageSheetTitle => '语言';
+
+  @override
+  String get lockAutoSubscribe => '自动订阅下一章';
+
+  @override
+  String lockWordCount(int count) {
+    return '$count字';
+  }
+
+  @override
+  String get lockSubscribeAction => '订阅本章：免费解锁';
 }

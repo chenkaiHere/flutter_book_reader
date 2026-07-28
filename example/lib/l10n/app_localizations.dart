@@ -477,6 +477,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get languageSheetTitle;
+
+  /// No description provided for @lockAutoSubscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-subscribe to next chapter'**
+  String get lockAutoSubscribe;
+
+  /// No description provided for @lockWordCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} words'**
+  String lockWordCount(int count);
+
+  /// No description provided for @lockSubscribeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock this chapter: Free'**
+  String get lockSubscribeAction;
 }
 
 class _AppLocalizationsDelegate

@@ -214,4 +214,15 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get languageSheetTitle => 'زبان';
+
+  @override
+  String get lockAutoSubscribe => 'اگلے باب کی خودکار رکنیت';
+
+  @override
+  String lockWordCount(int count) {
+    return '$count الفاظ';
+  }
+
+  @override
+  String get lockSubscribeAction => 'یہ باب کھولیں: مفت';
 }

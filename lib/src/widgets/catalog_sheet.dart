@@ -32,6 +32,7 @@ class CatalogSheet extends StatefulWidget {
     this.onDeleteUnderline,
     this.onDeleteComment,
     this.scrollController,
+    this.isChapterLocked,
   });
 
   final String bookTitle;
@@ -59,6 +60,10 @@ class CatalogSheet extends StatefulWidget {
   /// 外部滚动控制器（如 [DraggableScrollableSheet] 提供的）；为空时内部自建。
   /// 绑定到「目录」列表，使列表滚到顶部后继续下拉可关闭整个面板。
   final ScrollController? scrollController;
+
+  /// 判定某章是否为「未解锁付费章」：目录里该章右侧显示锁 icon，解锁后不显示。
+  /// 为空时全部不显示锁。
+  final bool Function(int chapterIndex)? isChapterLocked;
 
   @override
   State<CatalogSheet> createState() => _CatalogSheetState();
@@ -528,6 +533,7 @@ class _CatalogSheetState extends State<CatalogSheet>
             itemBuilder: (BuildContext context, int pos) {
               final int index = _chapterAt(pos);
               final bool active = index == widget.currentIndex;
+              final bool locked = widget.isChapterLocked?.call(index) ?? false;
               return InkWell(
                 onTap: () => Navigator.of(context).pop(
                   ReadingPosition(chapterIndex: index),
@@ -554,6 +560,12 @@ class _CatalogSheetState extends State<CatalogSheet>
                       if (active)
                         Icon(Icons.play_arrow_rounded,
                             size: 18, color: _accent),
+                      // 未解锁付费章：右侧显示锁 icon，解锁后不再显示。
+                      if (locked)
+                        Padding(
+                          padding: EdgeInsets.only(left: active ? 6 : 0),
+                          child: Icon(Icons.lock_outline, size: 16, color: _sub),
+                        ),
                     ],
                   ),
                 ),

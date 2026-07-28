@@ -216,4 +216,15 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get languageSheetTitle => 'ভাষা';
+
+  @override
+  String get lockAutoSubscribe => 'পরবর্তী অধ্যায়ে স্বয়ংক্রিয় সাবস্ক্রিপশন';
+
+  @override
+  String lockWordCount(int count) {
+    return '$count শব্দ';
+  }
+
+  @override
+  String get lockSubscribeAction => 'এই অধ্যায় আনলক করুন: ফ্রি';
 }

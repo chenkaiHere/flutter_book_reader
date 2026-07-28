@@ -621,4 +621,105 @@ void main() {
     // 直接进入正文：第 1 章内容可见。
     expect(find.text('第 1 章'), findsWidgets);
   });
+
+  testWidgets('付费章：未解锁只显示首页，前翻直接跳到下一章', (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        startChapter: 1, // 直接从第 2 章（付费章）打开
+        isChapterLocked: (int ch) => ch == 1,
+        chapterLockBuilder:
+            (BuildContext context, ReaderTheme theme, ReaderLockInfo info) =>
+                const Text('订阅本章', key: ValueKey<String>('lock')),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 停在第 2 章首页并显示解锁块。
+    expect(find.text('第 2 章'), findsWidgets);
+    expect(find.byKey(const ValueKey<String>('lock')), findsOneWidget);
+
+    // 前翻应直接跳到第 3 章（跳过第 2 章其余页），且第 3 章无解锁块。
+    bool reachedCh3 = false;
+    for (int i = 0; i < 5; i++) {
+      await tester.fling(find.byType(PageView), const Offset(-400, 0), 1200);
+      await tester.pumpAndSettle();
+      if (find.text('第 3 章').evaluate().isNotEmpty) {
+        reachedCh3 = true;
+        break;
+      }
+    }
+    expect(reachedCh3, isTrue, reason: '未解锁付费章前翻应直接跳到下一章');
+    expect(find.byKey(const ValueKey<String>('lock')), findsNothing);
+  });
+
+  testWidgets('付费章：解锁后可翻阅整章', (WidgetTester tester) async {
+    final Set<int> unlocked = <int>{};
+    final ValueNotifier<int> refresh = ValueNotifier<int>(0);
+    addTearDown(refresh.dispose);
+
+    await tester.pumpWidget(MaterialApp(
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        startChapter: 1,
+        isChapterLocked: (int ch) => ch == 1 && !unlocked.contains(ch),
+        lockRefresh: refresh,
+        chapterLockBuilder:
+            (BuildContext context, ReaderTheme theme, ReaderLockInfo info) =>
+                const Text('订阅本章', key: ValueKey<String>('lock')),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey<String>('lock')), findsOneWidget);
+
+    // 解锁并触发刷新：解锁块消失、整章展开。
+    unlocked.add(1);
+    refresh.value++;
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey<String>('lock')), findsNothing);
+
+    // 现在前翻停留在第 2 章内（翻到第 2 页），不再跳章。
+    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1200);
+    await tester.pumpAndSettle();
+    expect(find.text('第 3 章'), findsNothing, reason: '解锁后前翻应留在本章而非跳章');
+    expect(find.textContaining('2/'), findsWidgets, reason: '解锁后应能翻到本章第 2 页');
+  });
+
+  testWidgets('付费章：连续锁定章中解锁一章后，可向前翻回上一锁定章而不卡死',
+      (WidgetTester tester) async {
+    // 第 3/4/5 章（index 2/3/4）付费，仅解锁第 4 章（index 3），从它打开。
+    final Set<int> unlocked = <int>{3};
+    await tester.pumpWidget(MaterialApp(
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        startChapter: 3,
+        isChapterLocked: (int ch) => ch >= 2 && !unlocked.contains(ch),
+        chapterLockBuilder:
+            (BuildContext context, ReaderTheme theme, ReaderLockInfo info) =>
+                const Text('订阅本章', key: ValueKey<String>('lock')),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 第 4 章已解锁：正常正文、无解锁块。
+    expect(find.text('第 4 章'), findsWidgets);
+    expect(find.byKey(const ValueKey<String>('lock')), findsNothing);
+
+    // 向前翻（右滑）应能翻回第 3 章（仍锁定），停在其锁定首页，而非卡在第 4 章抖动。
+    bool reachedCh3 = false;
+    for (int i = 0; i < 8; i++) {
+      await tester.fling(find.byType(PageView), const Offset(400, 0), 1200);
+      await tester.pumpAndSettle();
+      if (find.text('第 3 章').evaluate().isNotEmpty) {
+        reachedCh3 = true;
+        break;
+      }
+    }
+    expect(reachedCh3, isTrue, reason: '应能从已解锁章向前翻回上一锁定章');
+    expect(find.byKey(const ValueKey<String>('lock')), findsOneWidget,
+        reason: '翻回的上一章仍锁定，应显示其锁定首页');
+  });
 }

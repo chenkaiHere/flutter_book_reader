@@ -21,6 +21,7 @@ import 'theme/warm_theme.dart';
 import 'widgets/book_card.dart';
 import 'widgets/book_cover.dart';
 import 'widgets/book_detail_sheet.dart';
+import 'widgets/chapter_lock_block.dart';
 import 'widgets/comment_input_sheet.dart';
 import 'widgets/listen_overlay.dart';
 import 'widgets/paragraph_comments_sheet.dart';
@@ -70,6 +71,11 @@ class _BookshelfPageState extends State<BookshelfPage> {
 
   /// 评论刷新信号：外部新增评论后自增，通知阅读器重新拉取评论、刷新段尾角标。
   final ValueNotifier<int> _commentsRev = ValueNotifier<int>(0);
+
+  /// 演示「付费章」：每本书前 [_freeChapters] 章免费，其余需订阅解锁。
+  /// 已解锁的章节按 bookId 记在内存里（App 会话内有效）。真实业务应查服务端订阅状态。
+  static const int _freeChapters = 3;
+  final Map<int, Set<int>> _unlockedChapters = <int, Set<int>>{};
 
   static const String _kImportIntroShownKey = 'import_intro_shown';
 
@@ -207,6 +213,10 @@ class _BookshelfPageState extends State<BookshelfPage> {
     final BookReaderController readerController = BookReaderController();
     // 电量采集（battery_plus）：喂给阅读器右下角电量显示，随本次路由生命周期。
     final BatteryFeed batteryFeed = BatteryFeed()..start();
+    // 付费章：已解锁集合 + 解锁刷新信号（随本次路由生命周期）。
+    final Set<int> unlocked =
+        _unlockedChapters.putIfAbsent(book.id, () => <int>{});
+    final ValueNotifier<int> lockRefresh = ValueNotifier<int>(0);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => ListenOverlay(
@@ -243,12 +253,28 @@ class _BookshelfPageState extends State<BookshelfPage> {
             // 段尾「段评」角标点击：插件只抛段落信息，这里弹出该段评论列表。
             onSegmentCommentTap: (ReaderSegmentTap seg) =>
                 _onSegmentTap(book, labels, seg),
+            // 付费章：前 _freeChapters 章免费，其余未解锁则只显示首页 + 订阅块。
+            isChapterLocked: (int chapter) =>
+                chapter >= _freeChapters && !unlocked.contains(chapter),
+            lockRefresh: lockRefresh,
+            chapterLockBuilder:
+                (BuildContext context, ReaderTheme theme, ReaderLockInfo info) =>
+                    ChapterLockBlock(
+              theme: theme,
+              info: info,
+              // 演示：直接标记解锁并触发刷新；真实业务在此走下单/服务端校验。
+              onUnlock: () {
+                unlocked.add(info.chapterIndex);
+                lockRefresh.value++;
+              },
+            ),
           ),
         ),
       ),
     );
     readerController.dispose();
     batteryFeed.dispose();
+    lockRefresh.dispose();
     await _refreshProgress();
   }
 

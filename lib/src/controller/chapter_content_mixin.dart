@@ -1,3 +1,4 @@
+import '../chapter_lock.dart';
 import '../paginator.dart';
 import 'reader_controller_base.dart';
 
@@ -16,6 +17,13 @@ mixin ChapterContentMixin on ReaderControllerBase {
 
   /// 已加载的正文（未加载返回 null）。
   String? bodyOf(int index) => _bodies[index];
+
+  /// 构造付费章解锁块所需的章节信息（字数取已加载正文长度，未加载则 0）。
+  ReaderLockInfo lockInfoFor(int index) => ReaderLockInfo(
+        chapterIndex: index,
+        chapterTitle: chapterTitleAt(index),
+        wordCount: bodyOf(index)?.length ?? 0,
+      );
 
   bool isLoaded(int index) => _bodies.containsKey(index);
   bool isLoading(int index) => _loading.contains(index);

@@ -66,5 +66,9 @@
   "noMatches": "没有匹配的书籍",
   "loadFailed": "书籍加载失败：{error}",
 
-  "languageSheetTitle": "语言"
+  "languageSheetTitle": "语言",
+
+  "lockAutoSubscribe": "自动订阅下一章",
+  "lockWordCount": "{count}字",
+  "lockSubscribeAction": "订阅本章：免费解锁"
 }

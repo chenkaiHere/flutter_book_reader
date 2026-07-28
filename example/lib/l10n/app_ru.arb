@@ -59,5 +59,9 @@
   "emptyShelf": "Нет книг — нажмите вверху справа, чтобы импортировать TXT",
   "noMatches": "Нет подходящих книг",
   "loadFailed": "Не удалось загрузить книги: {error}",
-  "languageSheetTitle": "Язык"
+  "languageSheetTitle": "Язык",
+
+  "lockAutoSubscribe": "Автоподписка на следующую главу",
+  "lockWordCount": "{count} слов",
+  "lockSubscribeAction": "Разблокировать главу: бесплатно"
 }

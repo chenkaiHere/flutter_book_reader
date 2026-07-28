@@ -48,6 +48,10 @@ class ReadingController extends ReaderControllerBase
   ReadingPosition get position =>
       ReadingPosition(chapterIndex: chapterIndex, charOffset: charOffset);
 
+  /// 付费章解锁状态变化后触发重建：重新执行锁定判定、展开已解锁章节。
+  /// 分页结果不受锁定影响，无需清缓存，仅通知视图重建。
+  void refreshLocks() => notifyListeners();
+
   void _onConfigChanged() {
     clearPageCache();
     signature = '';

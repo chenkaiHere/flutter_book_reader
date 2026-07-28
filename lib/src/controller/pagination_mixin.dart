@@ -109,6 +109,8 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
     } else {
       pageIndex = pageIndexForOffset(charOffset).clamp(0, pages.length - 1);
     }
+    // 未解锁付费章只放行首页：兜底钳到 0，避免 pageIndex 落在被隐藏的后续页。
+    if (currentChapterLocked) pageIndex = 0;
     charOffset = startOffsetOfPage(pageIndex);
   }
 
@@ -141,6 +143,9 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
     _pageOffsets[pgs] = offs;
     return offs;
   }
+
+  /// 当前章可导航的页数：未解锁付费章只放行首页（1），其余为实际页数。
+  int get visiblePageCount => currentChapterLocked ? 1 : pages.length;
 
   int startOffsetOfPage(int index) => startOffsetOfPageIn(pages, index);
 

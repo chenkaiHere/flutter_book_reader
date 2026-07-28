@@ -6,6 +6,8 @@ mixin VerticalFlowMixin on ReaderControllerBase, ChapterContentMixin {
   /// 临近底部时接上下一章，返回是否发生追加。
   bool appendNextFlowChapter() {
     final int last = flowChapters.last;
+    // 末章为未解锁付费章时不再向下接章，避免付费正文被连续滚动漏出。
+    if (chapterLocked(last)) return false;
     if (last < chapterCount - 1 && !flowChapters.contains(last + 1)) {
       flowChapters.add(last + 1);
       ensureLoaded(last + 1);

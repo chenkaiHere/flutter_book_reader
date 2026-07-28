@@ -215,4 +215,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get languageSheetTitle => 'Язык';
+
+  @override
+  String get lockAutoSubscribe => 'Автоподписка на следующую главу';
+
+  @override
+  String lockWordCount(int count) {
+    return '$count слов';
+  }
+
+  @override
+  String get lockSubscribeAction => 'Разблокировать главу: бесплатно';
 }

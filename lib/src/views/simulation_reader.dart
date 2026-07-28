@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../paginator.dart';
 import '../widgets/loading_page.dart';
+import '../widgets/locked_page.dart';
 import '../widgets/page_frame.dart';
 import 'reader_mode_view.dart';
 
@@ -78,7 +79,8 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
 
   bool get _canForward =>
       controller.onTitlePage ||
-      controller.pageIndex < controller.pages.length - 1 ||
+      (!controller.currentChapterLocked &&
+          controller.pageIndex < controller.pages.length - 1) ||
       controller.hasNext;
   bool get _canBackward =>
       !controller.onTitlePage &&
@@ -240,7 +242,9 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
       // 扉页的下一页 = 正文第一页。
       return _pageWidget(controller.chapterIndex, controller.pages, 0);
     }
-    if (controller.pageIndex < controller.pages.length - 1) {
+    // 未解锁付费章只有首页，前翻的下一页 = 下一章首页。
+    if (!controller.currentChapterLocked &&
+        controller.pageIndex < controller.pages.length - 1) {
       return _pageWidget(
         controller.chapterIndex,
         controller.pages,
@@ -271,7 +275,10 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
         child: ReaderStatusPage(theme: theme),
       );
     }
-    final int pageIdx = atEnd ? (pages.isEmpty ? 0 : pages.length - 1) : 0;
+    // 付费章只展示首页：相邻章预览也固定首页，避免露出被隐藏的付费正文。
+    final int pageIdx = (!controller.chapterLocked(chapterIdx) && atEnd)
+        ? (pages.isEmpty ? 0 : pages.length - 1)
+        : 0;
     return _pageWidget(chapterIdx, pages, pageIdx);
   }
 
@@ -279,24 +286,43 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
     final ReaderPage content = (pageIdx >= 0 && pageIdx < pages.length)
         ? pages[pageIdx]
         : const <ReaderBlock>[];
+    final Widget page = ReaderPageContent(
+      theme: theme,
+      config: config,
+      bookTitle: controller.manifest.title,
+      chapterTitle: controller.chapterTitleAt(chapterIdx),
+      page: content,
+      isChapterHead: pageIdx == 0,
+      chapterIndex: chapterIdx,
+      chapterCount: controller.chapterCount,
+      pageIndex: pageIdx,
+      pageCount: pages.length,
+      progress: controller.progressFor(chapterIdx, pages, pageIdx),
+      pageStartOffset: controller.startOffsetOfPageIn(pages, pageIdx),
+      leadingParagraphStart:
+          controller.leadingParagraphStartIn(pages, pageIdx),
+    );
     return ColoredBox(
       color: theme.paperColor,
-      child: ReaderPageContent(
-        theme: theme,
-        config: config,
-        bookTitle: controller.manifest.title,
-        chapterTitle: controller.chapterTitleAt(chapterIdx),
-        page: content,
-        isChapterHead: pageIdx == 0,
-        chapterIndex: chapterIdx,
-        chapterCount: controller.chapterCount,
-        pageIndex: pageIdx,
-        pageCount: pages.length,
-        progress: controller.progressFor(chapterIdx, pages, pageIdx),
-        pageStartOffset: controller.startOffsetOfPageIn(pages, pageIdx),
-        leadingParagraphStart:
-            controller.leadingParagraphStartIn(pages, pageIdx),
+      child: _maybeLock(chapterIdx, pageIdx, page),
+    );
+  }
+
+  /// 付费章首页（pageIdx==0）叠加解锁块；其余原样返回。
+  Widget _maybeLock(int chapterIdx, int pageIdx, Widget content) {
+    if (pageIdx != 0 ||
+        !controller.chapterLocked(chapterIdx) ||
+        controller.chapterLockBuilder == null) {
+      return content;
+    }
+    return ReaderLockedPage(
+      theme: theme,
+      lockBlock: controller.chapterLockBuilder!(
+        context,
+        theme,
+        controller.lockInfoFor(chapterIdx),
       ),
+      child: content,
     );
   }
 }

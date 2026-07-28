@@ -59,5 +59,9 @@
   "emptyShelf": "কোনো বই নেই — TXT ইমপোর্ট করতে উপরের ডানদিকে ট্যাপ করুন",
   "noMatches": "মিলে যাওয়া কোনো বই নেই",
   "loadFailed": "বই লোড করা যায়নি: {error}",
-  "languageSheetTitle": "ভাষা"
+  "languageSheetTitle": "ভাষা",
+
+  "lockAutoSubscribe": "পরবর্তী অধ্যায়ে স্বয়ংক্রিয় সাবস্ক্রিপশন",
+  "lockWordCount": "{count} শব্দ",
+  "lockSubscribeAction": "এই অধ্যায় আনলক করুন: ফ্রি"
 }

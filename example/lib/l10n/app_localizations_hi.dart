@@ -214,4 +214,15 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get languageSheetTitle => 'भाषा';
+
+  @override
+  String get lockAutoSubscribe => 'अगले अध्याय की स्वतः सदस्यता';
+
+  @override
+  String lockWordCount(int count) {
+    return '$count शब्द';
+  }
+
+  @override
+  String get lockSubscribeAction => 'यह अध्याय अनलॉक करें: निःशुल्क';
 }

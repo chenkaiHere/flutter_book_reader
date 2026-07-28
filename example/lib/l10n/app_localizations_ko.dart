@@ -210,4 +210,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get languageSheetTitle => '언어';
+
+  @override
+  String get lockAutoSubscribe => '다음 화 자동 구독';
+
+  @override
+  String lockWordCount(int count) {
+    return '$count자';
+  }
+
+  @override
+  String get lockSubscribeAction => '이 화 잠금 해제: 무료';
 }

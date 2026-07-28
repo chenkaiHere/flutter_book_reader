@@ -90,6 +90,11 @@ anywhere else — without touching the reader's internals.
   host via `battery: ValueListenable<ReaderBatteryInfo?>` (`{ level, charging }`);
   charging shows a green bolt, otherwise the level fills with the percentage
   inside. `null` hides it — no native battery dependency in the package.
+- **Paid / locked chapters** — mark chapters as locked via `isChapterLocked`; a
+  locked chapter shows only its first page with your own unlock block
+  (`chapterLockBuilder`) and paging forward skips to the next chapter. Call
+  `lockRefresh` after unlocking to reveal the full chapter; the catalog shows a
+  lock icon on locked chapters.
 - **Theming & typography** — six built-in paper themes, per-theme accent color,
   and runtime controls for font size / line height / brightness.
 - **Localization built in** — `ReaderLabels` ships **12 languages** (en, zh, es,
@@ -101,7 +106,7 @@ anywhere else — without touching the reader's internals.
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.4
+  flutter_book_reader: ^1.5.5
 ```
 
 ```dart

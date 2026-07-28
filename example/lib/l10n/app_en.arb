@@ -91,5 +91,10 @@
   "loadFailed": "Failed to load books: {error}",
   "@loadFailed": { "placeholders": { "error": { "type": "String" } } },
 
-  "languageSheetTitle": "Language"
+  "languageSheetTitle": "Language",
+
+  "lockAutoSubscribe": "Auto-subscribe to next chapter",
+  "lockWordCount": "{count} words",
+  "@lockWordCount": { "placeholders": { "count": { "type": "int" } } },
+  "lockSubscribeAction": "Unlock this chapter: Free"
 }

@@ -59,5 +59,9 @@
   "emptyShelf": "کوئی کتاب نہیں — TXT درآمد کرنے کے لیے اوپر دائیں طرف ٹیپ کریں",
   "noMatches": "کوئی مماثل کتاب نہیں",
   "loadFailed": "کتابیں لوڈ نہیں ہو سکیں: {error}",
-  "languageSheetTitle": "زبان"
+  "languageSheetTitle": "زبان",
+
+  "lockAutoSubscribe": "اگلے باب کی خودکار رکنیت",
+  "lockWordCount": "{count} الفاظ",
+  "lockSubscribeAction": "یہ باب کھولیں: مفت"
 }

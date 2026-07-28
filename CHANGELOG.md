@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.5
+
+- Paid / locked chapters: mark chapters as locked via `isChapterLocked`. A locked
+  chapter shows only its first page
+
 ## 1.5.4
 
 - Performance: smoother text selection dragging and page turns — per-page layout

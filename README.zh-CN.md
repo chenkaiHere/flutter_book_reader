@@ -69,6 +69,9 @@
 - **电量显示** —— 页脚可选电量角标，数据由业务方经 `battery: ValueListenable<ReaderBatteryInfo?>`
   （`{ level, charging }`）注入；充电时显示绿色闪电，否则按电量填充、数字显示在电池内。
   传 `null` 即不显示——**插件本身不依赖任何原生电量库**。
+- **付费 / 加锁章节** —— 通过 `isChapterLocked` 标记付费章：未解锁章只展示第一页并叠加
+  你自定义的解锁块（`chapterLockBuilder`），向后翻页直接跳到下一章；解锁后调用
+  `lockRefresh` 即展开整章。目录里付费章右侧显示锁 icon。
 - **主题与排版**：六套内置纸张主题、每套可定制强调色，字号 / 行距 / 亮度可运行时调节。
 - **内置多语言** —— `ReaderLabels` 内置 **12 种语言**（en、zh、es、fr、ar、bn、pt、
   ru、hi、ur、ja、ko），通过 `ReaderLabels.forLanguageCode(code)` 选择（非内置语言
@@ -78,7 +81,7 @@
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.4
+  flutter_book_reader: ^1.5.5
 ```
 
 ```dart
