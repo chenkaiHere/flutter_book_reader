@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.6
+
+- Open at an exact in-chapter position via `startCharOffset` (paired with
+  `startChapter`) — e.g. to resume from a bookmark.
+- Fix: jumping to a bookmark / highlight / comment now lands on its exact page
+  instead of falling back to the chapter's first page.
+
 ## 1.5.5
 
 - Paid / locked chapters: mark chapters as locked via `isChapterLocked`. A locked

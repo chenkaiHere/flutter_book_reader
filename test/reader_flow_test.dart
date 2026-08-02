@@ -687,6 +687,24 @@ void main() {
     expect(find.textContaining('2/'), findsWidgets, reason: '解锁后应能翻到本章第 2 页');
   });
 
+  testWidgets('startCharOffset：带章内偏移打开可直接定位到对应页（非章首）',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        startChapter: 1, // 第 2 章（共 5 章）
+        startCharOffset: 100000, // 远超章长 → 定位到本章最后一页
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('第 2 章'), findsWidgets);
+    // 第 2/5 章最后一页：全书进度 = (1 + 1) / 5 = 40.0%。落到章首则不会是这个值。
+    expect(find.text('40.0%'), findsOneWidget,
+        reason: '带偏移打开应定位到章内对应页，而非章首第一页');
+  });
+
   testWidgets('付费章：连续锁定章中解锁一章后，可向前翻回上一锁定章而不卡死',
       (WidgetTester tester) async {
     // 第 3/4/5 章（index 2/3/4）付费，仅解锁第 4 章（index 3），从它打开。

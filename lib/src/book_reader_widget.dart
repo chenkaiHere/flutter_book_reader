@@ -49,6 +49,7 @@ class BookReader extends StatefulWidget {
     this.commentStore = const NoopReaderCommentStore(),
     this.labels = const ReaderLabels(),
     this.startChapter,
+    this.startCharOffset,
     this.onChapterChanged,
     this.onPositionChanged,
     this.onClose,
@@ -88,6 +89,10 @@ class BookReader extends StatefulWidget {
 
   /// 指定起始章；为空时优先使用 [progressStore] 中恢复的位置
   final int? startChapter;
+
+  /// 指定起始章内字符偏移（配合 [startChapter] 使用，如从书签跳转定位到某页）。
+  /// 仅当 [startChapter] 非空时生效；为空则视为 0（章首）。
+  final int? startCharOffset;
 
   /// 当前阅读章节变化回调
   final ValueChanged<int>? onChapterChanged;
@@ -240,8 +245,9 @@ class _BookReaderState extends State<BookReader>
       final List<Comment> comments =
           await widget.commentStore.load(manifest.id);
       final int start = widget.startChapter ?? saved?.chapterIndex ?? 0;
-      final int offset =
-          widget.startChapter != null ? 0 : (saved?.charOffset ?? 0);
+      final int offset = widget.startChapter != null
+          ? (widget.startCharOffset ?? 0)
+          : (saved?.charOffset ?? 0);
 
       if (!mounted) return;
       final ReadingController controller = ReadingController(

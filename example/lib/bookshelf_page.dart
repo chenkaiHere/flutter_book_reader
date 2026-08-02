@@ -73,9 +73,26 @@ class _BookshelfPageState extends State<BookshelfPage> {
   final ValueNotifier<int> _commentsRev = ValueNotifier<int>(0);
 
   /// 演示「付费章」：每本书前 [_freeChapters] 章免费，其余需订阅解锁。
-  /// 已解锁的章节按 bookId 记在内存里（App 会话内有效）。真实业务应查服务端订阅状态。
+  /// 已解锁章节按 bookId 缓存在内存并持久化到本地（跨重启保留，与书签一致）。
+  /// 真实业务应改为查询服务端订阅状态。
   static const int _freeChapters = 3;
+  static const String _unlockedPrefsPrefix = 'unlocked_';
   final Map<int, Set<int>> _unlockedChapters = <int, Set<int>>{};
+
+  Future<Set<int>> _loadUnlockedChapters(int bookId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final List<String>? raw =
+        prefs.getStringList('$_unlockedPrefsPrefix$bookId');
+    return raw == null ? <int>{} : raw.map(int.parse).toSet();
+  }
+
+  Future<void> _saveUnlockedChapters(int bookId, Set<int> chapters) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      '$_unlockedPrefsPrefix$bookId',
+      chapters.map((int c) => '$c').toList(),
+    );
+  }
 
   static const String _kImportIntroShownKey = 'import_intro_shown';
 
@@ -198,12 +215,20 @@ class _BookshelfPageState extends State<BookshelfPage> {
       commentStore: _commentStore,
     );
     if (intent != null) {
-      await _openReader(book, startChapter: intent.startChapter);
+      await _openReader(
+        book,
+        startChapter: intent.startChapter,
+        startCharOffset: intent.startOffset,
+      );
     }
     await _refreshProgress();
   }
 
-  Future<void> _openReader(BookRow book, {int? startChapter}) async {
+  Future<void> _openReader(
+    BookRow book, {
+    int? startChapter,
+    int startCharOffset = 0,
+  }) async {
     await _progressStore.markLastRead(book.id);
     if (!mounted) return;
     // 把当前 App 语言传给插件：插件按语言码取内置文案，未命中回退英文。
@@ -213,9 +238,11 @@ class _BookshelfPageState extends State<BookshelfPage> {
     final BookReaderController readerController = BookReaderController();
     // 电量采集（battery_plus）：喂给阅读器右下角电量显示，随本次路由生命周期。
     final BatteryFeed batteryFeed = BatteryFeed()..start();
-    // 付费章：已解锁集合 + 解锁刷新信号（随本次路由生命周期）。
+    // 付费章：已解锁集合（跨重启持久化）+ 解锁刷新信号（随本次路由生命周期）。
     final Set<int> unlocked =
-        _unlockedChapters.putIfAbsent(book.id, () => <int>{});
+        _unlockedChapters[book.id] ?? await _loadUnlockedChapters(book.id);
+    _unlockedChapters[book.id] = unlocked;
+    if (!mounted) return;
     final ValueNotifier<int> lockRefresh = ValueNotifier<int>(0);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -235,6 +262,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
             commentStore: _commentStore,
             commentsRefresh: _commentsRev,
             startChapter: startChapter,
+            startCharOffset: startCharOffset,
             // 右下角电量：数据由 App 侧采集注入，不传则不显示。
             battery: batteryFeed.notifier,
             // 扉页（第一章之前的宣传页）
@@ -262,9 +290,10 @@ class _BookshelfPageState extends State<BookshelfPage> {
                     ChapterLockBlock(
               theme: theme,
               info: info,
-              // 演示：直接标记解锁并触发刷新；真实业务在此走下单/服务端校验。
+              // 演示：直接标记解锁、持久化并触发刷新；真实业务在此走下单/服务端校验。
               onUnlock: () {
                 unlocked.add(info.chapterIndex);
+                _saveUnlockedChapters(book.id, unlocked);
                 lockRefresh.value++;
               },
             ),

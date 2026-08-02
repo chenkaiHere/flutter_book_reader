@@ -8,8 +8,11 @@ import 'book_cover.dart';
 
 /// 从详情弹窗返回的「去阅读」意图；[startChapter] 为空表示从上次位置/开头读起。
 class ReadIntent {
-  const ReadIntent(this.startChapter);
+  const ReadIntent(this.startChapter, [this.startOffset = 0]);
   final int? startChapter;
+
+  /// 起始章内字符偏移（如从书签/划线/评论跳转，定位到具体页）；0 表示章首。
+  final int startOffset;
 }
 
 /// 笔记筛选：全部 / 仅书签 / 仅划线 / 仅评论。
@@ -24,6 +27,7 @@ class _Note {
     required this.kind,
     required this.chapterIndex,
     required this.chapterTitle,
+    required this.offset,
     required this.createdAt,
     required this.text,
     this.quote = '',
@@ -35,6 +39,9 @@ class _Note {
   final _NoteKind kind;
   final int chapterIndex;
   final String chapterTitle;
+
+  /// 跳转目标：章内字符偏移（书签为其页首偏移，划线/评论为选区起点）。
+  final int offset;
   final int createdAt;
   final String text;
   final String quote;
@@ -512,6 +519,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
             kind: _NoteKind.bookmark,
             chapterIndex: b.chapterIndex,
             chapterTitle: b.chapterTitle,
+            offset: b.charOffset,
             createdAt: b.createdAt,
             text: '',
             bookmark: b,
@@ -526,6 +534,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
             kind: _NoteKind.underline,
             chapterIndex: u.chapterIndex,
             chapterTitle: u.chapterTitle,
+            offset: u.start,
             createdAt: u.createdAt,
             text: u.text,
             underline: u,
@@ -540,6 +549,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
             kind: _NoteKind.comment,
             chapterIndex: cm.chapterIndex,
             chapterTitle: cm.chapterTitle,
+            offset: cm.start,
             createdAt: cm.createdAt,
             text: cm.text,
             quote: cm.quote,
@@ -701,7 +711,8 @@ class _BookDetailSheetState extends State<BookDetailSheet>
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => Navigator.of(context).pop(ReadIntent(n.chapterIndex)),
+          onTap: () =>
+              Navigator.of(context).pop(ReadIntent(n.chapterIndex, n.offset)),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 6, 14),
             child: Column(
@@ -798,7 +809,7 @@ class _BookDetailSheetState extends State<BookDetailSheet>
       padding: EdgeInsets.zero,
       color: Warm.sheet,
       onSelected: (int v) => v == 0
-          ? Navigator.of(context).pop(ReadIntent(n.chapterIndex))
+          ? Navigator.of(context).pop(ReadIntent(n.chapterIndex, n.offset))
           : _deleteNote(n),
       itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
         PopupMenuItem<int>(

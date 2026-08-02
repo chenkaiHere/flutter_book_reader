@@ -60,6 +60,10 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
     super.didUpdateWidget(oldWidget);
     final int target = _targetIndex;
     if (controller.chapterIndex != _builtChapter) {
+      // 切章后本章正文可能仍在加载（pages 为空），此时 pageIndex 尚未据 charOffset
+      // 解析出目标页，PageController 会以第 0 页初始化。等正文就绪、目标页确定后再
+      // 重建控制器——否则书签/跳转跨章到未缓存章时会落回第一页。
+      if (controller.pages.isEmpty) return;
       _builtChapter = controller.chapterIndex;
       _pageController.dispose();
       _pageController = PageController(initialPage: target);
