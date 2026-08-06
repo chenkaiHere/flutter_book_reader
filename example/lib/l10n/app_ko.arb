@@ -63,5 +63,10 @@
 
   "lockAutoSubscribe": "다음 화 자동 구독",
   "lockWordCount": "{count}자",
-  "lockSubscribeAction": "이 화 잠금 해제: 무료"
+  "lockSubscribeAction": "이 화 잠금 해제: 무료",
+
+  "autoTurnTitle": "자동 페이지 넘김",
+  "autoTurnStop": "자동 넘김 중지",
+  "autoTurnSpeedTitle": "넘김 속도",
+  "autoTurnSeconds": "{n}초"
 }

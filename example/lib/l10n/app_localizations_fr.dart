@@ -227,4 +227,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'Débloquer ce chapitre : Gratuit';
+
+  @override
+  String get autoTurnTitle => 'Tourne-page automatique';
+
+  @override
+  String get autoTurnStop => 'Arrêter';
+
+  @override
+  String get autoTurnSpeedTitle => 'Vitesse';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '${n}s';
+  }
 }

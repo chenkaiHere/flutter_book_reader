@@ -57,12 +57,7 @@ class BookReaderController extends ChangeNotifier {
   }
 
   /// 是否已到全书最后一页（听书循环据此停止）。
-  bool get isAtBookEnd {
-    final ReadingController? rc = _rc;
-    if (rc == null) return false;
-    return !rc.hasNext &&
-        (rc.pages.isEmpty || rc.pageIndex >= rc.pages.length - 1);
-  }
+  bool get isAtBookEnd => _rc?.isAtBookEnd ?? false;
 
   /// 翻到下一页；已在章末则自动进入下一章（到全书末尾则不动）。
   void nextPage() => _rc?.nextPage();
@@ -96,6 +91,29 @@ class BookReaderController extends ChangeNotifier {
 
   /// 编程式加 / 删当前页书签（等价于点顶栏书签按钮）。切换后会通知监听者。
   void toggleBookmark() => _toggleBookmarkFn?.call();
+
+  // —————— 自动翻页 ——————
+
+  /// 是否正在自动翻页。开关变化会通知监听者——宿主可据此开/关屏幕常亮（如 wakelock）。
+  bool get isAutoTurning => _rc?.autoTurning ?? false;
+
+  /// 当前自动翻页间隔（分页模式：每页停留时长；纵向模式：滚过约一屏的时长）。
+  Duration get autoTurnInterval =>
+      _rc?.autoTurnInterval ?? const Duration(seconds: 5);
+
+  /// 开始自动翻页。分页模式每隔 [interval] 翻一页并在右侧显示倒计时竖线；
+  /// 纵向滚动模式按该速度平滑向下滚。到全书末尾自动停止。不传 [interval] 沿用当前值。
+  void startAutoTurn([Duration? interval]) {
+    if (interval != null) _rc?.setAutoTurnInterval(interval);
+    _rc?.setAutoTurning(true);
+  }
+
+  /// 停止自动翻页。
+  void stopAutoTurn() => _rc?.setAutoTurning(false);
+
+  /// 仅调整自动翻页间隔（自动翻页进行中即时生效）。
+  void setAutoTurnInterval(Duration interval) =>
+      _rc?.setAutoTurnInterval(interval);
 
   // —————— 以下由 BookReader 内部调用（@internal），业务方请勿使用 ——————
 

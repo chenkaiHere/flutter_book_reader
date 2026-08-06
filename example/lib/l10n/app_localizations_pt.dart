@@ -226,4 +226,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'Desbloquear este capítulo: Grátis';
+
+  @override
+  String get autoTurnTitle => 'Virar página automaticamente';
+
+  @override
+  String get autoTurnStop => 'Parar de virar';
+
+  @override
+  String get autoTurnSpeedTitle => 'Velocidade';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '${n}s';
+  }
 }

@@ -227,4 +227,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'Desbloquear este capítulo: Gratis';
+
+  @override
+  String get autoTurnTitle => 'Cambio de página automático';
+
+  @override
+  String get autoTurnStop => 'Detener cambio automático';
+
+  @override
+  String get autoTurnSpeedTitle => 'Velocidad';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '${n}s';
+  }
 }

@@ -20,6 +20,7 @@ import 'listen/listen_service.dart';
 import 'theme/warm_theme.dart';
 import 'widgets/book_card.dart';
 import 'widgets/book_cover.dart';
+import 'widgets/auto_turn_overlay.dart';
 import 'widgets/book_detail_sheet.dart';
 import 'widgets/chapter_lock_block.dart';
 import 'widgets/comment_input_sheet.dart';
@@ -81,8 +82,9 @@ class _BookshelfPageState extends State<BookshelfPage> {
 
   Future<Set<int>> _loadUnlockedChapters(int bookId) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final List<String>? raw =
-        prefs.getStringList('$_unlockedPrefsPrefix$bookId');
+    final List<String>? raw = prefs.getStringList(
+      '$_unlockedPrefsPrefix$bookId',
+    );
     return raw == null ? <int>{} : raw.map(int.parse).toSet();
   }
 
@@ -252,50 +254,56 @@ class _BookshelfPageState extends State<BookshelfPage> {
           bookId: book.id,
           bookTitle: book.title,
           source: DbBookSource(_db, book.id),
-          child: BookReader(
-            source: DbBookSource(_db, book.id),
-            labels: labels,
+          child: AutoTurnOverlay(
             controller: readerController,
-            progressStore: _progressStore,
-            bookmarkStore: _bookmarkStore,
-            underlineStore: _underlineStore,
-            commentStore: _commentStore,
-            commentsRefresh: _commentsRev,
-            startChapter: startChapter,
-            startCharOffset: startCharOffset,
-            // 右下角电量：数据由 App 侧采集注入，不传则不显示。
-            battery: batteryFeed.notifier,
-            // 扉页（第一章之前的宣传页）
-            titlePageBuilder: (BuildContext context, ReaderTheme theme) =>
-                ReaderTitlePage(
-              theme: theme,
-              title: book.title,
-              coverColor: Color(book.coverColor),
-              author: book.author.isEmpty ? '佚名' : book.author,
-              description: book.intro.isEmpty ? null : book.intro,
-              tags: const <String>['历史', '名著'],
-            ),
-            // 气泡菜单「复制 / 评论 / 查询 / 分享」全部回调到 App 侧自行处理。
-            onTextAction: (ReaderTextAction action, ReaderSelection sel) =>
-                _onReaderTextAction(book, labels, action, sel),
-            // 段尾「段评」角标点击：插件只抛段落信息，这里弹出该段评论列表。
-            onSegmentCommentTap: (ReaderSegmentTap seg) =>
-                _onSegmentTap(book, labels, seg),
-            // 付费章：前 _freeChapters 章免费，其余未解锁则只显示首页 + 订阅块。
-            isChapterLocked: (int chapter) =>
-                chapter >= _freeChapters && !unlocked.contains(chapter),
-            lockRefresh: lockRefresh,
-            chapterLockBuilder:
-                (BuildContext context, ReaderTheme theme, ReaderLockInfo info) =>
-                    ChapterLockBlock(
-              theme: theme,
-              info: info,
-              // 演示：直接标记解锁、持久化并触发刷新；真实业务在此走下单/服务端校验。
-              onUnlock: () {
-                unlocked.add(info.chapterIndex);
-                _saveUnlockedChapters(book.id, unlocked);
-                lockRefresh.value++;
-              },
+            child: BookReader(
+              source: DbBookSource(_db, book.id),
+              labels: labels,
+              controller: readerController,
+              progressStore: _progressStore,
+              bookmarkStore: _bookmarkStore,
+              underlineStore: _underlineStore,
+              commentStore: _commentStore,
+              commentsRefresh: _commentsRev,
+              startChapter: startChapter,
+              startCharOffset: startCharOffset,
+              // 右下角电量：数据由 App 侧采集注入，不传则不显示。
+              battery: batteryFeed.notifier,
+              // 扉页（第一章之前的宣传页）
+              titlePageBuilder: (BuildContext context, ReaderTheme theme) =>
+                  ReaderTitlePage(
+                    theme: theme,
+                    title: book.title,
+                    coverColor: Color(book.coverColor),
+                    author: book.author.isEmpty ? '佚名' : book.author,
+                    description: book.intro.isEmpty ? null : book.intro,
+                    tags: const <String>['历史', '名著'],
+                  ),
+              // 气泡菜单「复制 / 评论 / 查询 / 分享」全部回调到 App 侧自行处理。
+              onTextAction: (ReaderTextAction action, ReaderSelection sel) =>
+                  _onReaderTextAction(book, labels, action, sel),
+              // 段尾「段评」角标点击：插件只抛段落信息，这里弹出该段评论列表。
+              onSegmentCommentTap: (ReaderSegmentTap seg) =>
+                  _onSegmentTap(book, labels, seg),
+              // 付费章：前 _freeChapters 章免费，其余未解锁则只显示首页 + 订阅块。
+              isChapterLocked: (int chapter) =>
+                  chapter >= _freeChapters && !unlocked.contains(chapter),
+              lockRefresh: lockRefresh,
+              chapterLockBuilder:
+                  (
+                    BuildContext context,
+                    ReaderTheme theme,
+                    ReaderLockInfo info,
+                  ) => ChapterLockBlock(
+                    theme: theme,
+                    info: info,
+                    // 演示：直接标记解锁、持久化并触发刷新；真实业务在此走下单/服务端校验。
+                    onUnlock: () {
+                      unlocked.add(info.chapterIndex);
+                      _saveUnlockedChapters(book.id, unlocked);
+                      lockRefresh.value++;
+                    },
+                  ),
             ),
           ),
         ),

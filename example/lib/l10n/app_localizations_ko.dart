@@ -221,4 +221,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => '이 화 잠금 해제: 무료';
+
+  @override
+  String get autoTurnTitle => '자동 페이지 넘김';
+
+  @override
+  String get autoTurnStop => '자동 넘김 중지';
+
+  @override
+  String get autoTurnSpeedTitle => '넘김 속도';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '$n초';
+  }
 }

@@ -495,6 +495,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlock this chapter: Free'**
   String get lockSubscribeAction;
+
+  /// No description provided for @autoTurnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto page-turn'**
+  String get autoTurnTitle;
+
+  /// No description provided for @autoTurnStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop auto-turn'**
+  String get autoTurnStop;
+
+  /// No description provided for @autoTurnSpeedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-turn speed'**
+  String get autoTurnSpeedTitle;
+
+  /// No description provided for @autoTurnSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}s'**
+  String autoTurnSeconds(int n);
 }
 
 class _AppLocalizationsDelegate

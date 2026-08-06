@@ -63,5 +63,10 @@
 
   "lockAutoSubscribe": "اگلے باب کی خودکار رکنیت",
   "lockWordCount": "{count} الفاظ",
-  "lockSubscribeAction": "یہ باب کھولیں: مفت"
+  "lockSubscribeAction": "یہ باب کھولیں: مفت",
+
+  "autoTurnTitle": "خودکار صفحہ پلٹنا",
+  "autoTurnStop": "روکیں",
+  "autoTurnSpeedTitle": "رفتار",
+  "autoTurnSeconds": "{n} سیکنڈ"
 }

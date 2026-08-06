@@ -63,5 +63,10 @@
 
   "lockAutoSubscribe": "পরবর্তী অধ্যায়ে স্বয়ংক্রিয় সাবস্ক্রিপশন",
   "lockWordCount": "{count} শব্দ",
-  "lockSubscribeAction": "এই অধ্যায় আনলক করুন: ফ্রি"
+  "lockSubscribeAction": "এই অধ্যায় আনলক করুন: ফ্রি",
+
+  "autoTurnTitle": "স্বয়ংক্রিয় পৃষ্ঠা পরিবর্তন",
+  "autoTurnStop": "বন্ধ করুন",
+  "autoTurnSpeedTitle": "গতি",
+  "autoTurnSeconds": "{n}সে"
 }

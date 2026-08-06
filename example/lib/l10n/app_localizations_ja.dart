@@ -220,4 +220,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'この章を解除：無料';
+
+  @override
+  String get autoTurnTitle => '自動ページめくり';
+
+  @override
+  String get autoTurnStop => '自動めくりを停止';
+
+  @override
+  String get autoTurnSpeedTitle => 'めくり速度';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '$n秒';
+  }
 }

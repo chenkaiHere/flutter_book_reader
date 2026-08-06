@@ -225,4 +225,18 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'یہ باب کھولیں: مفت';
+
+  @override
+  String get autoTurnTitle => 'خودکار صفحہ پلٹنا';
+
+  @override
+  String get autoTurnStop => 'روکیں';
+
+  @override
+  String get autoTurnSpeedTitle => 'رفتار';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '$n سیکنڈ';
+  }
 }

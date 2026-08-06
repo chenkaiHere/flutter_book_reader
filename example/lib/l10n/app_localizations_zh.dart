@@ -218,4 +218,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => '订阅本章：免费解锁';
+
+  @override
+  String get autoTurnTitle => '自动翻页';
+
+  @override
+  String get autoTurnStop => '停止自动翻页';
+
+  @override
+  String get autoTurnSpeedTitle => '翻页速度';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '$n 秒';
+  }
 }

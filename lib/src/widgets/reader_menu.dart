@@ -28,6 +28,9 @@ class ReaderMenu extends StatefulWidget {
     required this.onSeekChapter,
     required this.onRequestClose,
     this.onSettingsPanelChanged,
+    this.onStartAutoTurn,
+    this.onStopAutoTurn,
+    this.autoTurning = false,
   });
 
   final bool visible;
@@ -57,6 +60,16 @@ class ReaderMenu extends StatefulWidget {
 
   /// 设置面板展开 / 收起时回调（true 表示设置面板已展开）。
   final ValueChanged<bool>? onSettingsPanelChanged;
+
+  /// 点击设置面板里「开启自动翻页」时回调（由 BookReader 负责关菜单并开始自动翻页）。
+  /// 为 null 时不显示该入口。
+  final VoidCallback? onStartAutoTurn;
+
+  /// 正在自动阅读时点击该入口的回调（此时入口文字变为「停止自动阅读」）。
+  final VoidCallback? onStopAutoTurn;
+
+  /// 当前是否正在自动阅读：决定该入口显示「开启自动翻页」还是「停止自动阅读」。
+  final bool autoTurning;
 
   @override
   State<ReaderMenu> createState() => _ReaderMenuState();
@@ -474,8 +487,51 @@ class _ReaderMenuState extends State<ReaderMenu> {
           _sectionLabel(_labels.flipMode),
           const SizedBox(height: 12),
           _buildFlipRow(c),
+          // 开启自动翻页：翻页方式下面居中的入口，点击后关菜单开始自动阅读。
+          if (widget.onStartAutoTurn != null) ...<Widget>[
+            const SizedBox(height: 16),
+            Center(child: _autoTurnEntry()),
+          ],
           const SizedBox(height: 6),
         ],
+      ),
+    );
+  }
+
+  Widget _autoTurnEntry() {
+    // 自动阅读中：显示「停止自动阅读」；否则显示「开启自动翻页」。
+    final bool active = widget.autoTurning;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: active ? widget.onStopAutoTurn : widget.onStartAutoTurn,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: active ? _accent : _t.borderColor,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              active ? Icons.stop_circle_outlined : Icons.play_circle_outline,
+              size: 20,
+              color: _accent,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              active ? _labels.autoTurnStop : _labels.autoTurn,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: active ? _accent : _text,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

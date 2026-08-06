@@ -227,4 +227,18 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'এই অধ্যায় আনলক করুন: ফ্রি';
+
+  @override
+  String get autoTurnTitle => 'স্বয়ংক্রিয় পৃষ্ঠা পরিবর্তন';
+
+  @override
+  String get autoTurnStop => 'বন্ধ করুন';
+
+  @override
+  String get autoTurnSpeedTitle => 'গতি';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '$nসে';
+  }
 }

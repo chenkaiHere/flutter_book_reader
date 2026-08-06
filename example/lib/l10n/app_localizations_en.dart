@@ -224,4 +224,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'Unlock this chapter: Free';
+
+  @override
+  String get autoTurnTitle => 'Auto page-turn';
+
+  @override
+  String get autoTurnStop => 'Stop auto-turn';
+
+  @override
+  String get autoTurnSpeedTitle => 'Auto-turn speed';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '${n}s';
+  }
 }

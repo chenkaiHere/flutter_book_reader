@@ -75,6 +75,11 @@ class ReaderLabels {
     this.timeMinutesAgoTemplate = '{n} min ago',
     this.timeHoursAgoTemplate = '{n} h ago',
     this.timeDaysAgoTemplate = '{n} d ago',
+    this.autoTurn = 'Auto page-turn',
+    this.autoTurnStop = 'Stop auto-read',
+    this.autoTurnExit = 'Exit auto-read',
+    this.speedSlow = 'Slow',
+    this.speedFast = 'Fast',
   });
 
   final String loading;
@@ -183,6 +188,13 @@ class ReaderLabels {
   final String timeHoursAgoTemplate;
   final String timeDaysAgoTemplate;
 
+  /// 自动翻页：设置面板里的开启入口 / 自动阅读中显示的停止 / 退出自动阅读 / 速度「慢」「快」。
+  final String autoTurn;
+  final String autoTurnStop;
+  final String autoTurnExit;
+  final String speedSlow;
+  final String speedFast;
+
   /// 把时间戳（毫秒）格式化为相对时间；超过 7 天用 “yyyy-MM-dd”。
   String relativeTime(int ms, {DateTime? now}) {
     if (ms <= 0) return '';
@@ -270,6 +282,11 @@ class ReaderLabels {
     timeMinutesAgoTemplate: '{n} 分钟前',
     timeHoursAgoTemplate: '{n} 小时前',
     timeDaysAgoTemplate: '{n} 天前',
+    autoTurn: '自动翻页',
+    autoTurnStop: '停止自动阅读',
+    autoTurnExit: '退出自动阅读',
+    speedSlow: '慢',
+    speedFast: '快',
   );
 
   static const ReaderLabels spanish = ReaderLabels(

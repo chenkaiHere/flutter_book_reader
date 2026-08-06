@@ -222,4 +222,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'فتح هذا الفصل: مجانًا';
+
+  @override
+  String get autoTurnTitle => 'تقليب الصفحات تلقائيًا';
+
+  @override
+  String get autoTurnStop => 'إيقاف التقليب';
+
+  @override
+  String get autoTurnSpeedTitle => 'السرعة';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '$n ث';
+  }
 }

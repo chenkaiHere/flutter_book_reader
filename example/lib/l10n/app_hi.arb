@@ -63,5 +63,10 @@
 
   "lockAutoSubscribe": "अगले अध्याय की स्वतः सदस्यता",
   "lockWordCount": "{count} शब्द",
-  "lockSubscribeAction": "यह अध्याय अनलॉक करें: निःशुल्क"
+  "lockSubscribeAction": "यह अध्याय अनलॉक करें: निःशुल्क",
+
+  "autoTurnTitle": "स्वतः पृष्ठ पलटना",
+  "autoTurnStop": "रोकें",
+  "autoTurnSpeedTitle": "गति",
+  "autoTurnSeconds": "{n}से"
 }

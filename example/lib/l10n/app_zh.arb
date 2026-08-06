@@ -70,5 +70,10 @@
 
   "lockAutoSubscribe": "自动订阅下一章",
   "lockWordCount": "{count}字",
-  "lockSubscribeAction": "订阅本章：免费解锁"
+  "lockSubscribeAction": "订阅本章：免费解锁",
+
+  "autoTurnTitle": "自动翻页",
+  "autoTurnStop": "停止自动翻页",
+  "autoTurnSpeedTitle": "翻页速度",
+  "autoTurnSeconds": "{n} 秒"
 }

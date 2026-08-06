@@ -687,6 +687,62 @@ void main() {
     expect(find.textContaining('2/'), findsWidgets, reason: '解锁后应能翻到本章第 2 页');
   });
 
+  testWidgets('自动翻页：到点自动翻到下一页，停止后不再翻',
+      (WidgetTester tester) async {
+    final BookReaderController controller = BookReaderController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        controller: controller,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(controller.pageIndex, 0);
+
+    controller.startAutoTurn(const Duration(seconds: 2));
+    await tester.pump(); // 启动本页计时
+    expect(controller.isAutoTurning, isTrue);
+    await tester.pump(const Duration(milliseconds: 2100)); // 走完计时 → 翻页
+    await tester.pump(const Duration(milliseconds: 300)); // 翻页动画结束
+    expect(controller.pageIndex, 1, reason: '到点应自动翻到下一页');
+
+    controller.stopAutoTurn();
+    await tester.pump();
+    expect(controller.isAutoTurning, isFalse);
+    // 停止后再等一个间隔，不应再翻。
+    await tester.pump(const Duration(milliseconds: 2100));
+    expect(controller.pageIndex, 1, reason: '停止后不应继续自动翻页');
+  });
+
+  testWidgets('自动翻页：翻到未解锁付费章自动停止，不跳过', (WidgetTester tester) async {
+    final BookReaderController controller = BookReaderController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        controller: controller,
+        startChapter: 0,
+        startCharOffset: 100000, // 落在第 1 章最后一页
+        isChapterLocked: (int ch) => ch == 1, // 第 2 章付费
+        chapterLockBuilder:
+            (BuildContext context, ReaderTheme theme, ReaderLockInfo info) =>
+                const Text('订阅本章'),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(controller.chapterIndex, 0);
+
+    controller.startAutoTurn(const Duration(seconds: 1));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1100)); // 计时走完 → 翻入第 2 章
+    await tester.pump(const Duration(milliseconds: 300)); // 切章 + 停止
+    expect(controller.chapterIndex, 1, reason: '应翻到付费章');
+    expect(controller.isAutoTurning, isFalse, reason: '翻到付费章应自动停止');
+  });
+
   testWidgets('startCharOffset：带章内偏移打开可直接定位到对应页（非章首）',
       (WidgetTester tester) async {
     await tester.pumpWidget(MaterialApp(

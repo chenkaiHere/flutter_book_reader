@@ -63,5 +63,10 @@
 
   "lockAutoSubscribe": "Abonnement automatique au chapitre suivant",
   "lockWordCount": "{count} mots",
-  "lockSubscribeAction": "Débloquer ce chapitre : Gratuit"
+  "lockSubscribeAction": "Débloquer ce chapitre : Gratuit",
+
+  "autoTurnTitle": "Tourne-page automatique",
+  "autoTurnStop": "Arrêter",
+  "autoTurnSpeedTitle": "Vitesse",
+  "autoTurnSeconds": "{n}s"
 }

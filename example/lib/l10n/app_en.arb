@@ -96,5 +96,11 @@
   "lockAutoSubscribe": "Auto-subscribe to next chapter",
   "lockWordCount": "{count} words",
   "@lockWordCount": { "placeholders": { "count": { "type": "int" } } },
-  "lockSubscribeAction": "Unlock this chapter: Free"
+  "lockSubscribeAction": "Unlock this chapter: Free",
+
+  "autoTurnTitle": "Auto page-turn",
+  "autoTurnStop": "Stop auto-turn",
+  "autoTurnSpeedTitle": "Auto-turn speed",
+  "autoTurnSeconds": "{n}s",
+  "@autoTurnSeconds": { "placeholders": { "n": { "type": "int" } } }
 }

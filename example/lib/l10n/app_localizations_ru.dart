@@ -226,4 +226,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'Разблокировать главу: бесплатно';
+
+  @override
+  String get autoTurnTitle => 'Автолистание';
+
+  @override
+  String get autoTurnStop => 'Остановить';
+
+  @override
+  String get autoTurnSpeedTitle => 'Скорость';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '$n с';
+  }
 }

@@ -22,6 +22,7 @@ import 'underline/reader_underline_store.dart';
 import 'views/horizontal_reader.dart';
 import 'views/simulation_reader.dart';
 import 'views/vertical_reader.dart';
+import 'widgets/auto_turn_bar.dart';
 import 'widgets/battery_indicator.dart';
 import 'widgets/catalog_sheet.dart';
 import 'widgets/loading_page.dart';
@@ -156,6 +157,7 @@ class BookReader extends StatefulWidget {
 class _BookReaderState extends State<BookReader>
     with
         WidgetsBindingObserver,
+        TickerProviderStateMixin,
         _ImmersiveSystemUi,
         _ReadAlongHighlight,
         _ReaderNotesManager {
@@ -167,6 +169,17 @@ class _BookReaderState extends State<BookReader>
 
   @override
   final ValueNotifier<bool> _menuVisible = ValueNotifier<bool>(false);
+
+  /// 自动翻页（分页模式）的本页计时动画：0→1 走完即翻页并重置；也驱动右侧倒计时竖线。
+  /// 纵向滚动模式的自动阅读由 VerticalReader 自行按速度平滑滚动，不用此动画。
+  late final AnimationController _autoTurnCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 5),
+  );
+
+  /// 上次计时所处的位置；位置一变（含手动翻页）就从 0 重新计时。
+  int _autoTurnChapter = -1;
+  int _autoTurnPage = -1;
 
   ReaderConfig get _config => widget.config ?? ReaderConfig.instance;
 
@@ -180,6 +193,7 @@ class _BookReaderState extends State<BookReader>
     widget.commentsRefresh?.addListener(_reloadComments);
     widget.lockRefresh?.addListener(_onLockRefresh);
     _menuVisible.addListener(_syncMenuToController);
+    _autoTurnCtrl.addStatusListener(_onAutoTurnStatus);
     _init();
   }
 
@@ -190,6 +204,58 @@ class _BookReaderState extends State<BookReader>
     widget.controller?.setMenuVisible(_menuVisible.value);
     // 菜单显隐时切换系统栏：菜单出现→显示状态栏/导航栏，收起→回到沉浸。
     _enterImmersive();
+    // 唤起菜单时暂停自动翻页计时，收起后继续。
+    _syncAutoTurn();
+  }
+
+  // —— 自动翻页（分页模式）——
+
+  /// 是否为分页模式（纵向滚动的自动阅读由 VerticalReader 自行处理）。
+  bool get _pagedFlip => _config.flipType != FlipType.scrollVertical;
+
+  /// 依据「自动翻页开关 + 分页模式 + 菜单是否可见」启停本页计时动画。
+  void _syncAutoTurn() {
+    final ReadingController? c = _controller;
+    if (c == null) return;
+    // 自动阅读翻到未解锁付费章：停止自动阅读，不跳过付费内容（分页 / 纵向通用）。
+    if (c.autoTurning && c.currentChapterLocked) {
+      _autoTurnCtrl.stop();
+      _autoTurnCtrl.value = 0;
+      c.setAutoTurning(false); // 通知 → 纵向滚动 ticker 也随之停止
+      return;
+    }
+    final bool run = c.autoTurning && _pagedFlip && !_menuVisible.value;
+    if (run) {
+      _autoTurnCtrl.duration = c.autoTurnInterval;
+      // 位置变化（含手动翻页 / 滑动 / 仿真翻页）→ 从 0 重新计时；
+      // 位置未变（如菜单开合）→ 从当前进度续算，避免无谓重置。
+      final bool posChanged =
+          c.chapterIndex != _autoTurnChapter || c.pageIndex != _autoTurnPage;
+      _autoTurnChapter = c.chapterIndex;
+      _autoTurnPage = c.pageIndex;
+      if (posChanged) {
+        _autoTurnCtrl.forward(from: 0);
+      } else if (!_autoTurnCtrl.isAnimating) {
+        _autoTurnCtrl.forward(from: _autoTurnCtrl.value);
+      }
+    } else {
+      if (_autoTurnCtrl.isAnimating) _autoTurnCtrl.stop();
+      // 彻底关闭（非菜单临时暂停）时把倒计时归零。
+      if (!c.autoTurning) _autoTurnCtrl.value = 0;
+    }
+  }
+
+  /// 本页计时走完：翻到下一页并重置计时；到全书末尾则自动停止。
+  void _onAutoTurnStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed) return;
+    final ReadingController? c = _controller;
+    if (c == null || !c.autoTurning) return;
+    if (c.isAtBookEnd) {
+      c.setAutoTurning(false); // 到全书末尾自动停止
+      return;
+    }
+    // 翻页；通知会经 _syncAutoTurn 检测到位置变化，从 0 重新计时。
+    c.nextPage();
   }
 
   @override
@@ -291,6 +357,8 @@ class _BookReaderState extends State<BookReader>
     }
     widget.onPositionChanged?.call(c.position);
     widget.controller?.notifyPositionChanged();
+    // 自动翻页开关 / 间隔 / 翻页后：据最新状态启停本页计时。
+    _syncAutoTurn();
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), _flushSave);
   }
@@ -325,6 +393,7 @@ class _BookReaderState extends State<BookReader>
     _saveTimer?.cancel();
     _flushSave();
     _restoreSystemUiOnExit();
+    _autoTurnCtrl.dispose();
     _controller?.removeListener(_onControllerChanged);
     _controller?.dispose();
     _menuVisible.dispose();
@@ -497,6 +566,22 @@ class _BookReaderState extends State<BookReader>
                       ),
                     ),
                   ),
+                // 自动翻页（分页模式）竖屏时右侧显示本页倒计时竖线。
+                if (c.autoTurning &&
+                    _pagedFlip &&
+                    MediaQuery.orientationOf(context) == Orientation.portrait)
+                  Positioned.fill(
+                    child: AutoTurnProgressBar(progress: _autoTurnCtrl, theme: t),
+                  ),
+                // 自动阅读时底部中央入口（菜单打开时让位隐藏）。
+                if (c.autoTurning)
+                  Positioned.fill(
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: _menuVisible,
+                      builder: (BuildContext context, bool menuOn, _) =>
+                          menuOn ? const SizedBox.shrink() : _autoReadBar(t),
+                    ),
+                  ),
                 ValueListenableBuilder<bool>(
                   valueListenable: _menuVisible,
                   builder: (BuildContext context, bool visible, _) =>
@@ -635,6 +720,148 @@ class _BookReaderState extends State<BookReader>
       onRequestClose: () => _menuVisible.value = false,
       onSettingsPanelChanged: (bool open) =>
           widget.controller?.setMenuPanelExpanded(open),
+      // 设置面板「开启自动翻页」：关菜单并开始自动翻页。
+      onStartAutoTurn: _startAutoTurnFromMenu,
+      // 自动阅读中入口变「停止自动阅读」，点击即停（菜单保持展开）。
+      onStopAutoTurn: () => c.setAutoTurning(false),
+      autoTurning: c.autoTurning,
+    );
+  }
+
+  void _startAutoTurnFromMenu() {
+    _menuVisible.value = false;
+    _controller?.setAutoTurning(true);
+  }
+
+  /// 自动阅读时底部中央的「自动阅读」入口：点击弹出速度 / 退出面板。
+  Widget _autoReadBar(ReaderTheme t) {
+    final ReaderLabels labels = ReaderLabels.of(context);
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _openAutoReadSettings,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+              decoration: BoxDecoration(
+                color: t.panelColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: t.dividerColor),
+                boxShadow: <BoxShadow>[
+                  BoxShadow(
+                    color: Colors.black
+                        .withValues(alpha: t.isDark ? 0.4 : 0.12),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(Icons.tune, size: 17, color: t.accentColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    labels.autoTurn,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: t.textColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 自动阅读设置面板：调阅读快慢 + 退出自动阅读（不含翻页方式切换）。
+  Future<void> _openAutoReadSettings() async {
+    final ReadingController? c = _controller;
+    if (c == null) return;
+    final ReaderTheme t = _config.theme;
+    final ReaderLabels labels = ReaderLabels.of(context);
+    // 速度映射：滑到「慢」= 20s/页，「快」= 2s/页。
+    const double slowSecs = 20;
+    const double fastSecs = 2;
+    double toValue(Duration d) =>
+        ((slowSecs - d.inMilliseconds / 1000) / (slowSecs - fastSecs))
+            .clamp(0.0, 1.0);
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: t.panelColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext ctx) {
+        double value = toValue(c.autoTurnInterval);
+        return SafeArea(
+          top: false,
+          child: StatefulBuilder(
+            builder: (BuildContext ctx, StateSetter setSheet) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+                  child: Row(
+                    children: <Widget>[
+                      Text(labels.speedSlow,
+                          style: TextStyle(
+                              fontSize: 14, color: t.subTextColor)),
+                      Expanded(
+                        child: Slider(
+                          value: value,
+                          activeColor: t.accentColor,
+                          inactiveColor: t.trackColor,
+                          onChanged: (double v) {
+                            setSheet(() => value = v);
+                            final double secs =
+                                slowSecs - v * (slowSecs - fastSecs);
+                            c.setAutoTurnInterval(
+                              Duration(milliseconds: (secs * 1000).round()),
+                            );
+                          },
+                        ),
+                      ),
+                      Text(labels.speedFast,
+                          style: TextStyle(
+                              fontSize: 14, color: t.subTextColor)),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: t.dividerColor),
+                InkWell(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    c.setAutoTurning(false);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: Text(
+                        labels.autoTurnExit,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: t.textColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

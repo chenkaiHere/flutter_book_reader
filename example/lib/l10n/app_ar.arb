@@ -63,5 +63,10 @@
 
   "lockAutoSubscribe": "الاشتراك التلقائي في الفصل التالي",
   "lockWordCount": "{count} كلمة",
-  "lockSubscribeAction": "فتح هذا الفصل: مجانًا"
+  "lockSubscribeAction": "فتح هذا الفصل: مجانًا",
+
+  "autoTurnTitle": "تقليب الصفحات تلقائيًا",
+  "autoTurnStop": "إيقاف التقليب",
+  "autoTurnSpeedTitle": "السرعة",
+  "autoTurnSeconds": "{n} ث"
 }

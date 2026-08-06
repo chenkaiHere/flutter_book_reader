@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../reader_labels.dart';
 import '../widgets/page_frame.dart';
@@ -21,13 +22,61 @@ class VerticalReader extends ReaderModeView {
   State<VerticalReader> createState() => _VerticalReaderState();
 }
 
-class _VerticalReaderState extends ReaderModeViewState<VerticalReader> {
+class _VerticalReaderState extends ReaderModeViewState<VerticalReader>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _listKey = GlobalKey();
   final Map<int, GlobalKey> _sectionKeys = <int, GlobalKey>{};
 
+  /// 自动阅读：按速度平滑向下滚（约「一屏 / autoTurnInterval」）。
+  late final Ticker _autoTicker = createTicker(_onAutoTick);
+  Duration _lastTick = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    controller.addListener(_syncAutoScroll);
+    _syncAutoScroll();
+  }
+
+  /// 依据自动阅读开关启停滚动 ticker。
+  void _syncAutoScroll() {
+    if (controller.autoTurning) {
+      if (!_autoTicker.isActive) {
+        _lastTick = Duration.zero;
+        _autoTicker.start();
+      }
+    } else if (_autoTicker.isActive) {
+      _autoTicker.stop();
+    }
+  }
+
+  void _onAutoTick(Duration elapsed) {
+    if (!_scrollController.hasClients) return;
+    final double dt = (elapsed - _lastTick).inMicroseconds / 1e6;
+    _lastTick = elapsed;
+    if (dt <= 0) return;
+    final ScrollPosition pos = _scrollController.position;
+    final double secs = controller.autoTurnInterval.inMilliseconds / 1000.0;
+    // 速度：约「一屏 / 间隔」像素每秒。
+    final double speed =
+        secs > 0 ? pos.viewportDimension / secs : pos.viewportDimension;
+    final double next = pos.pixels + speed * dt;
+    if (next >= pos.maxScrollExtent) {
+      _scrollController.jumpTo(pos.maxScrollExtent);
+      // 到底且已是最后一章：停止自动阅读；否则 _onScroll 会自动接入下一章继续。
+      if (controller.flowChapters.last >= controller.chapterCount - 1) {
+        controller.setAutoTurning(false);
+      }
+    } else {
+      _scrollController.jumpTo(next);
+    }
+  }
+
   @override
   void dispose() {
+    _autoTicker.dispose();
+    controller.removeListener(_syncAutoScroll);
     _scrollController.dispose();
     super.dispose();
   }

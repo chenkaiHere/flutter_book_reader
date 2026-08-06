@@ -225,4 +225,18 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lockSubscribeAction => 'यह अध्याय अनलॉक करें: निःशुल्क';
+
+  @override
+  String get autoTurnTitle => 'स्वतः पृष्ठ पलटना';
+
+  @override
+  String get autoTurnStop => 'रोकें';
+
+  @override
+  String get autoTurnSpeedTitle => 'गति';
+
+  @override
+  String autoTurnSeconds(int n) {
+    return '$nसे';
+  }
 }

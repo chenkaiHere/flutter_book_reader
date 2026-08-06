@@ -95,6 +95,11 @@ anywhere else — without touching the reader's internals.
   (`chapterLockBuilder`) and paging forward skips to the next chapter. Call
   `lockRefresh` after unlocking to reveal the full chapter; the catalog shows a
   lock icon on locked chapters.
+- **Auto page-turn** — hands-free reading via `controller.startAutoTurn(interval)`
+  / `stopAutoTurn()`. Paged modes flip every N seconds with a countdown line;
+  scroll mode auto-scrolls smoothly. Built-in menu entry + speed/exit panel; it
+  restarts on manual turns and stops at the book end or a locked chapter. Keep
+  the screen awake yourself via `isAutoTurning` (no native dependency).
 - **Theming & typography** — six built-in paper themes, per-theme accent color,
   and runtime controls for font size / line height / brightness.
 - **Localization built in** — `ReaderLabels` ships **12 languages** (en, zh, es,
@@ -106,7 +111,7 @@ anywhere else — without touching the reader's internals.
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.6
+  flutter_book_reader: ^1.5.7
 ```
 
 ```dart

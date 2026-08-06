@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.7
+
+- Auto page-turn: timed flipping (paged) / smooth auto-scroll (vertical) via
+  `startAutoTurn` / `stopAutoTurn`, with built-in speed & exit controls.
+
 ## 1.5.6
 
 - Open at an exact in-chapter position via `startCharOffset` (paired with

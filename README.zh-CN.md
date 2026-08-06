@@ -72,6 +72,10 @@
 - **付费 / 加锁章节** —— 通过 `isChapterLocked` 标记付费章：未解锁章只展示第一页并叠加
   你自定义的解锁块（`chapterLockBuilder`），向后翻页直接跳到下一章；解锁后调用
   `lockRefresh` 即展开整章。目录里付费章右侧显示锁 icon。
+- **自动翻页** —— 通过 `controller.startAutoTurn(间隔)` / `stopAutoTurn()` 解放双手：
+  分页模式每隔 N 秒翻一页并在左侧显示倒计时竖线，纵向模式平滑自动滚动。菜单内置入口 +
+  底部速度/退出面板；手动翻页会重置计时，到全书末尾或遇到付费章自动停止。屏幕常亮由业务方
+  依据 `isAutoTurning` 自行控制（插件不依赖任何原生库）。
 - **主题与排版**：六套内置纸张主题、每套可定制强调色，字号 / 行距 / 亮度可运行时调节。
 - **内置多语言** —— `ReaderLabels` 内置 **12 种语言**（en、zh、es、fr、ar、bn、pt、
   ru、hi、ur、ja、ko），通过 `ReaderLabels.forLanguageCode(code)` 选择（非内置语言
@@ -81,7 +85,7 @@
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.6
+  flutter_book_reader: ^1.5.7
 ```
 
 ```dart

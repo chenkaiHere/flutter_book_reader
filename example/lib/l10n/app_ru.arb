@@ -63,5 +63,10 @@
 
   "lockAutoSubscribe": "Автоподписка на следующую главу",
   "lockWordCount": "{count} слов",
-  "lockSubscribeAction": "Разблокировать главу: бесплатно"
+  "lockSubscribeAction": "Разблокировать главу: бесплатно",
+
+  "autoTurnTitle": "Автолистание",
+  "autoTurnStop": "Остановить",
+  "autoTurnSpeedTitle": "Скорость",
+  "autoTurnSeconds": "{n} с"
 }

@@ -48,9 +48,39 @@ class ReadingController extends ReaderControllerBase
   ReadingPosition get position =>
       ReadingPosition(chapterIndex: chapterIndex, charOffset: charOffset);
 
+  /// 是否已到全书最后一页（无下一章且停在本章末页 / 空章）。
+  bool get isAtBookEnd =>
+      !hasNext && (pages.isEmpty || pageIndex >= pages.length - 1);
+
   /// 付费章解锁状态变化后触发重建：重新执行锁定判定、展开已解锁章节。
   /// 分页结果不受锁定影响，无需清缓存，仅通知视图重建。
   void refreshLocks() => notifyListeners();
+
+  // —— 自动翻页 ——
+
+  bool _autoTurning = false;
+  Duration _autoTurnInterval = const Duration(seconds: 5);
+
+  /// 是否处于自动翻页态（分页模式定时翻页、纵向模式平滑自动滚动）。
+  bool get autoTurning => _autoTurning;
+
+  /// 自动翻页间隔（分页模式：每页停留时长；纵向模式：滚过约一屏的时长）。
+  Duration get autoTurnInterval => _autoTurnInterval;
+
+  void setAutoTurning(bool active) {
+    if (_autoTurning == active) return;
+    _autoTurning = active;
+    notifyListeners();
+  }
+
+  void setAutoTurnInterval(Duration interval) {
+    // 下限 1s，避免过快导致连续翻页 / 滚动失控。
+    final Duration d =
+        interval < const Duration(seconds: 1) ? const Duration(seconds: 1) : interval;
+    if (d == _autoTurnInterval) return;
+    _autoTurnInterval = d;
+    notifyListeners();
+  }
 
   void _onConfigChanged() {
     clearPageCache();

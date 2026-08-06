@@ -63,5 +63,10 @@
 
   "lockAutoSubscribe": "次の章を自動購読",
   "lockWordCount": "{count}文字",
-  "lockSubscribeAction": "この章を解除：無料"
+  "lockSubscribeAction": "この章を解除：無料",
+
+  "autoTurnTitle": "自動ページめくり",
+  "autoTurnStop": "自動めくりを停止",
+  "autoTurnSpeedTitle": "めくり速度",
+  "autoTurnSeconds": "{n}秒"
 }
