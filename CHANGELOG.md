@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.8
+
+- Locked chapters in scroll mode now show a content preview before the unlock
+  block; `ReaderLockInfo` gains `isScrollMode`.
+
 ## 1.5.7
 
 - Auto page-turn: timed flipping (paged) / smooth auto-scroll (vertical) via

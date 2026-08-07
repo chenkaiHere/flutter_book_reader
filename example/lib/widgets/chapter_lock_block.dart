@@ -24,8 +24,10 @@ class ChapterLockBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color sub = theme.subTextColor;
     final AppLocalizations l = AppLocalizations.of(context);
-    // 顶部留白取屏幕高度的一半：渐隐区随屏幕高度自适应，而非写死像素。
-    final double topGap = MediaQuery.sizeOf(context).height / 2;
+    // 分页模式：顶部留半屏，把按钮顶到页面底部并留出渐隐区；
+    // 上下滚动模式：解锁块直接跟在预览正文后面，无需大留白。
+    final double topGap =
+        info.isScrollMode ? 8 : MediaQuery.sizeOf(context).height / 2;
     return Padding(
       padding: EdgeInsets.fromLTRB(20, topGap, 20, 22),
       child: Column(

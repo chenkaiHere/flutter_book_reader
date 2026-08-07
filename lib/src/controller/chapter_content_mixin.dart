@@ -1,5 +1,6 @@
 import '../chapter_lock.dart';
 import '../paginator.dart';
+import '../reader_config.dart';
 import 'reader_controller_base.dart';
 
 /// 章节正文的按需加载、缓存与错误处理能力。
@@ -23,6 +24,7 @@ mixin ChapterContentMixin on ReaderControllerBase {
         chapterIndex: index,
         chapterTitle: chapterTitleAt(index),
         wordCount: bodyOf(index)?.length ?? 0,
+        isScrollMode: config.flipType == FlipType.scrollVertical,
       );
 
   bool isLoaded(int index) => _bodies.containsKey(index);

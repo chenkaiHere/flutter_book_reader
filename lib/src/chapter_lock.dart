@@ -26,6 +26,7 @@ class ReaderLockInfo {
     required this.chapterIndex,
     required this.chapterTitle,
     required this.wordCount,
+    this.isScrollMode = false,
   });
 
   /// 章节下标（从 0 起）。
@@ -36,4 +37,10 @@ class ReaderLockInfo {
 
   /// 本章正文字符数（业务方可据此显示“字数”）。
   final int wordCount;
+
+  /// 当前是否为「上下滚动」连续模式（分页模式为 false）。
+  ///
+  /// 连续模式没有整页概念，解锁块直接跟在预览正文后面；业务方可据此调整留白 ——
+  /// 分页模式常把按钮顶到页面底部（大留白），连续模式则应紧凑显示。
+  final bool isScrollMode;
 }

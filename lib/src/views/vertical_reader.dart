@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../paginator.dart';
 import '../reader_labels.dart';
 import '../widgets/page_frame.dart';
 import 'reader_mode_view.dart';
@@ -230,14 +231,42 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader>
     );
   }
 
+  /// 付费章预览取多少字（连续滚动无分页，用定长预览近似「第一页」）。
+  static const int _lockPreviewChars = 500;
+
+  /// 取章节开头约 [_lockPreviewChars] 字作为付费章预览内容。
+  ReaderPage _lockedPreview(ReaderPage page) {
+    final List<ReaderBlock> out = <ReaderBlock>[];
+    int chars = 0;
+    for (final ReaderBlock b in page) {
+      out.add(b);
+      chars += b.length;
+      if (chars >= _lockPreviewChars) break;
+    }
+    return out;
+  }
+
   Widget _sectionBody(
       BuildContext context, int idx, String? body, ReaderLabels labels) {
-    // 未解锁付费章：只显示解锁块，不渲染正文（连续滚动无“页”概念，避免付费正文漏出）。
+    // 未解锁付费章：显示开头一段预览 + 解锁块（连续滚动无“页”，取定长预览作“部分内容”）。
     if (controller.chapterLocked(idx) && controller.chapterLockBuilder != null) {
-      return controller.chapterLockBuilder!(
+      final Widget lockBlock = controller.chapterLockBuilder!(
         context,
         theme,
         controller.lockInfoFor(idx),
+      );
+      if (body == null) return lockBlock; // 正文未加载：仅显示解锁块
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          ReaderProse(
+            page: _lockedPreview(controller.chapterBlocks(body)),
+            config: config,
+            chapterIndex: idx,
+            chapterTitle: controller.chapterTitleAt(idx),
+          ),
+          lockBlock,
+        ],
       );
     }
     if (body != null) {
