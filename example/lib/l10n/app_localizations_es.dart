@@ -241,4 +241,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '${n}s';
   }
+
+  @override
+  String get settingsSheetTitle => 'Ajustes';
+
+  @override
+  String get settingsChapterLock => 'Desbloqueo de capítulos';
+
+  @override
+  String get settingsChapterLockHint =>
+      'Demo de capítulos de pago: los primeros son gratis, el resto requiere desbloqueo.';
 }

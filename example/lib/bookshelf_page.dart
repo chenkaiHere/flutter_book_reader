@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'data/db/app_database.dart';
 import 'data/db/book_db.dart';
 import 'data/battery_feed.dart';
+import 'data/demo_settings.dart';
 import 'data/db/db_book_source.dart';
 import 'data/shared_prefs_bookmark_store.dart';
 import 'data/shared_prefs_comment_store.dart';
@@ -27,6 +28,7 @@ import 'widgets/comment_input_sheet.dart';
 import 'widgets/listen_overlay.dart';
 import 'widgets/paragraph_comments_sheet.dart';
 import 'widgets/reader_title_page.dart';
+import 'widgets/settings_sheet.dart';
 import 'widgets/share_card_sheet.dart';
 import 'widgets/language_sheet.dart';
 import 'widgets/warm_widgets.dart';
@@ -246,6 +248,9 @@ class _BookshelfPageState extends State<BookshelfPage> {
     _unlockedChapters[book.id] = unlocked;
     if (!mounted) return;
     final ValueNotifier<int> lockRefresh = ValueNotifier<int>(0);
+    // 「章节解锁」演示开关（设置里可关，默认关闭）：关闭时完全不传付费章参数，
+    // 阅读页与目录都不会出现锁的样式。
+    final bool lockDemo = DemoSettings.chapterLockEnabled.value;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => ListenOverlay(
@@ -286,24 +291,28 @@ class _BookshelfPageState extends State<BookshelfPage> {
               onSegmentCommentTap: (ReaderSegmentTap seg) =>
                   _onSegmentTap(book, labels, seg),
               // 付费章：前 _freeChapters 章免费，其余未解锁则只显示首页 + 订阅块。
-              isChapterLocked: (int chapter) =>
-                  chapter >= _freeChapters && !unlocked.contains(chapter),
-              lockRefresh: lockRefresh,
-              chapterLockBuilder:
-                  (
-                    BuildContext context,
-                    ReaderTheme theme,
-                    ReaderLockInfo info,
-                  ) => ChapterLockBlock(
-                    theme: theme,
-                    info: info,
-                    // 演示：直接标记解锁、持久化并触发刷新；真实业务在此走下单/服务端校验。
-                    onUnlock: () {
-                      unlocked.add(info.chapterIndex);
-                      _saveUnlockedChapters(book.id, unlocked);
-                      lockRefresh.value++;
-                    },
-                  ),
+              // 演示开关关闭时传 null —— 阅读页与目录都不会出现任何锁的样式。
+              isChapterLocked: lockDemo
+                  ? (int chapter) =>
+                      chapter >= _freeChapters && !unlocked.contains(chapter)
+                  : null,
+              lockRefresh: lockDemo ? lockRefresh : null,
+              chapterLockBuilder: lockDemo
+                  ? (
+                      BuildContext context,
+                      ReaderTheme theme,
+                      ReaderLockInfo info,
+                    ) => ChapterLockBlock(
+                      theme: theme,
+                      info: info,
+                      // 演示：直接标记解锁、持久化并触发刷新；真实业务走下单/服务端校验。
+                      onUnlock: () {
+                        unlocked.add(info.chapterIndex);
+                        _saveUnlockedChapters(book.id, unlocked);
+                        lockRefresh.value++;
+                      },
+                    )
+                  : null,
             ),
           ),
         ),
@@ -703,6 +712,11 @@ class _BookshelfPageState extends State<BookshelfPage> {
         _iconBox(
           icon: Icons.language,
           onTap: () => LanguageSheet.show(context),
+        ),
+        const SizedBox(width: 10),
+        _iconBox(
+          icon: Icons.settings_outlined,
+          onTap: () => SettingsSheet.show(context),
         ),
         const SizedBox(width: 10),
         _importButton(),

@@ -68,5 +68,9 @@
   "autoTurnTitle": "تقليب الصفحات تلقائيًا",
   "autoTurnStop": "إيقاف التقليب",
   "autoTurnSpeedTitle": "السرعة",
-  "autoTurnSeconds": "{n} ث"
+  "autoTurnSeconds": "{n} ث",
+
+  "settingsSheetTitle": "الإعدادات",
+  "settingsChapterLock": "فتح الفصول",
+  "settingsChapterLockHint": "عرض توضيحي للفصول المدفوعة: الفصول الأولى مجانية والبقية تحتاج فتحًا."
 }

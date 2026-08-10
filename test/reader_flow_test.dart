@@ -716,6 +716,43 @@ void main() {
     expect(controller.pageIndex, 1, reason: '停止后不应继续自动翻页');
   });
 
+  testWidgets('自动翻页：底部入口用本地化文案，翻过一页后收起为文字、点击可展开',
+      (WidgetTester tester) async {
+    final BookReaderController controller = BookReaderController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: BookReader(
+        source: FakeBookSource(),
+        labels: ReaderLabels.chinese,
+        controller: controller,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    controller.startAutoTurn(const Duration(seconds: 2));
+    await tester.pump();
+    // 文案必须是中文（此前用 ReaderLabels.of(state.context) 会回退英文）。
+    expect(find.text('自动翻页'), findsOneWidget);
+    expect(find.text('Auto page-turn'), findsNothing);
+    // 刚开启：按钮态（带 tune 图标）。
+    expect(find.byIcon(Icons.tune), findsOneWidget);
+
+    // 自动翻过一页后收起为纯文字态。
+    await tester.pump(const Duration(milliseconds: 2100));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(controller.pageIndex, 1);
+    expect(find.text('自动翻页'), findsOneWidget);
+    expect(find.byIcon(Icons.tune), findsNothing, reason: '翻页后应收起为文字态');
+
+    // 点文字展开回按钮态。
+    await tester.tap(find.text('自动翻页'));
+    await tester.pump();
+    expect(find.byIcon(Icons.tune), findsOneWidget, reason: '点击文字应展开回按钮');
+
+    controller.stopAutoTurn();
+    await tester.pump();
+  });
+
   testWidgets('自动翻页：翻到未解锁付费章自动停止，不跳过', (WidgetTester tester) async {
     final BookReaderController controller = BookReaderController();
     addTearDown(controller.dispose);

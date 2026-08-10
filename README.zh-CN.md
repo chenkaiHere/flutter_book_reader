@@ -85,7 +85,7 @@
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.8
+  flutter_book_reader: ^1.5.9
 ```
 
 ```dart

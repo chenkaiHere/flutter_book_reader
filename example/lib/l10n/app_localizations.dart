@@ -519,6 +519,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{n}s'**
   String autoTurnSeconds(int n);
+
+  /// No description provided for @settingsSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsSheetTitle;
+
+  /// No description provided for @settingsChapterLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter unlocking'**
+  String get settingsChapterLock;
+
+  /// No description provided for @settingsChapterLockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo paid chapters: the first few are free, the rest need unlocking.'**
+  String get settingsChapterLockHint;
 }
 
 class _AppLocalizationsDelegate

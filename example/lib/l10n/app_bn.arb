@@ -68,5 +68,9 @@
   "autoTurnTitle": "স্বয়ংক্রিয় পৃষ্ঠা পরিবর্তন",
   "autoTurnStop": "বন্ধ করুন",
   "autoTurnSpeedTitle": "গতি",
-  "autoTurnSeconds": "{n}সে"
+  "autoTurnSeconds": "{n}সে",
+
+  "settingsSheetTitle": "সেটিংস",
+  "settingsChapterLock": "অধ্যায় আনলক",
+  "settingsChapterLockHint": "পেইড অধ্যায় ডেমো: প্রথম কয়েকটি ফ্রি, বাকিগুলো আনলক করতে হবে।"
 }

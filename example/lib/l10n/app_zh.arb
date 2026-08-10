@@ -75,5 +75,9 @@
   "autoTurnTitle": "自动翻页",
   "autoTurnStop": "停止自动翻页",
   "autoTurnSpeedTitle": "翻页速度",
-  "autoTurnSeconds": "{n} 秒"
+  "autoTurnSeconds": "{n} 秒",
+
+  "settingsSheetTitle": "设置",
+  "settingsChapterLock": "章节解锁",
+  "settingsChapterLockHint": "演示付费章：前几章免费，其余需解锁后阅读。"
 }

@@ -20,14 +20,13 @@ import 'text_actions.dart';
 import 'title_page.dart';
 import 'underline/reader_underline_store.dart';
 import 'views/horizontal_reader.dart';
+import 'views/reader_page_builder.dart';
 import 'views/simulation_reader.dart';
 import 'views/vertical_reader.dart';
 import 'widgets/auto_turn_bar.dart';
 import 'widgets/battery_indicator.dart';
 import 'widgets/catalog_sheet.dart';
 import 'widgets/loading_page.dart';
-import 'widgets/locked_page.dart';
-import 'widgets/page_frame.dart';
 import 'widgets/reader_menu.dart';
 
 part 'book_reader/immersive_system_ui.dart';
@@ -181,6 +180,10 @@ class _BookReaderState extends State<BookReader>
   int _autoTurnChapter = -1;
   int _autoTurnPage = -1;
 
+  /// 底部自动阅读入口是否已收起为「纯文字」态。
+  /// 刚开启自动阅读时为按钮态；自动翻过一页后收起成文字，点文字再展开回按钮。
+  bool _autoBarCollapsed = false;
+
   ReaderConfig get _config => widget.config ?? ReaderConfig.instance;
 
   @override
@@ -224,6 +227,8 @@ class _BookReaderState extends State<BookReader>
       c.setAutoTurning(false); // 通知 → 纵向滚动 ticker 也随之停止
       return;
     }
+    // 停止自动阅读后复位入口形态，下次开启仍从按钮态开始。
+    if (!c.autoTurning) _autoBarCollapsed = false;
     final bool run = c.autoTurning && _pagedFlip && !_menuVisible.value;
     if (run) {
       _autoTurnCtrl.duration = c.autoTurnInterval;
@@ -254,6 +259,8 @@ class _BookReaderState extends State<BookReader>
       c.setAutoTurning(false); // 到全书末尾自动停止
       return;
     }
+    // 自动翻过一页后把底部入口收起为文字态（少占地方，不挡正文）。
+    _autoBarCollapsed = true;
     // 翻页；通知会经 _syncAutoTurn 检测到位置变化，从 0 重新计时。
     c.nextPage();
   }
@@ -574,8 +581,13 @@ class _BookReaderState extends State<BookReader>
                     child: AutoTurnProgressBar(progress: _autoTurnCtrl, theme: t),
                   ),
                 // 自动阅读时底部中央入口（菜单打开时让位隐藏）。
+                // bottom 取「页脚带中心线」的高度，使其与页码 / 进度 / 电量同处一行水平。
                 if (c.autoTurning)
-                  Positioned.fill(
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom:
+                        kReaderPagePadding.bottom + kReaderFooterHeight / 2,
                     child: ValueListenableBuilder<bool>(
                       valueListenable: _menuVisible,
                       builder: (BuildContext context, bool menuOn, _) =>
@@ -674,31 +686,14 @@ class _BookReaderState extends State<BookReader>
         onRetry: () => c.retry(idx),
       );
     }
-    final int i = c.pageIndex;
-    final Widget content = ReaderPageContent(
-      theme: t,
-      config: _config,
-      bookTitle: c.manifest.title,
-      chapterTitle: c.currentChapterTitle,
-      page: (i >= 0 && i < c.pages.length) ? c.pages[i] : const <ReaderBlock>[],
-      isChapterHead: i == 0,
+    // 与横向 / 仿真视图共用同一套页面构造（含付费章解锁块），见 buildReaderPage。
+    return buildReaderPage(
+      context: context,
+      controller: c,
       chapterIndex: c.chapterIndex,
-      chapterCount: c.chapterCount,
-      pageIndex: i,
-      pageCount: c.pages.length,
-      progress: c.globalProgress,
-      pageStartOffset: c.startOffsetOfPage(i),
-      leadingParagraphStart: c.leadingParagraphStartIn(c.pages, i),
+      pages: c.pages,
+      pageIndex: c.pageIndex,
     );
-    // 付费章首页叠加解锁块（无动画模式只显示当前页，锁定时页码恒为 0）。
-    if (i == 0 && c.currentChapterLocked && c.chapterLockBuilder != null) {
-      return ReaderLockedPage(
-        theme: t,
-        lockBlock: c.chapterLockBuilder!(context, t, c.lockInfoFor(c.chapterIndex)),
-        child: content,
-      );
-    }
-    return content;
   }
 
   Widget _buildMenu(ReadingController c, bool visible) {
@@ -730,54 +725,81 @@ class _BookReaderState extends State<BookReader>
 
   void _startAutoTurnFromMenu() {
     _menuVisible.value = false;
+    _autoBarCollapsed = false; // 开启时先给出完整按钮，翻过一页后自动收起
     _controller?.setAutoTurning(true);
   }
 
-  /// 自动阅读时底部中央的「自动阅读」入口：点击弹出速度 / 退出面板。
+  /// 自动阅读时底部中央的入口。两种形态：
+  /// - 按钮态（刚开启）：药丸按钮，点击弹出速度 / 退出面板；
+  /// - 文字态（自动翻过一页后）：一行浅色小字，点击展开回按钮态。
+  ///
+  /// 文案取 [BookReader.labels]（而非 `ReaderLabels.of(context)`）——本方法用的是
+  /// BookReader 自身的 context，而 ReaderLabelsScope 建在其子树里，向上查找取不到。
   Widget _autoReadBar(ReaderTheme t) {
-    final ReaderLabels labels = ReaderLabels.of(context);
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _openAutoReadSettings,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-              decoration: BoxDecoration(
-                color: t.panelColor,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: t.dividerColor),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: Colors.black
-                        .withValues(alpha: t.isDark ? 0.4 : 0.12),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(Icons.tune, size: 17, color: t.accentColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    labels.autoTurn,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: t.textColor,
-                    ),
-                  ),
-                ],
+    final String label = widget.labels.autoTurn;
+    // 外层 Positioned 把「页脚带中心线」交给这里，再下移自身一半高度，
+    // 使入口的垂直中心正好落在该线上——与页码 / 进度 / 电量视觉同一行。
+    return FractionalTranslation(
+      translation: const Offset(0, 0.5),
+      child: Center(
+        child: _autoBarCollapsed
+            ? _autoReadText(t, label)
+            : _autoReadPill(t, label),
+      ),
+    );
+  }
+
+  /// 文字态：仅一行小字，点击展开回按钮态。
+  Widget _autoReadText(ReaderTheme t, String label) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _autoBarCollapsed = false),
+      child: Padding(
+        // 纵向留白压到与页脚带等高，避免比同排的页码 / 电量高出一截。
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 12, height: 1.0, color: t.subTextColor),
+        ),
+      ),
+    );
+  }
+
+  /// 按钮态：药丸按钮，点击弹出速度 / 退出面板。
+  Widget _autoReadPill(ReaderTheme t, String label) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _openAutoReadSettings,
+      child: Container(
+        // 按钮态给足点击面积（约为文字态的两倍高），仍以页脚中心线为垂直基准居中。
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+        decoration: BoxDecoration(
+          color: t.panelColor,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: t.dividerColor),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Colors.black.withValues(alpha: t.isDark ? 0.35 : 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.tune, size: 18, color: t.accentColor),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.0,
+                fontWeight: FontWeight.w600,
+                color: t.textColor,
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -788,7 +810,7 @@ class _BookReaderState extends State<BookReader>
     final ReadingController? c = _controller;
     if (c == null) return;
     final ReaderTheme t = _config.theme;
-    final ReaderLabels labels = ReaderLabels.of(context);
+    final ReaderLabels labels = widget.labels; // 同上：不能用 of(context)
     // 速度映射：滑到「慢」= 20s/页，「快」= 2s/页。
     const double slowSecs = 20;
     const double fastSecs = 2;

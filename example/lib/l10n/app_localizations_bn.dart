@@ -241,4 +241,14 @@ class AppLocalizationsBn extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '$nসে';
   }
+
+  @override
+  String get settingsSheetTitle => 'সেটিংস';
+
+  @override
+  String get settingsChapterLock => 'অধ্যায় আনলক';
+
+  @override
+  String get settingsChapterLockHint =>
+      'পেইড অধ্যায় ডেমো: প্রথম কয়েকটি ফ্রি, বাকিগুলো আনলক করতে হবে।';
 }

@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 
 import '../paginator.dart';
 import '../widgets/loading_page.dart';
-import '../widgets/locked_page.dart';
-import '../widgets/page_frame.dart';
 import 'reader_mode_view.dart';
 
 /// 仿真翻页：真实书页折角，跟随手指。
@@ -282,49 +280,9 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
     return _pageWidget(chapterIdx, pages, pageIdx);
   }
 
-  Widget _pageWidget(int chapterIdx, List<ReaderPage> pages, int pageIdx) {
-    final ReaderPage content = (pageIdx >= 0 && pageIdx < pages.length)
-        ? pages[pageIdx]
-        : const <ReaderBlock>[];
-    final Widget page = ReaderPageContent(
-      theme: theme,
-      config: config,
-      bookTitle: controller.manifest.title,
-      chapterTitle: controller.chapterTitleAt(chapterIdx),
-      page: content,
-      isChapterHead: pageIdx == 0,
-      chapterIndex: chapterIdx,
-      chapterCount: controller.chapterCount,
-      pageIndex: pageIdx,
-      pageCount: pages.length,
-      progress: controller.progressFor(chapterIdx, pages, pageIdx),
-      pageStartOffset: controller.startOffsetOfPageIn(pages, pageIdx),
-      leadingParagraphStart:
-          controller.leadingParagraphStartIn(pages, pageIdx),
-    );
-    return ColoredBox(
-      color: theme.paperColor,
-      child: _maybeLock(chapterIdx, pageIdx, page),
-    );
-  }
-
-  /// 付费章首页（pageIdx==0）叠加解锁块；其余原样返回。
-  Widget _maybeLock(int chapterIdx, int pageIdx, Widget content) {
-    if (pageIdx != 0 ||
-        !controller.chapterLocked(chapterIdx) ||
-        controller.chapterLockBuilder == null) {
-      return content;
-    }
-    return ReaderLockedPage(
-      theme: theme,
-      lockBlock: controller.chapterLockBuilder!(
-        context,
-        theme,
-        controller.lockInfoFor(chapterIdx),
-      ),
-      child: content,
-    );
-  }
+  // 仿真翻页需要不透明纸张底色：否则折起的纸页会透出下层内容。
+  Widget _pageWidget(int chapterIdx, List<ReaderPage> pages, int pageIdx) =>
+      buildPage(context, chapterIdx, pages, pageIdx, paperBackground: true);
 }
 
 // ————————————————————— 几何 —————————————————————

@@ -68,5 +68,9 @@
   "autoTurnTitle": "Tourne-page automatique",
   "autoTurnStop": "Arrêter",
   "autoTurnSpeedTitle": "Vitesse",
-  "autoTurnSeconds": "{n}s"
+  "autoTurnSeconds": "{n}s",
+
+  "settingsSheetTitle": "Paramètres",
+  "settingsChapterLock": "Déverrouillage des chapitres",
+  "settingsChapterLockHint": "Démo des chapitres payants : les premiers sont gratuits, les autres doivent être déverrouillés."
 }

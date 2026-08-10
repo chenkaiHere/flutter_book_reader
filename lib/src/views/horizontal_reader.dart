@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../paginator.dart';
 import '../reader_config.dart';
 import '../widgets/loading_page.dart';
-import '../widgets/locked_page.dart';
-import '../widgets/page_frame.dart';
 import 'reader_mode_view.dart';
 
 /// 横向分页翻页视图（平滑 / 覆盖 / 仿真共用同一个 PageView，仅视觉变换不同）。
@@ -217,44 +215,6 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
     return _frame(chapterIdx, pages, pageIdx);
   }
 
-  Widget _frame(int chapterIdx, List<ReaderPage> pages, int pageIdx) {
-    final ReaderPage pageContent = (pageIdx >= 0 && pageIdx < pages.length)
-        ? pages[pageIdx]
-        : const <ReaderBlock>[];
-    final Widget content = ReaderPageContent(
-      theme: theme,
-      config: config,
-      bookTitle: controller.manifest.title,
-      chapterTitle: controller.chapterTitleAt(chapterIdx),
-      page: pageContent,
-      isChapterHead: pageIdx == 0,
-      chapterIndex: chapterIdx,
-      chapterCount: controller.chapterCount,
-      pageIndex: pageIdx,
-      pageCount: pages.length,
-      progress: controller.progressFor(chapterIdx, pages, pageIdx),
-      pageStartOffset: controller.startOffsetOfPageIn(pages, pageIdx),
-      leadingParagraphStart:
-          controller.leadingParagraphStartIn(pages, pageIdx),
-    );
-    return _maybeLock(chapterIdx, pageIdx, content);
-  }
-
-  /// 付费章首页（pageIdx==0）叠加解锁块；其余原样返回。
-  Widget _maybeLock(int chapterIdx, int pageIdx, Widget content) {
-    if (pageIdx != 0 ||
-        !controller.chapterLocked(chapterIdx) ||
-        controller.chapterLockBuilder == null) {
-      return content;
-    }
-    return ReaderLockedPage(
-      theme: theme,
-      lockBlock: controller.chapterLockBuilder!(
-        context,
-        theme,
-        controller.lockInfoFor(chapterIdx),
-      ),
-      child: content,
-    );
-  }
+  Widget _frame(int chapterIdx, List<ReaderPage> pages, int pageIdx) =>
+      buildPage(context, chapterIdx, pages, pageIdx);
 }

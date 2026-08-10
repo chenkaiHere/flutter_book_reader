@@ -68,5 +68,9 @@
   "autoTurnTitle": "स्वतः पृष्ठ पलटना",
   "autoTurnStop": "रोकें",
   "autoTurnSpeedTitle": "गति",
-  "autoTurnSeconds": "{n}से"
+  "autoTurnSeconds": "{n}से",
+
+  "settingsSheetTitle": "सेटिंग्ज़",
+  "settingsChapterLock": "अध्याय अनलॉक",
+  "settingsChapterLockHint": "सशुल्क अध्याय डेमो: शुरुआती अध्याय निःशुल्क, बाकी अनलॉक करने होंगे।"
 }

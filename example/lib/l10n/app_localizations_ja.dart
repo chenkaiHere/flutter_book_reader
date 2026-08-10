@@ -234,4 +234,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '$n秒';
   }
+
+  @override
+  String get settingsSheetTitle => '設定';
+
+  @override
+  String get settingsChapterLock => '章のロック解除';
+
+  @override
+  String get settingsChapterLockHint => '有料章のデモ：最初の数章は無料、以降は解除が必要です。';
 }

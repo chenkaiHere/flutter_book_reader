@@ -68,5 +68,9 @@
   "autoTurnTitle": "自動ページめくり",
   "autoTurnStop": "自動めくりを停止",
   "autoTurnSpeedTitle": "めくり速度",
-  "autoTurnSeconds": "{n}秒"
+  "autoTurnSeconds": "{n}秒",
+
+  "settingsSheetTitle": "設定",
+  "settingsChapterLock": "章のロック解除",
+  "settingsChapterLockHint": "有料章のデモ：最初の数章は無料、以降は解除が必要です。"
 }

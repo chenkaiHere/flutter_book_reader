@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.9
+
+- Complete built-in labels for all 12 languages.
+- Fix: localized and better-aligned auto page-turn entry.
+
 ## 1.5.8
 
 - Locked chapters in scroll mode now show a content preview before the unlock

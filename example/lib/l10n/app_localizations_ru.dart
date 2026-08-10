@@ -240,4 +240,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '$n с';
   }
+
+  @override
+  String get settingsSheetTitle => 'Настройки';
+
+  @override
+  String get settingsChapterLock => 'Разблокировка глав';
+
+  @override
+  String get settingsChapterLockHint =>
+      'Демо платных глав: первые бесплатны, остальные нужно разблокировать.';
 }

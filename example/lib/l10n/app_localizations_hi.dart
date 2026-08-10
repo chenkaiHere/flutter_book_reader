@@ -239,4 +239,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '$nसे';
   }
+
+  @override
+  String get settingsSheetTitle => 'सेटिंग्ज़';
+
+  @override
+  String get settingsChapterLock => 'अध्याय अनलॉक';
+
+  @override
+  String get settingsChapterLockHint =>
+      'सशुल्क अध्याय डेमो: शुरुआती अध्याय निःशुल्क, बाकी अनलॉक करने होंगे।';
 }

@@ -68,5 +68,9 @@
   "autoTurnTitle": "خودکار صفحہ پلٹنا",
   "autoTurnStop": "روکیں",
   "autoTurnSpeedTitle": "رفتار",
-  "autoTurnSeconds": "{n} سیکنڈ"
+  "autoTurnSeconds": "{n} سیکنڈ",
+
+  "settingsSheetTitle": "ترتیبات",
+  "settingsChapterLock": "باب کھولنا",
+  "settingsChapterLockHint": "معاوضہ ابواب کا ڈیمو: ابتدائی ابواب مفت، باقی کھولنے ہوں گے۔"
 }

@@ -68,5 +68,9 @@
   "autoTurnTitle": "Автолистание",
   "autoTurnStop": "Остановить",
   "autoTurnSpeedTitle": "Скорость",
-  "autoTurnSeconds": "{n} с"
+  "autoTurnSeconds": "{n} с",
+
+  "settingsSheetTitle": "Настройки",
+  "settingsChapterLock": "Разблокировка глав",
+  "settingsChapterLockHint": "Демо платных глав: первые бесплатны, остальные нужно разблокировать."
 }

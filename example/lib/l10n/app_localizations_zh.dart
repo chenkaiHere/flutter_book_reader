@@ -232,4 +232,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '$n 秒';
   }
+
+  @override
+  String get settingsSheetTitle => '设置';
+
+  @override
+  String get settingsChapterLock => '章节解锁';
+
+  @override
+  String get settingsChapterLockHint => '演示付费章：前几章免费，其余需解锁后阅读。';
 }

@@ -235,4 +235,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '$n초';
   }
+
+  @override
+  String get settingsSheetTitle => '설정';
+
+  @override
+  String get settingsChapterLock => '챕터 잠금 해제';
+
+  @override
+  String get settingsChapterLockHint => '유료 챕터 데모: 앞부분은 무료, 이후는 해제가 필요합니다.';
 }

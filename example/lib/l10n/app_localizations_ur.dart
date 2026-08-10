@@ -239,4 +239,14 @@ class AppLocalizationsUr extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '$n سیکنڈ';
   }
+
+  @override
+  String get settingsSheetTitle => 'ترتیبات';
+
+  @override
+  String get settingsChapterLock => 'باب کھولنا';
+
+  @override
+  String get settingsChapterLockHint =>
+      'معاوضہ ابواب کا ڈیمو: ابتدائی ابواب مفت، باقی کھولنے ہوں گے۔';
 }

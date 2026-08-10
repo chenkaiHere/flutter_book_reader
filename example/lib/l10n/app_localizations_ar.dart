@@ -236,4 +236,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '$n ث';
   }
+
+  @override
+  String get settingsSheetTitle => 'الإعدادات';
+
+  @override
+  String get settingsChapterLock => 'فتح الفصول';
+
+  @override
+  String get settingsChapterLockHint =>
+      'عرض توضيحي للفصول المدفوعة: الفصول الأولى مجانية والبقية تحتاج فتحًا.';
 }

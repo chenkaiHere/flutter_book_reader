@@ -102,5 +102,9 @@
   "autoTurnStop": "Stop auto-turn",
   "autoTurnSpeedTitle": "Auto-turn speed",
   "autoTurnSeconds": "{n}s",
-  "@autoTurnSeconds": { "placeholders": { "n": { "type": "int" } } }
+  "@autoTurnSeconds": { "placeholders": { "n": { "type": "int" } } },
+
+  "settingsSheetTitle": "Settings",
+  "settingsChapterLock": "Chapter unlocking",
+  "settingsChapterLockHint": "Demo paid chapters: the first few are free, the rest need unlocking."
 }

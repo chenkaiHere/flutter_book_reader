@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'bookshelf_page.dart';
+import 'data/demo_settings.dart';
 import 'l10n/app_locales.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/warm_theme.dart';
@@ -15,6 +16,7 @@ Future<void> main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(kAppSystemUi);
   await LocaleController.load(); // 读取上次选择的语言
+  await DemoSettings.load(); // 读取演示开关（章节解锁默认关闭）
   runApp(const ReadBookApp());
 }
 

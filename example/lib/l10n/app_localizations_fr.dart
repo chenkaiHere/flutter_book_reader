@@ -241,4 +241,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String autoTurnSeconds(int n) {
     return '${n}s';
   }
+
+  @override
+  String get settingsSheetTitle => 'Paramètres';
+
+  @override
+  String get settingsChapterLock => 'Déverrouillage des chapitres';
+
+  @override
+  String get settingsChapterLockHint =>
+      'Démo des chapitres payants : les premiers sont gratuits, les autres doivent être déverrouillés.';
 }

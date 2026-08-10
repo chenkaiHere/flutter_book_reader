@@ -68,5 +68,9 @@
   "autoTurnTitle": "자동 페이지 넘김",
   "autoTurnStop": "자동 넘김 중지",
   "autoTurnSpeedTitle": "넘김 속도",
-  "autoTurnSeconds": "{n}초"
+  "autoTurnSeconds": "{n}초",
+
+  "settingsSheetTitle": "설정",
+  "settingsChapterLock": "챕터 잠금 해제",
+  "settingsChapterLockHint": "유료 챕터 데모: 앞부분은 무료, 이후는 해제가 필요합니다."
 }
