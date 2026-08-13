@@ -54,7 +54,8 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
   void initState() {
     super.initState();
     _anim.addListener(() {
-      final double t = _anim.value;
+      // 松手后的收尾用缓出曲线：起步快、临近终点减速，比线性插值更像真实纸张。
+      final double t = Curves.easeOutCubic.transform(_anim.value);
       _fold.value = _Fold(
         Point<double>(
           _animFrom.x + (_animTo.x - _animFrom.x) * t,
@@ -397,7 +398,12 @@ class _FrontClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final Path rect = Path()..addRect(Offset.zero & size);
     final _Fold? p = fold.value;
-    if (p == null || p.flat || p.a.x <= -size.width) return rect;
+    // 已完全翻过（折点扫到左边界之外）：翻动页整页隐藏，露出其下的相邻页。
+    //
+    // 必须先于 flat 判断：翻页动画的终点是 (-w, h)，其 a.y == f.y 也会命中 flat，
+    // 若那时返回整页裁剪区，旧页会在最后一帧整页闪回一下（翻页末尾的跳动）。
+    if (p != null && p.a.x <= -size.width) return Path();
+    if (p == null || p.flat) return rect;
     return Path.combine(PathOperation.difference, rect, p.flapPath());
   }
 
@@ -423,7 +429,8 @@ class _FoldPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.clipRect(Offset.zero & size);
     final _Fold? p = fold.value;
-    if (p == null || p.flat) return;
+    // 与 _FrontClipper 同步：已完全翻过则不再画纸背与折痕阴影。
+    if (p == null || p.a.x <= -size.width || p.flat) return;
 
     final Color shadowSoft = Colors.black.withValues(alpha: 0.12);
     final Color shadowMid = Colors.black.withValues(alpha: 0.16);
@@ -453,8 +460,17 @@ class _FoldPainter extends CustomPainter {
       ..close();
 
     final Paint sp = Paint()..style = PaintingStyle.fill;
+    // 两片投影都要「减掉折起的纸片」。原先各做一次 Path.combine（CPU 布尔运算），
+    // 现在只求一次「整页 − 纸片」并作为裁剪区复用：布尔运算减半，且裁剪走绘制管线更便宜。
+    final Path outsideFlap = Path.combine(
+      PathOperation.difference,
+      Path()..addRect(Offset.zero & size),
+      flap,
+    );
+    canvas.save();
+    canvas.clipPath(outsideFlap);
     canvas.drawPath(
-      Path.combine(PathOperation.reverseDifference, flap, aShadowLeft),
+      aShadowLeft,
       sp
         ..shader = ui.Gradient.linear(
           _o(p.a),
@@ -463,7 +479,7 @@ class _FoldPainter extends CustomPainter {
         ),
     );
     canvas.drawPath(
-      Path.combine(PathOperation.reverseDifference, flap, aShadowRight),
+      aShadowRight,
       sp
         ..shader = ui.Gradient.linear(
           _o(p.a),
@@ -471,6 +487,7 @@ class _FoldPainter extends CustomPainter {
           <Color>[shadowSoft, clear],
         ),
     );
+    canvas.restore();
 
     // a 点缺口的三角补偿
     final Point<double> xp = _cross(
@@ -506,28 +523,30 @@ class _FoldPainter extends CustomPainter {
       ..lineTo(p.a.x, p.a.y)
       ..lineTo(p.i.x, p.i.y)
       ..close();
-    final Path mPathB = Path.combine(PathOperation.intersect, flap, triangleB);
+    // 纸片 ∩ 三角：改用裁剪到纸片后直接填三角，省掉一次布尔求交。
+    canvas.save();
+    canvas.clipPath(flap);
     canvas.drawPath(
-      mPathB,
+      triangleB,
       Paint()
         ..style = PaintingStyle.fill
         ..color = backColor,
     );
 
     // —— C 区：纸背靠折痕一侧的加深阴影 ——
+    // 原式 (bcArea ∩ flap) − (triangleB ∩ flap) 等价于 flap ∩ (bcArea − triangleB)，
+    // 于是沿用上面的 flap 裁剪，只需一次布尔差集（原先要两次求交 / 差集）。
     final Path bcArea = Path()
       ..moveTo(p.c.x, p.c.y)
       ..lineTo(p.j.x, p.j.y)
       ..lineTo(p.h.x, p.h.y)
       ..lineTo(p.e.x, p.e.y)
       ..close();
-    final Path combineToBC =
-        Path.combine(PathOperation.intersect, bcArea, flap);
-    final Path combineToC =
-        Path.combine(PathOperation.difference, combineToBC, mPathB);
+    final Path bcOutsideB =
+        Path.combine(PathOperation.difference, bcArea, triangleB);
     final Point<double> u = _cross(p.a, p.f, p.d, p.i);
     canvas.drawPath(
-      combineToC,
+      bcOutsideB,
       Paint()
         ..style = PaintingStyle.fill
         ..shader = ui.Gradient.linear(
@@ -536,6 +555,7 @@ class _FoldPainter extends CustomPainter {
           <Color>[isDark ? shadowStrong : shadowMid, clear],
         ),
     );
+    canvas.restore();
   }
 
   @override

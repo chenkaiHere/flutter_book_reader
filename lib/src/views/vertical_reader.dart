@@ -33,6 +33,10 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader>
   late final Ticker _autoTicker = createTicker(_onAutoTick);
   Duration _lastTick = Duration.zero;
 
+  /// 「当前章」判定的节流：上次判定时的滚动位置，及触发重算的最小位移。
+  double _lastChapterCheckPx = 0;
+  static const double _chapterCheckStride = 60;
+
   @override
   void initState() {
     super.initState();
@@ -91,7 +95,12 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader>
       final int? inserted = controller.prependPrevFlowChapter();
       if (inserted != null) _compensateForPrepend(inserted, m.pixels);
     }
-    _updateCurrentChapter();
+    // 章节判定要对每个已装入章做 RenderBox 查询，而滚动通知（尤其自动滚动）每帧都来。
+    // 按滚动距离节流：移动不足半屏内容不重算，标题/进度的更新延迟人眼不可感。
+    if ((m.pixels - _lastChapterCheckPx).abs() >= _chapterCheckStride) {
+      _lastChapterCheckPx = m.pixels;
+      _updateCurrentChapter();
+    }
     return false;
   }
 

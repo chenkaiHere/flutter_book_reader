@@ -111,7 +111,7 @@ anywhere else — without touching the reader's internals.
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.9
+  flutter_book_reader: ^1.5.10
 ```
 
 ```dart

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.10
+
+- Fix: no more flicker at the end of a simulation page-curl.
+- Performance: cheaper page-turn rendering across modes.
+
 ## 1.5.9
 
 - Complete built-in labels for all 12 languages.

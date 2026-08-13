@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../paginator.dart';
@@ -169,32 +171,14 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
     );
   }
 
+  /// 新页左缘投影。用 [CustomPaint] 而非 Stack + DecoratedBox：滑动时浓度每帧变化，
+  /// 走 widget 树意味着每帧重建 5 个节点并新建 BoxDecoration / LinearGradient；
+  /// 换成前景画笔后每帧只是一次重绘（[_CoverEdgeShadowPainter.shouldRepaint] 把关）。
   Widget _withLeftEdgeShadow(Widget child, double intensity) {
     if (intensity <= 0.01) return child;
-    return Stack(
-      children: <Widget>[
-        child,
-        Positioned(
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 18,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: <Color>[
-                    Colors.black.withValues(alpha: 0.22 * intensity),
-                    Colors.black.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return CustomPaint(
+      foregroundPainter: _CoverEdgeShadowPainter(intensity),
+      child: child,
     );
   }
 
@@ -217,4 +201,35 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
 
   Widget _frame(int chapterIdx, List<ReaderPage> pages, int pageIdx) =>
       buildPage(context, chapterIdx, pages, pageIdx);
+}
+
+/// 覆盖翻页时新页左缘的渐变投影（[intensity] 0~1 随滑入进度加深）。
+class _CoverEdgeShadowPainter extends CustomPainter {
+  const _CoverEdgeShadowPainter(this.intensity);
+
+  final double intensity;
+
+  /// 投影宽度（像素）。
+  static const double _bandWidth = 18;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Rect band = Rect.fromLTWH(0, 0, _bandWidth, size.height);
+    canvas.drawRect(
+      band,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          band.centerLeft,
+          band.centerRight,
+          <Color>[
+            Colors.black.withValues(alpha: 0.22 * intensity),
+            const Color(0x00000000),
+          ],
+        ),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CoverEdgeShadowPainter old) =>
+      old.intensity != intensity;
 }
