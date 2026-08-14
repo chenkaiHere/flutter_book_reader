@@ -560,8 +560,9 @@ class _BookReaderState extends State<BookReader>
                 Positioned.fill(
                   child: ValueListenableBuilder<bool>(
                     valueListenable: _menuVisible,
-                    builder: (BuildContext context, bool visible, Widget? child) =>
-                        AbsorbPointer(absorbing: visible, child: child),
+                    builder:
+                        (BuildContext context, bool visible, Widget? child) =>
+                            AbsorbPointer(absorbing: visible, child: child),
                     child: _buildContent(t, c),
                   ),
                 ),
@@ -578,7 +579,8 @@ class _BookReaderState extends State<BookReader>
                     _pagedFlip &&
                     MediaQuery.orientationOf(context) == Orientation.portrait)
                   Positioned.fill(
-                    child: AutoTurnProgressBar(progress: _autoTurnCtrl, theme: t),
+                    child:
+                        AutoTurnProgressBar(progress: _autoTurnCtrl, theme: t),
                   ),
                 // 自动阅读时底部中央入口（菜单打开时让位隐藏）。
                 // bottom 取「页脚带中心线」的高度，使其与页码 / 进度 / 电量同处一行水平。
@@ -586,8 +588,7 @@ class _BookReaderState extends State<BookReader>
                   Positioned(
                     left: 0,
                     right: 0,
-                    bottom:
-                        kReaderPagePadding.bottom + kReaderFooterHeight / 2,
+                    bottom: kReaderPagePadding.bottom + kReaderFooterHeight / 2,
                     child: ValueListenableBuilder<bool>(
                       valueListenable: _menuVisible,
                       builder: (BuildContext context, bool menuOn, _) =>
@@ -836,8 +837,8 @@ class _BookReaderState extends State<BookReader>
                   child: Row(
                     children: <Widget>[
                       Text(labels.speedSlow,
-                          style: TextStyle(
-                              fontSize: 14, color: t.subTextColor)),
+                          style:
+                              TextStyle(fontSize: 14, color: t.subTextColor)),
                       Expanded(
                         child: Slider(
                           value: value,
@@ -854,8 +855,8 @@ class _BookReaderState extends State<BookReader>
                         ),
                       ),
                       Text(labels.speedFast,
-                          style: TextStyle(
-                              fontSize: 14, color: t.subTextColor)),
+                          style:
+                              TextStyle(fontSize: 14, color: t.subTextColor)),
                     ],
                   ),
                 ),

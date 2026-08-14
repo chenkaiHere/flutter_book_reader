@@ -174,6 +174,9 @@ class ReaderConfig extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 已发布的公开 API：改成命名参数属破坏性变更；
+  // 且 setJustify(true) 在调用点可读性足够。
+  // ignore: avoid_positional_boolean_parameters
   void setJustify(bool value) {
     if (value == _justify) return;
     _justify = value;

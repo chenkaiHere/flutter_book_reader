@@ -1,1 +1,46 @@
+# 见 CLAUDE.md §3.1。Flutter 包以 flutter_lints 为底（它已含 lints/recommended
+# 并额外提供 Flutter 专属检查），在其上收紧。
 include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    # 对「包」而言是致命问题，降级为 warning 等于没有
+    implementation_imports: error
+    invalid_use_of_visible_for_testing_member: error
+    body_might_complete_normally: error
+
+linter:
+  rules:
+    # —— 公开 API 的稳定性 ——
+    always_declare_return_types: true
+    avoid_positional_boolean_parameters: true
+
+    # —— 不可变性 ——
+    prefer_final_locals: true
+    prefer_final_fields: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    avoid_setters_without_getters: true
+
+    # —— 空安全与类型 ——
+    avoid_dynamic_calls: true
+    unnecessary_null_checks: true
+    null_check_on_nullable_type_parameter: true
+
+    # —— 简洁度 ——
+    prefer_if_null_operators: true
+    prefer_null_aware_method_calls: true
+    unnecessary_parenthesis: true
+
+    # —— 包场景专属 ——
+    avoid_print: true
+    # 未 await 的 Future 必须显式 unawaited(...)，迫使作者回答
+    # 「这个失败谁来管」（见 CLAUDE.md §11.6）
+    unawaited_futures: true
+    use_rethrow_when_possible: true
+    depend_on_referenced_packages: true
+    sort_pub_dependencies: true

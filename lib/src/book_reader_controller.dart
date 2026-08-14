@@ -157,6 +157,9 @@ class BookReaderController extends ChangeNotifier {
 
   /// 菜单显隐变化时由 BookReader 调用。
   @internal
+  // setter 式单参方法：调用点 setMenuVisible(true) 语义自明；
+  // avoid_positional_boolean_parameters 针对的是多参数里的裸 bool。
+  // ignore: avoid_positional_boolean_parameters
   void setMenuVisible(bool visible) {
     if (_disposed || _menuVisible == visible) return;
     _menuVisible = visible;
@@ -165,6 +168,7 @@ class BookReaderController extends ChangeNotifier {
 
   /// 设置面板展开 / 收起时由 BookReader 调用。
   @internal
+  // ignore: avoid_positional_boolean_parameters —— 同上，setter 式单参方法。
   void setMenuPanelExpanded(bool expanded) {
     if (_disposed || _menuPanelExpanded == expanded) return;
     _menuPanelExpanded = expanded;

@@ -370,8 +370,9 @@ class _ReaderProseState extends State<ReaderProse> {
   int get _indentLen => _config.indent.length;
 
   /// 块 i 首字符在本章的起始偏移（前缀和查表，O(1)）。
-  int _blockChapterStart(int i) =>
-      (i >= 0 && i < _blockStarts.length) ? _blockStarts[i] : widget.pageStartOffset;
+  int _blockChapterStart(int i) => (i >= 0 && i < _blockStarts.length)
+      ? _blockStarts[i]
+      : widget.pageStartOffset;
 
   /// 块 i 内「占位符空间」偏移 → 本章偏移。
   int _plainToChapter(int i, int plainOffset) {
@@ -1043,7 +1044,8 @@ class _ReaderProseState extends State<ReaderProse> {
         if (c.chapterIndex == chapter) c,
     ];
     final int n = widget.page.length;
-    final List<(int, int, int)?> result = List<(int, int, int)?>.filled(n, null);
+    final List<(int, int, int)?> result =
+        List<(int, int, int)?>.filled(n, null);
     // 段落在本章的起始偏移；页首若是上页某段的延续，用回溯得到的真实起点。
     int runStart = widget.leadingParagraphStart ?? widget.pageStartOffset;
     for (int i = 0; i < n; i++) {

@@ -13,9 +13,8 @@ class ReaderBatteryScope extends InheritedWidget {
 
   final ValueListenable<ReaderBatteryInfo?>? battery;
 
-  static ValueListenable<ReaderBatteryInfo?>? of(BuildContext context) => context
-      .dependOnInheritedWidgetOfExactType<ReaderBatteryScope>()
-      ?.battery;
+  static ValueListenable<ReaderBatteryInfo?>? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ReaderBatteryScope>()?.battery;
 
   @override
   bool updateShouldNotify(ReaderBatteryScope oldWidget) =>

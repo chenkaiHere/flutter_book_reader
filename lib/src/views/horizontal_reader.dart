@@ -30,8 +30,7 @@ class _HorizontalReaderState extends ReaderModeViewState<HorizontalReader> {
   late int _builtChapter;
 
   /// 第 0 章且配置了扉页时，正文各页之前多出的扉页页数（1）。
-  bool get _hasTitle =>
-      controller.hasTitlePage && controller.chapterIndex == 0;
+  bool get _hasTitle => controller.hasTitlePage && controller.chapterIndex == 0;
   int get _titleLead => _hasTitle ? 1 : 0;
 
   /// 本章正文首页在 PageView 里的视图下标（含上一章边界页 + 扉页）。
@@ -230,6 +229,5 @@ class _CoverEdgeShadowPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CoverEdgeShadowPainter old) =>
-      old.intensity != intensity;
+  bool shouldRepaint(_CoverEdgeShadowPainter old) => old.intensity != intensity;
 }

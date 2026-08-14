@@ -67,6 +67,7 @@ class ReadingController extends ReaderControllerBase
   /// 自动翻页间隔（分页模式：每页停留时长；纵向模式：滚过约一屏的时长）。
   Duration get autoTurnInterval => _autoTurnInterval;
 
+  // ignore: avoid_positional_boolean_parameters —— setter 式单参方法。
   void setAutoTurning(bool active) {
     if (_autoTurning == active) return;
     _autoTurning = active;
@@ -75,8 +76,9 @@ class ReadingController extends ReaderControllerBase
 
   void setAutoTurnInterval(Duration interval) {
     // 下限 1s，避免过快导致连续翻页 / 滚动失控。
-    final Duration d =
-        interval < const Duration(seconds: 1) ? const Duration(seconds: 1) : interval;
+    final Duration d = interval < const Duration(seconds: 1)
+        ? const Duration(seconds: 1)
+        : interval;
     if (d == _autoTurnInterval) return;
     _autoTurnInterval = d;
     notifyListeners();

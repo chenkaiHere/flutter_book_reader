@@ -154,8 +154,7 @@ void main() {
     expect(find.textContaining('1/'), findsWidgets, reason: '菜单可见时滑动不翻页');
   });
 
-  testWidgets('菜单唤起后单击/滑动都只关闭菜单、不翻页；关闭后滑动才翻页',
-      (WidgetTester tester) async {
+  testWidgets('菜单唤起后单击/滑动都只关闭菜单、不翻页；关闭后滑动才翻页', (WidgetTester tester) async {
     await tester.pumpWidget(host(FakeBookSource()));
     await tester.pumpAndSettle();
 
@@ -188,8 +187,7 @@ void main() {
     await tester.fling(find.byType(PageView), const Offset(-400, 0), 1200);
     await tester.pumpAndSettle();
     expect(menuOpacity(), 0, reason: '滑动应隐藏菜单');
-    expect(find.textContaining('1/'), findsWidgets,
-        reason: '菜单可见时滑动只关闭菜单，不翻页');
+    expect(find.textContaining('1/'), findsWidgets, reason: '菜单可见时滑动只关闭菜单，不翻页');
 
     // 菜单已关闭，再滑动 —— 才翻到下一页
     await tester.fling(find.byType(PageView), const Offset(-400, 0), 1200);
@@ -293,8 +291,7 @@ void main() {
     await tester.tap(find.textContaining('笔记'));
     await tester.pumpAndSettle();
     expect(find.byType(CatalogSheet), findsOneWidget);
-    expect(find.text('一条测试评论内容'), findsWidgets,
-        reason: '中途写入的评论应出现在笔记页');
+    expect(find.text('一条测试评论内容'), findsWidgets, reason: '中途写入的评论应出现在笔记页');
   });
 
   testWidgets('听书：BookReaderController 可读当前页文本并翻页',
@@ -355,8 +352,7 @@ void main() {
     expect(controller.isCurrentPageBookmarked, isFalse, reason: '再次调用应移除');
   });
 
-  testWidgets('听书跟读：markReading 定位高亮 / 翻页且不抛异常',
-      (WidgetTester tester) async {
+  testWidgets('听书跟读：markReading 定位高亮 / 翻页且不抛异常', (WidgetTester tester) async {
     final BookReaderController controller = BookReaderController();
     addTearDown(controller.dispose);
     await tester.pumpWidget(MaterialApp(
@@ -379,8 +375,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('段评：有评论的段落尾部显示数字角标，点击回调段落信息',
-      (WidgetTester tester) async {
+  testWidgets('段评：有评论的段落尾部显示数字角标，点击回调段落信息', (WidgetTester tester) async {
     final InMemoryReaderCommentStore store = InMemoryReaderCommentStore();
     await store.save('fake-book', <Comment>[
       Comment(
@@ -687,8 +682,7 @@ void main() {
     expect(find.textContaining('2/'), findsWidgets, reason: '解锁后应能翻到本章第 2 页');
   });
 
-  testWidgets('自动翻页：到点自动翻到下一页，停止后不再翻',
-      (WidgetTester tester) async {
+  testWidgets('自动翻页：到点自动翻到下一页，停止后不再翻', (WidgetTester tester) async {
     final BookReaderController controller = BookReaderController();
     addTearDown(controller.dispose);
     await tester.pumpWidget(MaterialApp(
@@ -716,8 +710,7 @@ void main() {
     expect(controller.pageIndex, 1, reason: '停止后不应继续自动翻页');
   });
 
-  testWidgets('自动翻页：底部入口用本地化文案，翻过一页后收起为文字、点击可展开',
-      (WidgetTester tester) async {
+  testWidgets('自动翻页：底部入口用本地化文案，翻过一页后收起为文字、点击可展开', (WidgetTester tester) async {
     final BookReaderController controller = BookReaderController();
     addTearDown(controller.dispose);
     await tester.pumpWidget(MaterialApp(
@@ -798,8 +791,7 @@ void main() {
         reason: '带偏移打开应定位到章内对应页，而非章首第一页');
   });
 
-  testWidgets('付费章：连续锁定章中解锁一章后，可向前翻回上一锁定章而不卡死',
-      (WidgetTester tester) async {
+  testWidgets('付费章：连续锁定章中解锁一章后，可向前翻回上一锁定章而不卡死', (WidgetTester tester) async {
     // 第 3/4/5 章（index 2/3/4）付费，仅解锁第 4 章（index 3），从它打开。
     final Set<int> unlocked = <int>{3};
     await tester.pumpWidget(MaterialApp(

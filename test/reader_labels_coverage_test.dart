@@ -24,16 +24,15 @@ void main() {
   ];
 
   test('每个内置语言预设都覆盖全部文案（新增 key 不能只改 en/zh）', () {
-    final String src =
-        File('lib/src/reader_labels.dart').readAsStringSync();
+    final String src = File('lib/src/reader_labels.dart').readAsStringSync();
 
     // 构造器里声明的全部文案字段：`    this.xxx = ...`
-    final Set<String> allKeys = RegExp(r'^ {4}this\.([a-zA-Z]+)', multiLine: true)
-        .allMatches(src)
-        .map((RegExpMatch m) => m.group(1)!)
-        .toSet();
-    expect(allKeys.length, greaterThan(50),
-        reason: '未能解析出文案字段，测试的解析规则可能已失效');
+    final Set<String> allKeys =
+        RegExp(r'^ {4}this\.([a-zA-Z]+)', multiLine: true)
+            .allMatches(src)
+            .map((RegExpMatch m) => m.group(1)!)
+            .toSet();
+    expect(allKeys.length, greaterThan(50), reason: '未能解析出文案字段，测试的解析规则可能已失效');
 
     for (final String preset in presets) {
       final String block = _presetBlock(src, preset);
@@ -50,7 +49,8 @@ void main() {
 
 /// 截取某个预设的定义块（`static const ReaderLabels <name> = ReaderLabels(` 到 `);`）。
 String _presetBlock(String src, String name) {
-  final int start = src.indexOf('static const ReaderLabels $name = ReaderLabels(');
+  final int start =
+      src.indexOf('static const ReaderLabels $name = ReaderLabels(');
   expect(start, isNot(-1), reason: '找不到 $name 预设');
   final int end = src.indexOf('\n  );', start);
   expect(end, isNot(-1), reason: '$name 预设未正常结束');

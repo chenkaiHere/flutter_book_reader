@@ -73,8 +73,7 @@ class _SimulationReaderState extends ReaderModeViewState<SimulationReader>
     super.dispose();
   }
 
-  bool get _hasTitle =>
-      controller.hasTitlePage && controller.chapterIndex == 0;
+  bool get _hasTitle => controller.hasTitlePage && controller.chapterIndex == 0;
 
   bool get _canForward =>
       controller.onTitlePage ||

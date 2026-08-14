@@ -11,6 +11,12 @@ class FakeBookSource extends BookSource {
   /// 这些章节的正文加载会抛错（用于测试错误/重试）。可动态增删。
   final Set<int> failing = <int>{};
 
+  /// 正文被真正请求的次数：用于断言缓存 / 去重生效（fake 优于 mock，见 CLAUDE.md §7.3）。
+  int bodyLoadCount = 0;
+
+  /// 每章正文请求各被调用的次数。
+  final Map<int, int> bodyLoadCountByChapter = <int, int>{};
+
   @override
   Future<BookManifest> loadManifest() async => BookManifest(
         id: 'fake-book',
@@ -24,12 +30,17 @@ class FakeBookSource extends BookSource {
 
   @override
   Future<String> loadChapterBody(int index) async {
+    bodyLoadCount++;
+    bodyLoadCountByChapter.update(index, (int n) => n + 1, ifAbsent: () => 1);
     if (failing.contains(index)) throw Exception('章节 $index 加载失败');
     return _body(index);
   }
 
-  String _body(int index) => List<String>.filled(
+  /// 每段文字都带章号 + 段号，因此**互不相同** —— 跟读定位、段落锚点等用例需要
+  /// 能唯一命中某一段；若各段文字相同，`indexOf` 永远命中第一处，测不出真实行为。
+  String _body(int index) => List<String>.generate(
         paragraphsPerChapter,
-        '　　这是第 ${index + 1} 章的正文段落，用于填充足够的文字以便分页测试。',
+        (int i) => '　　这是第 ${index + 1} 章第 ${i + 1} 段的正文，'
+            '用于填充足够的文字以便分页测试。',
       ).join('\n');
 }

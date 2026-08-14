@@ -258,7 +258,8 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader>
   Widget _sectionBody(
       BuildContext context, int idx, String? body, ReaderLabels labels) {
     // 未解锁付费章：显示开头一段预览 + 解锁块（连续滚动无“页”，取定长预览作“部分内容”）。
-    if (controller.chapterLocked(idx) && controller.chapterLockBuilder != null) {
+    if (controller.chapterLocked(idx) &&
+        controller.chapterLockBuilder != null) {
       final Widget lockBlock = controller.chapterLockBuilder!(
         context,
         theme,

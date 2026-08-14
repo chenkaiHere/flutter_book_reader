@@ -564,7 +564,8 @@ class _CatalogSheetState extends State<CatalogSheet>
                       if (locked)
                         Padding(
                           padding: EdgeInsets.only(left: active ? 6 : 0),
-                          child: Icon(Icons.lock_outline, size: 16, color: _sub),
+                          child:
+                              Icon(Icons.lock_outline, size: 16, color: _sub),
                         ),
                     ],
                   ),

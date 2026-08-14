@@ -38,11 +38,16 @@ mixin ChapterContentMixin on ReaderControllerBase {
   void clearPageCache() => _pageCache.clear();
 
   /// 确保某章正文已加载；完成或失败后通知刷新。
+  ///
+  /// 已失败的章不会自动重试——[pagesFor] 在每次 build 都会调用本方法，若不拦住
+  /// 错误态就会形成「build → 加载 → 失败 → 通知 → build」的无限重试循环（既刷爆
+  /// 请求，也让界面永远无法稳定）。重试必须由用户经 [retry] 显式触发。
   Future<void> ensureLoaded(int index) async {
     if (index < 0 ||
         index >= chapterCount ||
         _bodies.containsKey(index) ||
-        _loading.contains(index)) {
+        _loading.contains(index) ||
+        _errors.contains(index)) {
       return;
     }
     _loading.add(index);

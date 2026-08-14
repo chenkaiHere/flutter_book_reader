@@ -495,7 +495,8 @@ class ReaderLabels {
     noteDelete: 'حذف',
     noteJump: 'الانتقال',
     noNotes: 'لا توجد ملاحظات بعد',
-    noNotesHint: 'ستظهر هنا التظليلات والتعليقات والعلامات التي تضيفها أثناء القراءة.',
+    noNotesHint:
+        'ستظهر هنا التظليلات والتعليقات والعلامات التي تضيفها أثناء القراءة.',
     timeJustNow: 'الآن',
     timeMinutesAgoTemplate: 'قبل {n} دقيقة',
     timeHoursAgoTemplate: 'قبل {n} ساعة',

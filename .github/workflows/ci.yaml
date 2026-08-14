@@ -1,0 +1,91 @@
+name: CI
+
+# 推到 master（直接 push 或 PR 合并产生的 push）与「以 master 为目标的 PR」都会触发。
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  # 允许在 Actions 页面手动跑一次
+  workflow_dispatch:
+
+# 同一分支上的新提交会取消仍在跑的旧任务，避免排队浪费
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze-and-test:
+    name: 静态分析 + 单元测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 安装依赖（插件 + 示例）
+        run: |
+          flutter pub get
+          flutter pub get --directory=example
+
+      # 1. 格式：与格式化器不一致直接失败（见 CLAUDE.md §3.2）
+      - name: 检查代码格式
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      # 2. 静态分析：插件与示例都必须零问题
+      - name: 静态分析
+        run: flutter analyze lib test example/lib
+
+      # 3. 单元测试 + 覆盖率
+      - name: 运行测试
+        run: flutter test --coverage
+
+      # 4. 覆盖率门槛（见 CLAUDE.md §7.2：整体 ≥80%，controller 层 ≥90%）
+      - name: 检查覆盖率门槛
+        run: |
+          total=$(awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} \
+            END{printf "%.1f", lh*100/lf}' coverage/lcov.info)
+          ctrl=$(awk '/^SF:.*controller/{f=1} /^SF:/{if($0 !~ /controller/) f=0} \
+            f&&/^LF:/{lf+=substr($0,4)} f&&/^LH:/{lh+=substr($0,4)} \
+            END{printf "%.1f", lh*100/lf}' coverage/lcov.info)
+          echo "整体行覆盖率: ${total}%（门槛 80%）"
+          echo "controller 层: ${ctrl}%（门槛 90%）"
+          awk -v v="$total" 'BEGIN { exit (v >= 80) ? 0 : 1 }' \
+            || { echo "::error::整体覆盖率低于 80%"; exit 1; }
+          awk -v v="$ctrl" 'BEGIN { exit (v >= 90) ? 0 : 1 }' \
+            || { echo "::error::controller 层覆盖率低于 90%"; exit 1; }
+
+      - name: 上传覆盖率报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: warn
+
+  package-health:
+    name: 发布体检（pana + 干跑发布）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # 干跑发布：提前发现打包问题（缺文件、版本号不一致等）
+      - name: 干跑发布
+        run: flutter pub publish --dry-run
+
+      # pana 评分：pub.dev 的评分项，只报告不阻断（阈值可按需收紧）
+      - name: pana 评分
+        continue-on-error: true
+        run: |
+          flutter pub global activate pana
+          flutter pub global run pana --no-warning --exit-code-threshold 20 .
