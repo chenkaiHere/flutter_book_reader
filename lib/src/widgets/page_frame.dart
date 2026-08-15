@@ -1081,7 +1081,9 @@ class _ReaderProseState extends State<ReaderProse> {
     final ReaderSegmentScope? segScope = ReaderSegmentScope.of(context);
     final bool showBadges = segScope != null &&
         segScope.onTap != null &&
-        segScope.comments.isNotEmpty;
+        segScope.comments.isNotEmpty &&
+        // 读者可在阅读菜单里一键收起角标（见 ReaderConfig.showSegmentComments）。
+        _config.showSegmentComments;
     final List<(int, int, int)?>? badges =
         showBadges ? _badgesFor(segScope) : null;
 

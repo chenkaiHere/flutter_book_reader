@@ -86,6 +86,9 @@ anywhere else — without touching the reader's internals.
 - **Paragraph comments** — a tappable comment-count badge at each paragraph's end;
   the tap is delivered via `onSegmentCommentTap` so your app renders the comment
   list, and `commentsRefresh` refreshes badges/notes after a comment is added.
+  Readers who prefer clean text can hide the badges from the reader menu, or you
+  can drive it with `config.setSegmentCommentsVisible(visible: false)` — comments
+  themselves are untouched and still listed in the notes panel.
 - **Battery indicator** — an optional battery gauge in the footer, fed by the
   host via `battery: ValueListenable<ReaderBatteryInfo?>` (`{ level, charging }`);
   charging shows a green bolt, otherwise the level fills with the percentage
@@ -111,7 +114,7 @@ anywhere else — without touching the reader's internals.
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.10
+  flutter_book_reader: ^1.5.11
 ```
 
 ```dart

@@ -101,6 +101,14 @@ class ReaderConfig extends ChangeNotifier {
   double _dimLevel = 0;
   double get dimLevel => _dimLevel;
 
+  // —— 段评角标（段落尾部的评论数小气泡）——
+  bool _showSegmentComments = true;
+
+  /// 是否在段落尾部显示「段评」小气泡。默认显示；关闭后正文只剩纯文字。
+  ///
+  /// 仅影响正文里的角标，不影响笔记面板中的评论列表，也不会删除任何评论。
+  bool get showSegmentComments => _showSegmentComments;
+
   // 样式对象缓存：这些 getter 在分页与正文渲染的热路径上被频繁访问，且仅在
   // 相关设置变化时才需重建。缓存后避免每次访问都新建对象（省 GC）。
   // 任一影响它们的设置改动都会经对应 setter 调用 [_invalidateStyleCache] 失效。
@@ -203,6 +211,17 @@ class ReaderConfig extends ChangeNotifier {
     _flipType = type;
     notifyListeners();
   }
+
+  /// 显示 / 隐藏正文里的段评角标。宿主可据此提供自己的开关。
+  void setSegmentCommentsVisible({required bool visible}) {
+    if (visible == _showSegmentComments) return;
+    _showSegmentComments = visible;
+    notifyListeners();
+  }
+
+  /// 取反当前的段评角标显隐（阅读菜单的按钮走这里）。
+  void toggleSegmentComments() =>
+      setSegmentCommentsVisible(visible: !_showSegmentComments);
 
   void setDimLevel(double value) {
     _dimLevel = value.clamp(0, 0.7);

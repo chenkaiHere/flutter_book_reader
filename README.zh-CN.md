@@ -66,6 +66,8 @@
   `ReaderUnderlineStore`、`ReaderCommentStore`）。
 - **段评** —— 每个段落尾部显示可点击的评论数角标；点击通过 `onSegmentCommentTap`
   抛给业务方（由业务方弹出评论列表），`commentsRefresh` 用于在新增评论后刷新角标 / 笔记。
+  不喜欢正文里出现小气泡的读者，可在阅读菜单里一键收起，业务方也可用
+  `config.setSegmentCommentsVisible(visible: false)` 控制；评论本身不受影响，笔记面板照常可见。
 - **电量显示** —— 页脚可选电量角标，数据由业务方经 `battery: ValueListenable<ReaderBatteryInfo?>`
   （`{ level, charging }`）注入；充电时显示绿色闪电，否则按电量填充、数字显示在电池内。
   传 `null` 即不显示——**插件本身不依赖任何原生电量库**。
@@ -85,7 +87,7 @@
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.10
+  flutter_book_reader: ^1.5.11
 ```
 
 ```dart

@@ -75,6 +75,8 @@ class ReaderLabels {
     this.timeMinutesAgoTemplate = '{n} min ago',
     this.timeHoursAgoTemplate = '{n} h ago',
     this.timeDaysAgoTemplate = '{n} d ago',
+    this.showSegmentComments = 'Show paragraph comments',
+    this.hideSegmentComments = 'Hide paragraph comments',
     this.autoTurn = 'Auto page-turn',
     this.autoTurnStop = 'Stop auto-read',
     this.autoTurnExit = 'Exit auto-read',
@@ -188,6 +190,10 @@ class ReaderLabels {
   final String timeHoursAgoTemplate;
   final String timeDaysAgoTemplate;
 
+  /// 段评角标的显 / 隐（顶栏按钮的无障碍标签与提示）。
+  final String showSegmentComments;
+  final String hideSegmentComments;
+
   /// 自动翻页：设置面板里的开启入口 / 自动阅读中显示的停止 / 退出自动阅读 / 速度「慢」「快」。
   final String autoTurn;
   final String autoTurnStop;
@@ -287,6 +293,8 @@ class ReaderLabels {
     autoTurnExit: '退出自动阅读',
     speedSlow: '慢',
     speedFast: '快',
+    showSegmentComments: '显示段评',
+    hideSegmentComments: '隐藏段评',
   );
 
   static const ReaderLabels spanish = ReaderLabels(
@@ -360,6 +368,8 @@ class ReaderLabels {
     autoTurnExit: 'Salir de lectura automática',
     speedSlow: 'Lento',
     speedFast: 'Rápido',
+    showSegmentComments: 'Mostrar comentarios de párrafo',
+    hideSegmentComments: 'Ocultar comentarios de párrafo',
   );
 
   static const ReaderLabels french = ReaderLabels(
@@ -433,6 +443,8 @@ class ReaderLabels {
     autoTurnExit: 'Quitter la lecture auto',
     speedSlow: 'Lent',
     speedFast: 'Rapide',
+    showSegmentComments: 'Afficher les commentaires',
+    hideSegmentComments: 'Masquer les commentaires',
   );
 
   static const ReaderLabels arabic = ReaderLabels(
@@ -506,6 +518,8 @@ class ReaderLabels {
     autoTurnExit: 'الخروج من القراءة التلقائية',
     speedSlow: 'بطيء',
     speedFast: 'سريع',
+    showSegmentComments: 'إظهار تعليقات الفقرة',
+    hideSegmentComments: 'إخفاء تعليقات الفقرة',
   );
 
   static const ReaderLabels bengali = ReaderLabels(
@@ -579,6 +593,8 @@ class ReaderLabels {
     autoTurnExit: 'স্বয়ংক্রিয় পড়া থেকে বেরোন',
     speedSlow: 'ধীর',
     speedFast: 'দ্রুত',
+    showSegmentComments: 'অনুচ্ছেদ মন্তব্য দেখান',
+    hideSegmentComments: 'অনুচ্ছেদ মন্তব্য লুকান',
   );
 
   static const ReaderLabels portuguese = ReaderLabels(
@@ -652,6 +668,8 @@ class ReaderLabels {
     autoTurnExit: 'Sair da leitura automática',
     speedSlow: 'Lento',
     speedFast: 'Rápido',
+    showSegmentComments: 'Mostrar comentários do parágrafo',
+    hideSegmentComments: 'Ocultar comentários do parágrafo',
   );
 
   static const ReaderLabels russian = ReaderLabels(
@@ -725,6 +743,8 @@ class ReaderLabels {
     autoTurnExit: 'Выйти из авточтения',
     speedSlow: 'Медленно',
     speedFast: 'Быстро',
+    showSegmentComments: 'Показать комментарии к абзацу',
+    hideSegmentComments: 'Скрыть комментарии к абзацу',
   );
 
   static const ReaderLabels hindi = ReaderLabels(
@@ -798,6 +818,8 @@ class ReaderLabels {
     autoTurnExit: 'स्वतः पठन से बाहर',
     speedSlow: 'धीमा',
     speedFast: 'तेज़',
+    showSegmentComments: 'अनुच्छेद टिप्पणियाँ दिखाएँ',
+    hideSegmentComments: 'अनुच्छेद टिप्पणियाँ छिपाएँ',
   );
 
   static const ReaderLabels urdu = ReaderLabels(
@@ -871,6 +893,8 @@ class ReaderLabels {
     autoTurnExit: 'خودکار مطالعہ سے باہر',
     speedSlow: 'آہستہ',
     speedFast: 'تیز',
+    showSegmentComments: 'پیراگراف تبصرے دکھائیں',
+    hideSegmentComments: 'پیراگراف تبصرے چھپائیں',
   );
 
   static const ReaderLabels japanese = ReaderLabels(
@@ -942,6 +966,8 @@ class ReaderLabels {
     autoTurnExit: '自動読書を終了',
     speedSlow: '遅い',
     speedFast: '速い',
+    showSegmentComments: '段落コメントを表示',
+    hideSegmentComments: '段落コメントを非表示',
   );
 
   static const ReaderLabels korean = ReaderLabels(
@@ -1013,6 +1039,8 @@ class ReaderLabels {
     autoTurnExit: '자동 읽기 종료',
     speedSlow: '느림',
     speedFast: '빠름',
+    showSegmentComments: '문단 댓글 표시',
+    hideSegmentComments: '문단 댓글 숨기기',
   );
 
   /// 语言码 → 预设。

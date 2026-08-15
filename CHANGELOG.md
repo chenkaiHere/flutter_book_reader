@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.11
+
+- Paragraph comment badges can now be hidden: a toggle in the reader menu, or
+  `config.setSegmentCommentsVisible(visible: …)` from the host.
+- Fix: a chapter that failed to load no longer retries endlessly.
+
 ## 1.5.10
 
 - Fix: no more flicker at the end of a simulation page-curl.

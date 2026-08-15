@@ -103,6 +103,8 @@ class _ReaderMenuState extends State<ReaderMenu> {
 
   ReaderTheme get _t => widget.config.theme;
 
+  bool get _segmentCommentsShown => widget.config.showSegmentComments;
+
   Color get _accent => _t.accentColor;
 
   Color get _text => _t.textColor;
@@ -210,6 +212,20 @@ class _ReaderMenuState extends State<ReaderMenu> {
                     style: _serif(size: 20),
                   ),
                 ),
+                // 段评角标显 / 隐：紧邻书签按钮左侧。有人不喜欢正文里的小气泡，
+                // 这里一键收起，评论本身不受影响（笔记面板照常可见）。
+                _iconTap(
+                  _segmentCommentsShown
+                      ? Icons.mode_comment_outlined
+                      : Icons.comments_disabled_outlined,
+                  20,
+                  _segmentCommentsShown ? _accent : _sub,
+                  widget.config.toggleSegmentComments,
+                  tooltip: _segmentCommentsShown
+                      ? _labels.hideSegmentComments
+                      : _labels.showSegmentComments,
+                ),
+                const SizedBox(width: 2),
                 _iconTap(
                   widget.bookmarked ? Icons.bookmark : Icons.bookmark_border,
                   22,
