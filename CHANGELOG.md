@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.12
+
+- update: sorted dependencies and bumped `flutter_lints` to 6. 
+
 ## 1.5.11
 
 - Paragraph comment badges can now be hidden: a toggle in the reader menu, or
