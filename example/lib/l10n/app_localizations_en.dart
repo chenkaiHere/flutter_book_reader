@@ -248,4 +248,49 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsChapterLockHint =>
       'Demo paid chapters: the first few are free, the rest need unlocking.';
+
+  @override
+  String get chapterEndDiscussion => 'Chapter discussion';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return '$n comments';
+  }
+
+  @override
+  String get giftSheetTitle => 'Send a gift to the author';
+
+  @override
+  String get giftSupportAuthor => 'Support the author';
+
+  @override
+  String get giftPickFirst => 'Pick a gift first';
+
+  @override
+  String giftSent(String gift, String price) {
+    return 'Sent $gift · $price pts';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$n pts';
+  }
+
+  @override
+  String get giftFireworks => 'Fireworks';
+
+  @override
+  String get giftDrumstick => 'Drumstick';
+
+  @override
+  String get giftFlowers => 'Flowers';
+
+  @override
+  String get giftCoffee => 'Coffee';
+
+  @override
+  String get giftRocket => 'Rocket';
+
+  @override
+  String get giftDiamond => 'Diamond';
 }

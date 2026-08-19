@@ -79,5 +79,19 @@
 
   "settingsSheetTitle": "设置",
   "settingsChapterLock": "章节解锁",
-  "settingsChapterLockHint": "演示付费章：前几章免费，其余需解锁后阅读。"
+  "settingsChapterLockHint": "演示付费章：前几章免费，其余需解锁后阅读。",
+
+  "chapterEndDiscussion": "本章讨论",
+  "chapterEndDiscussionCount": "{n}条讨论",
+  "giftSheetTitle": "送礼物给作者",
+  "giftSupportAuthor": "支持作者",
+  "giftPickFirst": "请先选择一个礼物",
+  "giftSent": "已送出 {gift} · {price} 点",
+  "giftPrice": "{n} 点",
+  "giftFireworks": "烟花",
+  "giftDrumstick": "大鸡腿",
+  "giftFlowers": "鲜花",
+  "giftCoffee": "咖啡",
+  "giftRocket": "火箭",
+  "giftDiamond": "钻石"
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.13
+
+- Custom widget at the end of every chapter via `chapterEndBuilder` (chapter
+  discussion, tip the author, next-chapter teaser…); pagination reserves room
+  for it, so body text is never clipped.
+
 ## 1.5.12
 
 - update: sorted dependencies and bumped `flutter_lints` to 6. 

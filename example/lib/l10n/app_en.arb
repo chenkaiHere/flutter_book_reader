@@ -106,5 +106,23 @@
 
   "settingsSheetTitle": "Settings",
   "settingsChapterLock": "Chapter unlocking",
-  "settingsChapterLockHint": "Demo paid chapters: the first few are free, the rest need unlocking."
+  "settingsChapterLockHint": "Demo paid chapters: the first few are free, the rest need unlocking.",
+
+  "chapterEndDiscussion": "Chapter discussion",
+  "chapterEndDiscussionCount": "{n} comments",
+  "giftSheetTitle": "Send a gift to the author",
+  "giftSupportAuthor": "Support the author",
+  "giftPickFirst": "Pick a gift first",
+  "giftSent": "Sent {gift} · {price} pts",
+  "giftPrice": "{n} pts",
+  "giftFireworks": "Fireworks",
+  "giftDrumstick": "Drumstick",
+  "giftFlowers": "Flowers",
+  "giftCoffee": "Coffee",
+  "giftRocket": "Rocket",
+  "giftDiamond": "Diamond",
+
+  "@chapterEndDiscussionCount": { "placeholders": { "n": { "type": "int" } } },
+  "@giftPrice": { "placeholders": { "n": { "type": "int" } } },
+  "@giftSent": { "placeholders": { "gift": { "type": "String" }, "price": { "type": "String" } } }
 }

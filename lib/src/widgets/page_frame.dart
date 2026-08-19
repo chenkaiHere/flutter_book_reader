@@ -110,6 +110,7 @@ class ReaderPageContent extends StatelessWidget {
     required this.progress,
     this.pageStartOffset = 0,
     this.leadingParagraphStart,
+    this.chapterEnd,
     this.padding = kReaderPagePadding,
   });
 
@@ -130,6 +131,10 @@ class ReaderPageContent extends StatelessWidget {
 
   /// 页首延续段落的真实起始偏移（段评角标跨页统计用），见 [ReaderProse.leadingParagraphStart]。
   final int? leadingParagraphStart;
+
+  /// 章末自定义组件（仅本章最后一页传入）：排在正文下方、页脚之上。
+  /// 分页已为它预留高度，因此正文不会被它挤掉，见 `chapterEndReserve`。
+  final Widget? chapterEnd;
   final EdgeInsets padding;
 
   @override
@@ -149,14 +154,23 @@ class ReaderPageContent extends StatelessWidget {
             const SizedBox(height: kReaderHeadingGapBottom),
           ],
           Expanded(
-            child: ReaderProse(
-              page: page,
-              config: config,
-              bounded: true,
-              chapterIndex: chapterIndex,
-              chapterTitle: chapterTitle,
-              pageStartOffset: pageStartOffset,
-              leadingParagraphStart: leadingParagraphStart,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                // 正文占据剩余空间；章末组件按自身高度紧随其后。
+                Flexible(
+                  child: ReaderProse(
+                    page: page,
+                    config: config,
+                    bounded: true,
+                    chapterIndex: chapterIndex,
+                    chapterTitle: chapterTitle,
+                    pageStartOffset: pageStartOffset,
+                    leadingParagraphStart: leadingParagraphStart,
+                  ),
+                ),
+                if (chapterEnd != null) chapterEnd!,
+              ],
             ),
           ),
           ReaderFooterBar(

@@ -72,5 +72,19 @@
 
   "settingsSheetTitle": "সেটিংস",
   "settingsChapterLock": "অধ্যায় আনলক",
-  "settingsChapterLockHint": "পেইড অধ্যায় ডেমো: প্রথম কয়েকটি ফ্রি, বাকিগুলো আনলক করতে হবে।"
+  "settingsChapterLockHint": "পেইড অধ্যায় ডেমো: প্রথম কয়েকটি ফ্রি, বাকিগুলো আনলক করতে হবে।",
+
+  "chapterEndDiscussion": "অধ্যায় আলোচনা",
+  "chapterEndDiscussionCount": "{n}টি মন্তব্য",
+  "giftSheetTitle": "লেখককে উপহার পাঠান",
+  "giftSupportAuthor": "লেখককে সমর্থন করুন",
+  "giftPickFirst": "আগে একটি উপহার বাছুন",
+  "giftSent": "{gift} পাঠানো হয়েছে · {price}",
+  "giftPrice": "{n} পয়েন্ট",
+  "giftFireworks": "আতশবাজি",
+  "giftDrumstick": "চিকেন লেগ",
+  "giftFlowers": "ফুল",
+  "giftCoffee": "কফি",
+  "giftRocket": "রকেট",
+  "giftDiamond": "হীরা"
 }

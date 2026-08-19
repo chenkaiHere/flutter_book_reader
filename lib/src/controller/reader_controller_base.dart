@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../chapter_end.dart';
 import '../chapter_lock.dart';
 import '../paginator.dart';
 import '../reader_config.dart';
@@ -31,6 +32,19 @@ abstract class ReaderControllerBase extends ChangeNotifier {
 
   /// 是否配置了扉页。
   bool get hasTitlePage => titlePageBuilder != null;
+
+  /// 章末自定义组件构建器（排在每章正文之后）。为 null 则不显示。
+  ReaderChapterEndBuilder? chapterEndBuilder;
+
+  /// 章末组件需要预留的高度（逻辑像素）。分页时在末页为它让出这么多空间；
+  /// 末页放不下时会另起一页承载它。
+  double chapterEndReserve = 0;
+
+  /// 是否配置了章末组件。
+  bool get hasChapterEnd => chapterEndBuilder != null;
+
+  /// 分页需要为章末组件预留的高度（未配置时为 0）。
+  double get chapterEndPageReserve => hasChapterEnd ? chapterEndReserve : 0;
 
   /// 付费章判定：返回 true 的章为「未解锁付费章」，只展示第一页并叠加解锁块。
   ReaderChapterLockPredicate? isChapterLocked;

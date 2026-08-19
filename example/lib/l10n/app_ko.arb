@@ -72,5 +72,19 @@
 
   "settingsSheetTitle": "설정",
   "settingsChapterLock": "챕터 잠금 해제",
-  "settingsChapterLockHint": "유료 챕터 데모: 앞부분은 무료, 이후는 해제가 필요합니다."
+  "settingsChapterLockHint": "유료 챕터 데모: 앞부분은 무료, 이후는 해제가 필요합니다.",
+
+  "chapterEndDiscussion": "이 화 토론",
+  "chapterEndDiscussionCount": "댓글 {n}개",
+  "giftSheetTitle": "작가에게 선물 보내기",
+  "giftSupportAuthor": "작가 응원하기",
+  "giftPickFirst": "먼저 선물을 선택하세요",
+  "giftSent": "{gift} 보냄 · {price}",
+  "giftPrice": "{n}포인트",
+  "giftFireworks": "불꽃",
+  "giftDrumstick": "치킨다리",
+  "giftFlowers": "꽃",
+  "giftCoffee": "커피",
+  "giftRocket": "로켓",
+  "giftDiamond": "다이아"
 }

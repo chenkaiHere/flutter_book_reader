@@ -23,8 +23,10 @@ import 'widgets/book_card.dart';
 import 'widgets/book_cover.dart';
 import 'widgets/auto_turn_overlay.dart';
 import 'widgets/book_detail_sheet.dart';
+import 'widgets/chapter_end_block.dart';
 import 'widgets/chapter_lock_block.dart';
 import 'widgets/comment_input_sheet.dart';
+import 'widgets/gift_sheet.dart';
 import 'widgets/listen_overlay.dart';
 import 'widgets/paragraph_comments_sheet.dart';
 import 'widgets/reader_title_page.dart';
@@ -294,7 +296,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
               // 演示开关关闭时传 null —— 阅读页与目录都不会出现任何锁的样式。
               isChapterLocked: lockDemo
                   ? (int chapter) =>
-                      chapter >= _freeChapters && !unlocked.contains(chapter)
+                        chapter >= _freeChapters && !unlocked.contains(chapter)
                   : null,
               lockRefresh: lockDemo ? lockRefresh : null,
               chapterLockBuilder: lockDemo
@@ -313,6 +315,23 @@ class _BookshelfPageState extends State<BookshelfPage> {
                       },
                     )
                   : null,
+              // 章末组件：本章讨论 + 送礼物入口。弹层由 App 自己弹出，插件只负责显示。
+              chapterEndBuilder:
+                  (
+                    BuildContext context,
+                    ReaderTheme theme,
+                    ReaderChapterEndInfo info,
+                  ) => ChapterEndBlock(
+                    theme: theme,
+                    info: info,
+                    // mock：讨论数按章号编一个稳定值
+                    discussionCount: 7 + info.chapterIndex * 3 % 40,
+                    onDiscussionTap: () => _toast(
+                      '${AppLocalizations.of(context).chapterEndDiscussion}'
+                      ' · ${info.chapterTitle}',
+                    ),
+                    onGiftTap: () => _sendGift(context),
+                  ),
             ),
           ),
         ),
@@ -322,6 +341,20 @@ class _BookshelfPageState extends State<BookshelfPage> {
     batteryFeed.dispose();
     lockRefresh.dispose();
     await _refreshProgress();
+  }
+
+  /// 顶层提示（阅读页是独立路由，用全局 messenger 才能盖在它上面）。
+  void _toast(String msg) => rootMessengerKey.currentState
+    ?..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(msg)));
+
+  /// 章末「送礼物」：弹出 App 自己的礼物弹层，选中后提示已送出。
+  /// 真实业务在这里走下单 / 扣费 / 上报；插件完全不介入。
+  Future<void> _sendGift(BuildContext context) async {
+    final AppLocalizations l = AppLocalizations.of(context);
+    final Gift? gift = await GiftSheet.show(context);
+    if (gift == null) return;
+    _toast(l.giftSent(gift.nameOf(l), l.giftPrice(gift.price)));
   }
 
   /// 气泡工具条动作全部由 App 处理：复制→写剪贴板；查询/分享→示意提示；

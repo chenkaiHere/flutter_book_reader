@@ -72,5 +72,19 @@
 
   "settingsSheetTitle": "सेटिंग्ज़",
   "settingsChapterLock": "अध्याय अनलॉक",
-  "settingsChapterLockHint": "सशुल्क अध्याय डेमो: शुरुआती अध्याय निःशुल्क, बाकी अनलॉक करने होंगे।"
+  "settingsChapterLockHint": "सशुल्क अध्याय डेमो: शुरुआती अध्याय निःशुल्क, बाकी अनलॉक करने होंगे।",
+
+  "chapterEndDiscussion": "अध्याय चर्चा",
+  "chapterEndDiscussionCount": "{n} टिप्पणियाँ",
+  "giftSheetTitle": "लेखक को उपहार भेजें",
+  "giftSupportAuthor": "लेखक का समर्थन करें",
+  "giftPickFirst": "पहले एक उपहार चुनें",
+  "giftSent": "{gift} भेजा · {price}",
+  "giftPrice": "{n} अंक",
+  "giftFireworks": "आतिशबाज़ी",
+  "giftDrumstick": "चिकन लेग",
+  "giftFlowers": "फूल",
+  "giftCoffee": "कॉफ़ी",
+  "giftRocket": "रॉकेट",
+  "giftDiamond": "हीरा"
 }

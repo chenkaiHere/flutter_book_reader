@@ -243,4 +243,49 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsChapterLockHint => '有料章のデモ：最初の数章は無料、以降は解除が必要です。';
+
+  @override
+  String get chapterEndDiscussion => 'この章の感想';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return 'コメント$n件';
+  }
+
+  @override
+  String get giftSheetTitle => '作者にギフトを贈る';
+
+  @override
+  String get giftSupportAuthor => '作者を応援';
+
+  @override
+  String get giftPickFirst => 'まずギフトを選んでください';
+
+  @override
+  String giftSent(String gift, String price) {
+    return '$gift を贈りました · $price';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$nポイント';
+  }
+
+  @override
+  String get giftFireworks => '花火';
+
+  @override
+  String get giftDrumstick => 'チキンレッグ';
+
+  @override
+  String get giftFlowers => '花束';
+
+  @override
+  String get giftCoffee => 'コーヒー';
+
+  @override
+  String get giftRocket => 'ロケット';
+
+  @override
+  String get giftDiamond => 'ダイヤ';
 }

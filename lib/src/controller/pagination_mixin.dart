@@ -19,7 +19,9 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
       '|${textScaler.scale(100).round()}|${config.fontFamily}'
       '|${config.firstLineIndent}|${config.paragraphSpacing}|${config.justify}'
       // 纳入实际渲染字体与地区：主题字体 / CJK 回退不同会改变换行行数
-      '|${_bodyStyle.fontFamily}|${_bodyStyle.fontFamilyFallback}|$locale';
+      '|${_bodyStyle.fontFamily}|${_bodyStyle.fontFamilyFallback}|$locale'
+      // 章末组件的预留高度变化也要重排（末页可能需要另起一页）
+      '|$chapterEndPageReserve';
 
   /// 把整章正文拆成「干净」的段落：按换行切分、去掉数据自带的行首缩进、丢弃空行。
   /// 缩进与段距一律由阅读器统一施加，避免排版耦合到数据。
@@ -57,6 +59,8 @@ mixin PaginationMixin on ReaderControllerBase, ChapterContentMixin {
         strutStyle: config.strut,
         // 首页为章首大标题预留高度（与 ReaderPageFrame 的渲染保持一致）
         firstPageReserve: headingReserveFor(index),
+        // 末页为章末组件预留高度，避免正文被它挤掉 / 组件被裁切
+        lastPageReserve: chapterEndPageReserve,
       ),
     );
   }

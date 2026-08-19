@@ -241,4 +241,49 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsChapterLockHint => '演示付费章：前几章免费，其余需解锁后阅读。';
+
+  @override
+  String get chapterEndDiscussion => '本章讨论';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return '$n条讨论';
+  }
+
+  @override
+  String get giftSheetTitle => '送礼物给作者';
+
+  @override
+  String get giftSupportAuthor => '支持作者';
+
+  @override
+  String get giftPickFirst => '请先选择一个礼物';
+
+  @override
+  String giftSent(String gift, String price) {
+    return '已送出 $gift · $price 点';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$n 点';
+  }
+
+  @override
+  String get giftFireworks => '烟花';
+
+  @override
+  String get giftDrumstick => '大鸡腿';
+
+  @override
+  String get giftFlowers => '鲜花';
+
+  @override
+  String get giftCoffee => '咖啡';
+
+  @override
+  String get giftRocket => '火箭';
+
+  @override
+  String get giftDiamond => '钻石';
 }

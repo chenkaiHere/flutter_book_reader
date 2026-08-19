@@ -72,5 +72,19 @@
 
   "settingsSheetTitle": "الإعدادات",
   "settingsChapterLock": "فتح الفصول",
-  "settingsChapterLockHint": "عرض توضيحي للفصول المدفوعة: الفصول الأولى مجانية والبقية تحتاج فتحًا."
+  "settingsChapterLockHint": "عرض توضيحي للفصول المدفوعة: الفصول الأولى مجانية والبقية تحتاج فتحًا.",
+
+  "chapterEndDiscussion": "مناقشة الفصل",
+  "chapterEndDiscussionCount": "{n} تعليقًا",
+  "giftSheetTitle": "أرسل هدية للمؤلف",
+  "giftSupportAuthor": "ادعم المؤلف",
+  "giftPickFirst": "اختر هدية أولاً",
+  "giftSent": "تم إرسال {gift} · {price}",
+  "giftPrice": "{n} نقطة",
+  "giftFireworks": "ألعاب نارية",
+  "giftDrumstick": "فخذ دجاج",
+  "giftFlowers": "زهور",
+  "giftCoffee": "قهوة",
+  "giftRocket": "صاروخ",
+  "giftDiamond": "ألماس"
 }

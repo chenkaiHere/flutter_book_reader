@@ -250,4 +250,49 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsChapterLockHint =>
       'Демо платных глав: первые бесплатны, остальные нужно разблокировать.';
+
+  @override
+  String get chapterEndDiscussion => 'Обсуждение главы';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return 'Комментариев: $n';
+  }
+
+  @override
+  String get giftSheetTitle => 'Подарок автору';
+
+  @override
+  String get giftSupportAuthor => 'Поддержать автора';
+
+  @override
+  String get giftPickFirst => 'Сначала выберите подарок';
+
+  @override
+  String giftSent(String gift, String price) {
+    return 'Отправлено: $gift · $price';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$n б.';
+  }
+
+  @override
+  String get giftFireworks => 'Фейерверк';
+
+  @override
+  String get giftDrumstick => 'Куриная ножка';
+
+  @override
+  String get giftFlowers => 'Цветы';
+
+  @override
+  String get giftCoffee => 'Кофе';
+
+  @override
+  String get giftRocket => 'Ракета';
+
+  @override
+  String get giftDiamond => 'Алмаз';
 }

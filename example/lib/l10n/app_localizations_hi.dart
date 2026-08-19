@@ -249,4 +249,49 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settingsChapterLockHint =>
       'सशुल्क अध्याय डेमो: शुरुआती अध्याय निःशुल्क, बाकी अनलॉक करने होंगे।';
+
+  @override
+  String get chapterEndDiscussion => 'अध्याय चर्चा';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return '$n टिप्पणियाँ';
+  }
+
+  @override
+  String get giftSheetTitle => 'लेखक को उपहार भेजें';
+
+  @override
+  String get giftSupportAuthor => 'लेखक का समर्थन करें';
+
+  @override
+  String get giftPickFirst => 'पहले एक उपहार चुनें';
+
+  @override
+  String giftSent(String gift, String price) {
+    return '$gift भेजा · $price';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$n अंक';
+  }
+
+  @override
+  String get giftFireworks => 'आतिशबाज़ी';
+
+  @override
+  String get giftDrumstick => 'चिकन लेग';
+
+  @override
+  String get giftFlowers => 'फूल';
+
+  @override
+  String get giftCoffee => 'कॉफ़ी';
+
+  @override
+  String get giftRocket => 'रॉकेट';
+
+  @override
+  String get giftDiamond => 'हीरा';
 }

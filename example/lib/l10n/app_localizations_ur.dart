@@ -249,4 +249,49 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get settingsChapterLockHint =>
       'معاوضہ ابواب کا ڈیمو: ابتدائی ابواب مفت، باقی کھولنے ہوں گے۔';
+
+  @override
+  String get chapterEndDiscussion => 'باب پر گفتگو';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return '$n تبصرے';
+  }
+
+  @override
+  String get giftSheetTitle => 'مصنف کو تحفہ بھیجیں';
+
+  @override
+  String get giftSupportAuthor => 'مصنف کی حمایت کریں';
+
+  @override
+  String get giftPickFirst => 'پہلے ایک تحفہ منتخب کریں';
+
+  @override
+  String giftSent(String gift, String price) {
+    return '$gift بھیجا · $price';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$n پوائنٹ';
+  }
+
+  @override
+  String get giftFireworks => 'آتش بازی';
+
+  @override
+  String get giftDrumstick => 'چکن لیگ';
+
+  @override
+  String get giftFlowers => 'پھول';
+
+  @override
+  String get giftCoffee => 'کافی';
+
+  @override
+  String get giftRocket => 'راکٹ';
+
+  @override
+  String get giftDiamond => 'ہیرا';
 }

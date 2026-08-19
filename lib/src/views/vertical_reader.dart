@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../chapter_end.dart';
 import '../paginator.dart';
 import '../reader_labels.dart';
 import '../widgets/page_frame.dart';
@@ -235,6 +236,20 @@ class _VerticalReaderState extends ReaderModeViewState<VerticalReader>
         ),
         const SizedBox(height: 16),
         _sectionBody(context, idx, body, labels),
+        // 章末组件：连续滚动模式下紧随该章正文之后（付费章不显示）。
+        if (controller.chapterEndBuilder != null &&
+            !controller.chapterLocked(idx)) ...<Widget>[
+          const SizedBox(height: 12),
+          controller.chapterEndBuilder!(
+            context,
+            theme,
+            ReaderChapterEndInfo(
+              chapterIndex: idx,
+              chapterTitle: controller.chapterTitleAt(idx),
+              isLastChapter: idx >= controller.chapterCount - 1,
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
       ],
     );

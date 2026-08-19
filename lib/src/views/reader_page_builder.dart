@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../chapter_end.dart';
 import '../controller/reading_controller.dart';
 import '../paginator.dart';
 import '../reader_theme.dart';
@@ -27,6 +28,24 @@ Widget buildReaderPage({
       ? pages[pageIndex]
       : const <ReaderBlock>[];
 
+  // 章末组件只出现在本章最后一页；分页已为它预留高度（chapterEndReserve），
+  // 末页放不下时分页器会另起一页，因此这里无需再判断空间。
+  // 未解锁付费章只放行首页，读者到不了章末，故不显示章末组件。
+  final bool onLastPage =
+      pageIndex == pages.length - 1 && !controller.chapterLocked(chapterIndex);
+  final Widget? chapterEnd =
+      (onLastPage && controller.chapterEndBuilder != null)
+          ? controller.chapterEndBuilder!(
+              context,
+              theme,
+              ReaderChapterEndInfo(
+                chapterIndex: chapterIndex,
+                chapterTitle: controller.chapterTitleAt(chapterIndex),
+                isLastChapter: chapterIndex >= controller.chapterCount - 1,
+              ),
+            )
+          : null;
+
   Widget content = ReaderPageContent(
     theme: theme,
     config: controller.config,
@@ -41,6 +60,7 @@ Widget buildReaderPage({
     progress: controller.progressFor(chapterIndex, pages, pageIndex),
     pageStartOffset: controller.startOffsetOfPageIn(pages, pageIndex),
     leadingParagraphStart: controller.leadingParagraphStartIn(pages, pageIndex),
+    chapterEnd: chapterEnd,
   );
 
   // 未解锁付费章：首页底部叠加宿主提供的解锁块（其余页不会被展示，见 visiblePageCount）。

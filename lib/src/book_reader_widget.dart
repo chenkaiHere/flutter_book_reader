@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'battery.dart';
 import 'book_reader_controller.dart';
 import 'bookmark/reader_bookmark_store.dart';
+import 'chapter_end.dart';
 import 'chapter_lock.dart';
 import 'comment/reader_comment_store.dart';
 import 'controller/reading_controller.dart';
@@ -64,6 +65,8 @@ class BookReader extends StatefulWidget {
     this.isChapterLocked,
     this.chapterLockBuilder,
     this.lockRefresh,
+    this.chapterEndBuilder,
+    this.chapterEndReserve = 96,
   });
 
   /// 书籍数据源
@@ -148,6 +151,19 @@ class BookReader extends StatefulWidget {
   /// 解锁刷新信号：业务方解锁成功、更新自己的锁定状态后触发它（如 `ValueNotifier<int>..value++`），
   /// 阅读器据此重新执行 [isChapterLocked] 判定并展开已解锁章节的整章内容。
   final Listenable? lockRefresh;
+
+  /// 章末自定义组件构建器：排在每章正文之后（本章讨论、给作者送礼物、下一章预告等）。
+  /// 样式与点击行为完全由业务方定义；为 null（默认）则不显示。
+  ///
+  /// 弹层之类的交互请在回调里自行 `showModalBottomSheet`——阅读器只负责显示这块组件。
+  final ReaderChapterEndBuilder? chapterEndBuilder;
+
+  /// 章末组件需要预留的高度（逻辑像素，默认 96）。
+  ///
+  /// 分页时会在每章末页为它让出这么多空间，末页放不下则另起一页承载它，因此正文
+  /// 不会被挤掉、组件也不会被裁切。**声明值应不小于组件实际高度**：小了会导致组件
+  /// 底部被裁，大了只是末页多留一点白。仅在 [chapterEndBuilder] 非空时生效。
+  final double chapterEndReserve;
 
   @override
   State<BookReader> createState() => _BookReaderState();
@@ -276,6 +292,18 @@ class _BookReaderState extends State<BookReader>
       oldWidget.lockRefresh?.removeListener(_onLockRefresh);
       widget.lockRefresh?.addListener(_onLockRefresh);
     }
+    if (!identical(oldWidget.chapterEndBuilder, widget.chapterEndBuilder) ||
+        oldWidget.chapterEndReserve != widget.chapterEndReserve) {
+      final ReadingController? c = _controller;
+      if (c != null) {
+        c.chapterEndBuilder = widget.chapterEndBuilder;
+        c.chapterEndReserve = widget.chapterEndReserve;
+        // 预留高度变化会改变分页结果，需重排
+        c.clearPageCache();
+        c.signature = '';
+        c.refreshLocks();
+      }
+    }
     if (!identical(oldWidget.isChapterLocked, widget.isChapterLocked) ||
         !identical(oldWidget.chapterLockBuilder, widget.chapterLockBuilder)) {
       final ReadingController? c = _controller;
@@ -333,6 +361,8 @@ class _BookReaderState extends State<BookReader>
       controller.titlePageBuilder = widget.titlePageBuilder;
       controller.isChapterLocked = widget.isChapterLocked;
       controller.chapterLockBuilder = widget.chapterLockBuilder;
+      controller.chapterEndBuilder = widget.chapterEndBuilder;
+      controller.chapterEndReserve = widget.chapterEndReserve;
       // 从全书开头（第 0 章、偏移 0）打开时先展示扉页；从书中续读则直接进正文。
       controller.onTitlePage =
           widget.titlePageBuilder != null && start == 0 && offset == 0;

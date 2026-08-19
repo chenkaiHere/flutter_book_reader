@@ -246,4 +246,49 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsChapterLockHint =>
       'عرض توضيحي للفصول المدفوعة: الفصول الأولى مجانية والبقية تحتاج فتحًا.';
+
+  @override
+  String get chapterEndDiscussion => 'مناقشة الفصل';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return '$n تعليقًا';
+  }
+
+  @override
+  String get giftSheetTitle => 'أرسل هدية للمؤلف';
+
+  @override
+  String get giftSupportAuthor => 'ادعم المؤلف';
+
+  @override
+  String get giftPickFirst => 'اختر هدية أولاً';
+
+  @override
+  String giftSent(String gift, String price) {
+    return 'تم إرسال $gift · $price';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$n نقطة';
+  }
+
+  @override
+  String get giftFireworks => 'ألعاب نارية';
+
+  @override
+  String get giftDrumstick => 'فخذ دجاج';
+
+  @override
+  String get giftFlowers => 'زهور';
+
+  @override
+  String get giftCoffee => 'قهوة';
+
+  @override
+  String get giftRocket => 'صاروخ';
+
+  @override
+  String get giftDiamond => 'ألماس';
 }

@@ -244,4 +244,49 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsChapterLockHint => '유료 챕터 데모: 앞부분은 무료, 이후는 해제가 필요합니다.';
+
+  @override
+  String get chapterEndDiscussion => '이 화 토론';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return '댓글 $n개';
+  }
+
+  @override
+  String get giftSheetTitle => '작가에게 선물 보내기';
+
+  @override
+  String get giftSupportAuthor => '작가 응원하기';
+
+  @override
+  String get giftPickFirst => '먼저 선물을 선택하세요';
+
+  @override
+  String giftSent(String gift, String price) {
+    return '$gift 보냄 · $price';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$n포인트';
+  }
+
+  @override
+  String get giftFireworks => '불꽃';
+
+  @override
+  String get giftDrumstick => '치킨다리';
+
+  @override
+  String get giftFlowers => '꽃';
+
+  @override
+  String get giftCoffee => '커피';
+
+  @override
+  String get giftRocket => '로켓';
+
+  @override
+  String get giftDiamond => '다이아';
 }

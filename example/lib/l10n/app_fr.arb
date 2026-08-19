@@ -72,5 +72,19 @@
 
   "settingsSheetTitle": "Paramètres",
   "settingsChapterLock": "Déverrouillage des chapitres",
-  "settingsChapterLockHint": "Démo des chapitres payants : les premiers sont gratuits, les autres doivent être déverrouillés."
+  "settingsChapterLockHint": "Démo des chapitres payants : les premiers sont gratuits, les autres doivent être déverrouillés.",
+
+  "chapterEndDiscussion": "Discussion du chapitre",
+  "chapterEndDiscussionCount": "{n} commentaires",
+  "giftSheetTitle": "Offrir un cadeau à l'auteur",
+  "giftSupportAuthor": "Soutenir l'auteur",
+  "giftPickFirst": "Choisissez d'abord un cadeau",
+  "giftSent": "Envoyé {gift} · {price} pts",
+  "giftPrice": "{n} pts",
+  "giftFireworks": "Feux d'artifice",
+  "giftDrumstick": "Cuisse de poulet",
+  "giftFlowers": "Fleurs",
+  "giftCoffee": "Café",
+  "giftRocket": "Fusée",
+  "giftDiamond": "Diamant"
 }

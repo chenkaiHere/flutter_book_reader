@@ -72,5 +72,19 @@
 
   "settingsSheetTitle": "設定",
   "settingsChapterLock": "章のロック解除",
-  "settingsChapterLockHint": "有料章のデモ：最初の数章は無料、以降は解除が必要です。"
+  "settingsChapterLockHint": "有料章のデモ：最初の数章は無料、以降は解除が必要です。",
+
+  "chapterEndDiscussion": "この章の感想",
+  "chapterEndDiscussionCount": "コメント{n}件",
+  "giftSheetTitle": "作者にギフトを贈る",
+  "giftSupportAuthor": "作者を応援",
+  "giftPickFirst": "まずギフトを選んでください",
+  "giftSent": "{gift} を贈りました · {price}",
+  "giftPrice": "{n}ポイント",
+  "giftFireworks": "花火",
+  "giftDrumstick": "チキンレッグ",
+  "giftFlowers": "花束",
+  "giftCoffee": "コーヒー",
+  "giftRocket": "ロケット",
+  "giftDiamond": "ダイヤ"
 }

@@ -251,4 +251,49 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get settingsChapterLockHint =>
       'পেইড অধ্যায় ডেমো: প্রথম কয়েকটি ফ্রি, বাকিগুলো আনলক করতে হবে।';
+
+  @override
+  String get chapterEndDiscussion => 'অধ্যায় আলোচনা';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return '$nটি মন্তব্য';
+  }
+
+  @override
+  String get giftSheetTitle => 'লেখককে উপহার পাঠান';
+
+  @override
+  String get giftSupportAuthor => 'লেখককে সমর্থন করুন';
+
+  @override
+  String get giftPickFirst => 'আগে একটি উপহার বাছুন';
+
+  @override
+  String giftSent(String gift, String price) {
+    return '$gift পাঠানো হয়েছে · $price';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$n পয়েন্ট';
+  }
+
+  @override
+  String get giftFireworks => 'আতশবাজি';
+
+  @override
+  String get giftDrumstick => 'চিকেন লেগ';
+
+  @override
+  String get giftFlowers => 'ফুল';
+
+  @override
+  String get giftCoffee => 'কফি';
+
+  @override
+  String get giftRocket => 'রকেট';
+
+  @override
+  String get giftDiamond => 'হীরা';
 }

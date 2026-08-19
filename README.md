@@ -103,6 +103,10 @@ anywhere else — without touching the reader's internals.
   scroll mode auto-scrolls smoothly. Built-in menu entry + speed/exit panel; it
   restarts on manual turns and stops at the book end or a locked chapter. Keep
   the screen awake yourself via `isAutoTurning` (no native dependency).
+- **Chapter-end widget** — drop your own widget after every chapter's body via
+  `chapterEndBuilder` (chapter discussion, tip the author, next-chapter teaser…).
+  Pagination reserves `chapterEndReserve` height for it, so body text is never
+  pushed out or clipped; popups are yours to open.
 - **Theming & typography** — six built-in paper themes, per-theme accent color,
   and runtime controls for font size / line height / brightness.
 - **Localization built in** — `ReaderLabels` ships **12 languages** (en, zh, es,
@@ -114,7 +118,7 @@ anywhere else — without touching the reader's internals.
 
 ```yaml
 dependencies:
-  flutter_book_reader: ^1.5.12
+  flutter_book_reader: ^1.5.13
 ```
 
 ```dart

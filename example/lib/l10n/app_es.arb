@@ -72,5 +72,19 @@
 
   "settingsSheetTitle": "Ajustes",
   "settingsChapterLock": "Desbloqueo de capítulos",
-  "settingsChapterLockHint": "Demo de capítulos de pago: los primeros son gratis, el resto requiere desbloqueo."
+  "settingsChapterLockHint": "Demo de capítulos de pago: los primeros son gratis, el resto requiere desbloqueo.",
+
+  "chapterEndDiscussion": "Debate del capítulo",
+  "chapterEndDiscussionCount": "{n} comentarios",
+  "giftSheetTitle": "Enviar un regalo al autor",
+  "giftSupportAuthor": "Apoyar al autor",
+  "giftPickFirst": "Elige un regalo primero",
+  "giftSent": "Enviado {gift} · {price} pts",
+  "giftPrice": "{n} pts",
+  "giftFireworks": "Fuegos artificiales",
+  "giftDrumstick": "Muslo de pollo",
+  "giftFlowers": "Flores",
+  "giftCoffee": "Café",
+  "giftRocket": "Cohete",
+  "giftDiamond": "Diamante"
 }

@@ -250,4 +250,49 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsChapterLockHint =>
       'Demo de capítulos pagos: os primeiros são grátis, o resto precisa ser desbloqueado.';
+
+  @override
+  String get chapterEndDiscussion => 'Discussão do capítulo';
+
+  @override
+  String chapterEndDiscussionCount(int n) {
+    return '$n comentários';
+  }
+
+  @override
+  String get giftSheetTitle => 'Enviar um presente ao autor';
+
+  @override
+  String get giftSupportAuthor => 'Apoiar o autor';
+
+  @override
+  String get giftPickFirst => 'Escolha um presente primeiro';
+
+  @override
+  String giftSent(String gift, String price) {
+    return 'Enviado $gift · $price pts';
+  }
+
+  @override
+  String giftPrice(int n) {
+    return '$n pts';
+  }
+
+  @override
+  String get giftFireworks => 'Fogos de artifício';
+
+  @override
+  String get giftDrumstick => 'Coxa de frango';
+
+  @override
+  String get giftFlowers => 'Flores';
+
+  @override
+  String get giftCoffee => 'Café';
+
+  @override
+  String get giftRocket => 'Foguete';
+
+  @override
+  String get giftDiamond => 'Diamante';
 }

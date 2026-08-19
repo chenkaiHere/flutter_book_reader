@@ -72,5 +72,19 @@
 
   "settingsSheetTitle": "Настройки",
   "settingsChapterLock": "Разблокировка глав",
-  "settingsChapterLockHint": "Демо платных глав: первые бесплатны, остальные нужно разблокировать."
+  "settingsChapterLockHint": "Демо платных глав: первые бесплатны, остальные нужно разблокировать.",
+
+  "chapterEndDiscussion": "Обсуждение главы",
+  "chapterEndDiscussionCount": "Комментариев: {n}",
+  "giftSheetTitle": "Подарок автору",
+  "giftSupportAuthor": "Поддержать автора",
+  "giftPickFirst": "Сначала выберите подарок",
+  "giftSent": "Отправлено: {gift} · {price}",
+  "giftPrice": "{n} б.",
+  "giftFireworks": "Фейерверк",
+  "giftDrumstick": "Куриная ножка",
+  "giftFlowers": "Цветы",
+  "giftCoffee": "Кофе",
+  "giftRocket": "Ракета",
+  "giftDiamond": "Алмаз"
 }

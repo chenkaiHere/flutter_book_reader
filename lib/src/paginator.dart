@@ -39,6 +39,7 @@ class Paginator {
     double paragraphSpacing = 0,
     TextAlign textAlign = TextAlign.start,
     double firstPageReserve = 0,
+    double lastPageReserve = 0,
     StrutStyle? strutStyle,
     Locale? locale,
   }) {
@@ -56,10 +57,13 @@ class Paginator {
     ReaderPage current = <ReaderBlock>[];
     // 首页预留章首大标题的高度（仅第一页；flushPage 后归零，故只影响首页）。
     double used = firstPageReserve.clamp(0, pageHeight * 0.6);
+    // 最后一页的实际占用高度（章末组件据此判断放不放得下）。
+    double lastPageUsed = 0;
 
     void flushPage() {
       if (current.isNotEmpty) {
         pages.add(current);
+        lastPageUsed = used;
         current = <ReaderBlock>[];
         used = 0;
       }
@@ -172,6 +176,11 @@ class Paginator {
 
     flushPage();
     if (pages.isEmpty) pages.add(<ReaderBlock>[]);
+    // 章末组件预留：末页剩余高度不足时另起一页承载它。否则正文与组件会挤在同一页，
+    // 组件被裁切或把末行顶出可视区（组件高度由业务方声明，分页器只按声明值让位）。
+    if (lastPageReserve > 0 && pageHeight - lastPageUsed < lastPageReserve) {
+      pages.add(<ReaderBlock>[]);
+    }
     return pages;
   }
 

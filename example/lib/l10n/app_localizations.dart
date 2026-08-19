@@ -537,6 +537,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Demo paid chapters: the first few are free, the rest need unlocking.'**
   String get settingsChapterLockHint;
+
+  /// No description provided for @chapterEndDiscussion.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter discussion'**
+  String get chapterEndDiscussion;
+
+  /// No description provided for @chapterEndDiscussionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} comments'**
+  String chapterEndDiscussionCount(int n);
+
+  /// No description provided for @giftSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a gift to the author'**
+  String get giftSheetTitle;
+
+  /// No description provided for @giftSupportAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Support the author'**
+  String get giftSupportAuthor;
+
+  /// No description provided for @giftPickFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a gift first'**
+  String get giftPickFirst;
+
+  /// No description provided for @giftSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent {gift} · {price} pts'**
+  String giftSent(String gift, String price);
+
+  /// No description provided for @giftPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} pts'**
+  String giftPrice(int n);
+
+  /// No description provided for @giftFireworks.
+  ///
+  /// In en, this message translates to:
+  /// **'Fireworks'**
+  String get giftFireworks;
+
+  /// No description provided for @giftDrumstick.
+  ///
+  /// In en, this message translates to:
+  /// **'Drumstick'**
+  String get giftDrumstick;
+
+  /// No description provided for @giftFlowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Flowers'**
+  String get giftFlowers;
+
+  /// No description provided for @giftCoffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Coffee'**
+  String get giftCoffee;
+
+  /// No description provided for @giftRocket.
+  ///
+  /// In en, this message translates to:
+  /// **'Rocket'**
+  String get giftRocket;
+
+  /// No description provided for @giftDiamond.
+  ///
+  /// In en, this message translates to:
+  /// **'Diamond'**
+  String get giftDiamond;
 }
 
 class _AppLocalizationsDelegate
